@@ -1,5 +1,6 @@
 # NumPy Financial
 
-The `numpy-financial` package is the future home for the standalone package of the NumPy functional functions.
-The financial functions will be deprecated within NumPy,
-see also [NEP-32](https://numpy.org/neps/nep-0032-remove-financial-functions.html).
+The `numpy-financial` package contains a collection of elementary financial functions.
+The original versions of these functions were in NumPy.
+The NumPy versions will be deprecated:
+see [NEP-32](https://numpy.org/neps/nep-0032-remove-financial-functions.html).
