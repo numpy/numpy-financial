@@ -50,7 +50,7 @@ jobs:
         echo "Committing empty repository"
         git commit -m "Remove old documentation"
         echo "Copying /tmp/html here"
-        cp -v -r /tmp/html/ .
+        cp -v -r /tmp/html/* .
         touch .nojekyll
         echo "Adding new documentation"
         git add -A
