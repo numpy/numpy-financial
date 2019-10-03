@@ -36,8 +36,8 @@ jobs:
       run: |
         git remote rm origin
         git remote add origin 'git@github.com:numpy/numpy-financial.git'
-        git config user.email "github.workflow@nomail"
-        git config user.name "Github Workflow: publish_docs_to_pages.yml"
+        #git config user.email "github.workflow@nomail"
+        #git config user.name "Github Workflow: publish_docs_to_pages.yml"
         git remote -v
         git config -l
         echo "Fetching gh-pages"
