@@ -30,7 +30,7 @@ jobs:
         make html
         mv build/html /tmp
         cd ..
-    - name: Push the new documentation to gh-pages
+    - name: Prepare local gh-pages branch
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -53,5 +53,9 @@ jobs:
         echo "Adding new documentation"
         git add -A
         git commit -m "Add new documentation"
+    - name: Push the new documentation to gh-pages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
         echo "Pushing new documentation to origin"
         git push -v "https://${GITHUB_TOKEN}:x-oauth-basic@github.com/numpy/numpy-financial.git" gh-pages
