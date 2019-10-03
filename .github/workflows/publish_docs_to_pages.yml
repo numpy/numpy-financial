@@ -30,7 +30,9 @@ jobs:
         make html
         mv build/html /tmp
         cd ..
-    - name: Prepare gh-pages branch
+    - name: Push the new documentation to gh-pages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config user.email "github.workflow@nomail"
         git config user.name "Github Workflow: publish_docs_to_pages.yml"
@@ -46,9 +48,5 @@ jobs:
         echo "Adding new documentation"
         git add -A
         git commit -m "Add new documentation"
-    - name: Push new gh-pages to the github repository
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
         echo "Pushing new documentation to origin"
         git push -v origin gh-pages
