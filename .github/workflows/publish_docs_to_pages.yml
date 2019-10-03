@@ -28,10 +28,12 @@ jobs:
         make html
         mv build/html /tmp
         git checkout gh-pages
+        echo "Removing old documentation"
         git rm -r *
         git commit -m "Remove old documentation"
-        cp -r /tmp/html .
+        cp -v -r /tmp/html .
         touch .nojekyll
+        echo "Adding new documentation"
         git add -A
         git commit -m "Add new documentation"
         git push origin gh-pages
