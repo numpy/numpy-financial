@@ -55,5 +55,5 @@ jobs:
         echo "Adding new documentation"
         git add -A
         git commit -m "Add new documentation"
-        #echo "Pushing new documentation to origin"
-        #git push -v origin gh-pages
+        echo "Pushing new documentation to origin"
+        git push -v origin gh-pages
