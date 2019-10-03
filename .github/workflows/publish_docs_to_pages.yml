@@ -37,9 +37,9 @@ jobs:
         #git remote rm origin
         #git remote add origin "https://${GITHUB_TOKEN}@github.com/numpy/numpy-financial.git"
         git config user.email "github.workflow@nomail"
-        git config user.name "Github Workflow: publish_docs_to_pages.yml"
+        git config user.name "none"
         echo "Fetching gh-pages"
-        git fetch "https://${GITHUB_TOKEN}:x-oauth-basic@github.com/numpy/numpy-financial.git" gh-pages
+        git fetch "https://${GITHUB_TOKEN}@github.com/numpy/numpy-financial.git" gh-pages
         echo "Checking out gh-pages branch"
         git checkout gh-pages
         echo "Removing old documentation"
@@ -58,4 +58,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "Pushing new documentation to origin"
-        git push -v "https://${GITHUB_TOKEN}:x-oauth-basic@github.com/numpy/numpy-financial.git" gh-pages
+        git push -v "https://${GITHUB_TOKEN}@github.com/numpy/numpy-financial.git" gh-pages
