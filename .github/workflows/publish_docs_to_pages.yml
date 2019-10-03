@@ -33,6 +33,8 @@ jobs:
         git clean -xdf .
         git rm -r '*'
         echo "Committing empty repository"
+        git config user.email "ci+notreal@numpy.org"
+        git config user.name "Github Workflow: publish_docs_to_pages.yml"
         git commit -m "Remove old documentation"
         echo "Copying /tmp/html here"
         cp -v -r /tmp/html .
