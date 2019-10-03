@@ -49,6 +49,6 @@ jobs:
     - name: Push new gh-pages to the github repository
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run:
+      run: |
         echo "Pushing new documentation to origin"
         git push -v origin gh-pages
