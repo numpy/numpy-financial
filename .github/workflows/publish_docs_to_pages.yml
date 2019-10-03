@@ -26,8 +26,6 @@ jobs:
       run: |
         cd doc
         make html
-    - name: Update gh-pages
-      run: |
         mv build/html /tmp
         git checkout gh-pages
         git rm -r *
