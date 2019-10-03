@@ -30,7 +30,7 @@ jobs:
         git checkout gh-pages
         echo "Removing old documentation"
         git clean -xdf .
-        git rm -r *
+        git rm -r '*'
         echo "Committing empty repository"
         git commit -m "Remove old documentation"
         echo "Copying /tmp/html here"
