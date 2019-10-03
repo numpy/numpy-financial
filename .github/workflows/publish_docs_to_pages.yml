@@ -29,6 +29,7 @@ jobs:
         mv build/html /tmp
         git checkout gh-pages
         echo "Removing old documentation"
+        git clean -xdf .
         git rm -r *
         echo "Committing empty repository"
         git commit -m "Remove old documentation"
