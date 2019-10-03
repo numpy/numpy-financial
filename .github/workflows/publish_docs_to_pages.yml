@@ -26,3 +26,14 @@ jobs:
       run: |
         cd doc
         make html
+    - name: Update gh-pages
+      run: |
+        mv build/html /tmp
+        git checkout gh-pages
+        git rm -r *
+        git commit -m "Remove old documentation"
+        cp -r /tmp/html .
+        touch .nojekyll
+        git add -A
+        git commit -m "Add new documentation"
+        git push origin gh-pages
