@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-python@v1
       with:
         python-version: '3.7'
@@ -36,10 +34,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        git remote rm origin
-        git remote add origin 'git@github.com:numpy/numpy-financial.git'
-        #git config user.email "github.workflow@nomail"
-        #git config user.name "Github Workflow: publish_docs_to_pages.yml"
+        git clone git@github.com:numpy/numpy-financial.git
+        cd numpy-financial
         git remote -v
         git config -l
         echo "Fetching gh-pages"
