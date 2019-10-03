@@ -27,6 +27,7 @@ jobs:
         cd doc
         make html
         mv build/html /tmp
+        cd ..
         git checkout gh-pages
         echo "Removing old documentation"
         git clean -xdf .
