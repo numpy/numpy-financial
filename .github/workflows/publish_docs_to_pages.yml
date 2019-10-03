@@ -40,7 +40,9 @@ jobs:
         git config user.name "Github Workflow: publish_docs_to_pages.yml"
         git remote -v
         git config -l
+        echo "Fetching gh-pages"
         git fetch origin gh-pages
+        echo "Checking out gh-pages branch"
         git checkout gh-pages
         echo "Removing old documentation"
         git clean -xdf .
