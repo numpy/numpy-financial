@@ -51,4 +51,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run:
         echo "Pushing new documentation to origin"
-        git push origin gh-pages
+        git push -v origin gh-pages
