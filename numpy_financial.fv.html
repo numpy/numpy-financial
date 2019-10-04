@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>fv &#8212; numpy-financial  documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ipmt" href="numpy_financial.ipmt.html" />
+    <link rel="prev" title="numpy-financial 0.0.1.dev3" href="index.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="numpy_financial.ipmt.html" title="ipmt"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="numpy-financial 0.0.1.dev3"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="fv">
+<h1>fv<a class="headerlink" href="#fv" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="function">
+<dt id="numpy_financial.fv">
+<code class="sig-prename descclassname">numpy_financial.</code><code class="sig-name descname">fv</code><span class="sig-paren">(</span><em class="sig-param">rate</em>, <em class="sig-param">nper</em>, <em class="sig-param">pmt</em>, <em class="sig-param">pv</em>, <em class="sig-param">when='end'</em><span class="sig-paren">)</span><a class="headerlink" href="#numpy_financial.fv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the future value.</p>
+<dl class="simple">
+<dt>Given:</dt><dd><ul class="simple">
+<li><p>a present value, <cite>pv</cite></p></li>
+<li><p>an interest <cite>rate</cite> compounded once per period, of which
+there are</p></li>
+<li><p><cite>nper</cite> total</p></li>
+<li><p>a (fixed) payment, <cite>pmt</cite>, paid either</p></li>
+<li><p>at the beginning (<cite>when</cite> = {‘begin’, 1}) or the end
+(<cite>when</cite> = {‘end’, 0}) of each period</p></li>
+</ul>
+</dd>
+<dt>Return:</dt><dd><p>the value at the end of the <cite>nper</cite> periods</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rate</strong><span class="classifier">scalar or array_like of shape(M, )</span></dt><dd><p>Rate of interest as decimal (not per cent) per period</p>
+</dd>
+<dt><strong>nper</strong><span class="classifier">scalar or array_like of shape(M, )</span></dt><dd><p>Number of compounding periods</p>
+</dd>
+<dt><strong>pmt</strong><span class="classifier">scalar or array_like of shape(M, )</span></dt><dd><p>Payment</p>
+</dd>
+<dt><strong>pv</strong><span class="classifier">scalar or array_like of shape(M, )</span></dt><dd><p>Present value</p>
+</dd>
+<dt><strong>when</strong><span class="classifier">{{‘begin’, 1}, {‘end’, 0}}, {string, int}, optional</span></dt><dd><p>When payments are due (‘begin’ (1) or ‘end’ (0)).
+Defaults to {‘end’, 0}.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">ndarray</span></dt><dd><p>Future values.  If all input is scalar, returns a scalar float.  If
+any input is array_like, returns future values for each input element.
+If multiple inputs are array_like, they all must have the same shape.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The future value is computed by solving the equation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fv</span> <span class="o">+</span>
+<span class="n">pv</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">rate</span><span class="p">)</span><span class="o">**</span><span class="n">nper</span> <span class="o">+</span>
+<span class="n">pmt</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">rate</span><span class="o">*</span><span class="n">when</span><span class="p">)</span><span class="o">/</span><span class="n">rate</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">rate</span><span class="p">)</span><span class="o">**</span><span class="n">nper</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>or, when <code class="docutils literal notranslate"><span class="pre">rate</span> <span class="pre">==</span> <span class="pre">0</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fv</span> <span class="o">+</span> <span class="n">pv</span> <span class="o">+</span> <span class="n">pmt</span> <span class="o">*</span> <span class="n">nper</span> <span class="o">==</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="rf657ed371af2-wrw"><span class="brackets">WRW</span></dt>
+<dd><p>Wheeler, D. A., E. Rathke, and R. Weir (Eds.) (2009, May).
+Open Document Format for Office Applications (OpenDocument)v1.2,
+Part 2: Recalculated Formula (OpenFormula) Format - Annotated Version,
+Pre-Draft 12. Organization for the Advancement of Structured Information
+Standards (OASIS). Billerica, MA, USA. [ODT Document].
+Available:
+<a class="reference external" href="http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula">http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula</a>
+OpenDocument-formula-20090508.odt</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>What is the future value after 10 years of saving $100 now, with
+an additional monthly savings of $100.  Assume the interest rate is
+5% (annually) compounded monthly?</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">fv</span><span class="p">(</span><span class="mf">0.05</span><span class="o">/</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">15692.928894335748</span>
+</pre></div>
+</div>
+<p>By convention, the negative sign represents cash flow out (i.e. money not
+available today).  Thus, saving $100 a month at 5% annual interest leads
+to $15,692.93 available to spend in 10 years.</p>
+<p>If any input is array_like, returns an array of equal shape.  Let’s
+compare different interest rates from the example above.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.07</span><span class="p">))</span><span class="o">/</span><span class="mi">12</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">fv</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">array([ 15692.92889434,  16569.87435405,  17509.44688102]) # may vary</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">numpy-financial 0.0.1.dev3</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="numpy_financial.ipmt.html"
+                        title="next chapter">ipmt</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="numpy_financial.ipmt.html" title="ipmt"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="numpy-financial 0.0.1.dev3"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, numpy-financial developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
