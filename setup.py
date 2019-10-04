@@ -12,5 +12,5 @@ if __name__ == "__main__":
     from numpy.distutils.core import setup
 
     setup(name='numpy-financial',
-          version='0.0.1.dev0',
+          version='0.0.1.dev1',
           configuration=configuration)
