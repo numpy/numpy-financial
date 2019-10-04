@@ -5,6 +5,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
+import numpy_financial
 
 # -- Path setup --------------------------------------------------------------
 
@@ -43,7 +44,7 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-version = '0.0.1.dev0'
+version = numpy_financial.__version__
 
 # -- Options for HTML output -------------------------------------------------
 
