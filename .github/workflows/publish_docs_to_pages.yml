@@ -30,16 +30,32 @@ jobs:
         make html
         mv build/html /tmp
         cd ..
-    - name: Prepare local gh-pages branch
+    - name: Deploy to gh-pages branch
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_ACTION_PAGES_DEPLOY_KEY: ${{ secrets.GH_ACTION_PAGES_DEPLOY_KEY }}
       run: |
-        #git remote rm origin
-        #git remote add origin "https://${GITHUB_TOKEN}@github.com/numpy/numpy-financial.git"
-        git config user.email "github.workflow@nomail"
-        git config user.name "none"
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # Set up SSH key
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        mkdir -p ~/.ssh/
+        echo "$GH_ACTION_PAGES_DEPLOY_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # Reconfigure the git remote to use SSH
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        git remote rm origin
+        git remote add origin git@github.com:numpy/numpy-financial.git
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # Configure the git user
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        git config user.name "${GITHUB_ACTOR}"
+        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # Go to work on gh-pages...
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         echo "Fetching gh-pages"
-        git fetch "https://${GITHUB_TOKEN}@github.com/numpy/numpy-financial.git" gh-pages
+        git fetch origin gh-pages
         echo "Checking out gh-pages branch"
         git checkout gh-pages
         echo "Removing old documentation"
@@ -53,9 +69,5 @@ jobs:
         echo "Adding new documentation"
         git add -A
         git commit -m "Add new documentation"
-    - name: Push the new documentation to gh-pages
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
         echo "Pushing new documentation to origin"
-        git push -v "https://${GITHUB_TOKEN}@github.com/numpy/numpy-financial.git" gh-pages
+        git push -v origin gh-pages
