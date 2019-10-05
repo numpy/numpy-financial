@@ -65,3 +65,7 @@ html_static_path = ['_static']
 
 html_logo = "_static/numpy_financial_logo.png"
 html_favicon = "_static/numpy_financial_favicon.png"
+
+html_sidebars = {
+	'**': ['globaltoc.html', 'searchbox.html'],
+}
