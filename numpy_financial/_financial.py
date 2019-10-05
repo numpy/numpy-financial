@@ -111,11 +111,14 @@ def fv(rate, nper, pmt, pv, when='end'):
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import numpy_financial as nf
+
     What is the future value after 10 years of saving $100 now, with
     an additional monthly savings of $100.  Assume the interest rate is
     5% (annually) compounded monthly?
 
-    >>> np.fv(0.05/12, 10*12, -100, -100)
+    >>> nf.fv(0.05/12, 10*12, -100, -100)
     15692.928894335748
 
     By convention, the negative sign represents cash flow out (i.e. money not
@@ -126,7 +129,7 @@ def fv(rate, nper, pmt, pv, when='end'):
     compare different interest rates from the example above.
 
     >>> a = np.array((0.05, 0.06, 0.07))/12
-    >>> np.fv(a, 10*12, -100, -100)
+    >>> nf.fv(a, 10*12, -100, -100)
     array([ 15692.92889434,  16569.87435405,  17509.44688102]) # may vary
 
     """
@@ -215,10 +218,12 @@ def pmt(rate, nper, pv, fv=0, when='end'):
 
     Examples
     --------
+    >>> import numpy_financial as nf
+
     What is the monthly payment needed to pay off a $200,000 loan in 15
     years at an annual interest rate of 7.5%?
 
-    >>> np.pmt(0.075/12, 12*15, 200000)
+    >>> nf.pmt(0.075/12, 12*15, 200000)
     -1854.0247200054619
 
     In order to pay-off (i.e., have a future-value of 0) the $200,000 obtained
@@ -272,10 +277,13 @@ def nper(rate, pmt, pv, fv=0, when='end'):
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import numpy_financial as nf
+
     If you only had $150/month to pay towards the loan, how long would it take
     to pay-off a loan of $8,000 at 7% annual interest?
 
-    >>> print(np.round(np.nper(0.07/12, -150, 8000), 5))
+    >>> print(np.round(nf.nper(0.07/12, -150, 8000), 5))
     64.07335
 
     So, over 64 months would be required to pay off the loan.
@@ -283,7 +291,7 @@ def nper(rate, pmt, pv, fv=0, when='end'):
     The same analysis could be done with several different interest rates
     and/or payments and/or total amounts to produce an entire table.
 
-    >>> np.nper(*(np.ogrid[0.07/12: 0.08/12: 0.01/12,
+    >>> nf.nper(*(np.ogrid[0.07/12: 0.08/12: 0.01/12,
     ...                    -150   : -99     : 50    ,
     ...                    8000   : 9001    : 1000]))
     array([[[ 64.07334877,  74.06368256],
@@ -356,6 +364,9 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import numpy_financial as nf
+
     What is the amortization schedule for a 1 year loan of $2500 at
     8.24% interest per year compounded monthly?
 
@@ -365,13 +376,13 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
     financial equations start the period count at 1!
 
     >>> per = np.arange(1*12) + 1
-    >>> ipmt = np.ipmt(0.0824/12, per, 1*12, principal)
-    >>> ppmt = np.ppmt(0.0824/12, per, 1*12, principal)
+    >>> ipmt = nf.ipmt(0.0824/12, per, 1*12, principal)
+    >>> ppmt = nf.ppmt(0.0824/12, per, 1*12, principal)
 
     Each element of the sum of the 'ipmt' and 'ppmt' arrays should equal
     'pmt'.
 
-    >>> pmt = np.pmt(0.0824/12, 1*12, principal)
+    >>> pmt = nf.pmt(0.0824/12, 1*12, principal)
     >>> np.allclose(ipmt + ppmt, pmt)
     True
 
@@ -521,12 +532,15 @@ def pv(rate, nper, pmt, fv=0, when='end'):
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import numpy_financial as nf
+
     What is the present value (e.g., the initial investment)
     of an investment that needs to total $15692.93
     after 10 years of saving $100 every month?  Assume the
     interest rate is 5% (annually) compounded monthly.
 
-    >>> np.pv(0.05/12, 10*12, -100, 15692.93)
+    >>> nf.pv(0.05/12, 10*12, -100, 15692.93)
     -100.00067131625819
 
     By convention, the negative sign represents cash flow out
@@ -538,7 +552,7 @@ def pv(rate, nper, pmt, fv=0, when='end'):
     Let's compare different interest rates in the example above:
 
     >>> a = np.array((0.05, 0.04, 0.03))/12
-    >>> np.pv(a, 10*12, -100, 15692.93)
+    >>> nf.pv(a, 10*12, -100, 15692.93)
     array([ -100.00067132,  -649.26771385, -1273.78633713]) # may vary
 
     So, to end up with the same $15692.93 under the same $100 per month
@@ -704,15 +718,17 @@ def irr(values):
 
     Examples
     --------
-    >>> round(np.irr([-100, 39, 59, 55, 20]), 5)
+    >>> import numpy_financial as nf
+
+    >>> round(nf.irr([-100, 39, 59, 55, 20]), 5)
     0.28095
-    >>> round(np.irr([-100, 0, 0, 74]), 5)
+    >>> round(nf.irr([-100, 0, 0, 74]), 5)
     -0.0955
-    >>> round(np.irr([-100, 100, 0, -7]), 5)
+    >>> round(nf.irr([-100, 100, 0, -7]), 5)
     -0.0833
-    >>> round(np.irr([-100, 100, 0, 7]), 5)
+    >>> round(nf.irr([-100, 100, 0, 7]), 5)
     0.06206
-    >>> round(np.irr([-5, 10.5, 1, -8, 1]), 5)
+    >>> round(nf.irr([-5, 10.5, 1, -8, 1]), 5)
     0.0886
 
     """
@@ -783,13 +799,16 @@ def npv(rate, values):
 
     Examples
     --------
+    >>> import numpy as np
+    >>> import numpy_financial as nf
+
     Consider a potential project with an initial investment of $40 000 and
     projected cashflows of $5 000, $8 000, $12 000 and $30 000 at the end of
     each period discounted at a rate of 8% per period. To find the project's
     net present value:
 
     >>> rate, cashflows = 0.08, [-40_000, 5_000, 8_000, 12_000, 30_000]
-    >>> np.npv(rate, cashflows).round(5)
+    >>> nf.npv(rate, cashflows).round(5)
     3065.22267
 
     It may be preferable to split the projected cashflow into an initial
@@ -799,7 +818,7 @@ def npv(rate, values):
 
     >>> initial_cashflow = cashflows[0]
     >>> cashflows[0] = 0
-    >>> np.round(np.npv(rate, cashflows) + initial_cashflow, 5)
+    >>> np.round(nf.npv(rate, cashflows) + initial_cashflow, 5)
     3065.22267
 
     """
