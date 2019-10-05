@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>npv &#8212; numpy-financial  documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pmt" href="numpy_financial.pmt.html" />
+    <link rel="prev" title="nper" href="numpy_financial.nper.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+<div class="header" role="banner">
+  <div class="logo">
+    <a href="index.html">
+      <img class="logo" src="_static/numpy_financial_logo.png" alt="Logo"/>
+    </a>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="numpy_financial.pmt.html" title="pmt"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="numpy_financial.nper.html" title="nper"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="npv">
+<h1>npv<a class="headerlink" href="#npv" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="function">
+<dt id="numpy_financial.npv">
+<code class="sig-prename descclassname">numpy_financial.</code><code class="sig-name descname">npv</code><span class="sig-paren">(</span><em class="sig-param">rate</em>, <em class="sig-param">values</em><span class="sig-paren">)</span><a class="headerlink" href="#numpy_financial.npv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the NPV (Net Present Value) of a cash flow series.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rate</strong><span class="classifier">scalar</span></dt><dd><p>The discount rate.</p>
+</dd>
+<dt><strong>values</strong><span class="classifier">array_like, shape(M, )</span></dt><dd><p>The values of the time series of cash flows.  The (fixed) time
+interval between cash flow “events” must be the same as that for
+which <cite>rate</cite> is given (i.e., if <cite>rate</cite> is per year, then precisely
+a year is understood to elapse between each cash flow event).  By
+convention, investments or “deposits” are negative, income or
+“withdrawals” are positive; <cite>values</cite> must begin with the initial
+investment, thus <cite>values[0]</cite> will typically be negative.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">float</span></dt><dd><p>The NPV of the input cash flow series <cite>values</cite> at the discount
+<cite>rate</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">npv</span></code> considers a series of cashflows starting in the present (t = 0).
+NPV can also be defined with a series of future cashflows, paid at the
+end, rather than the start, of each period. If future cashflows are used,
+the first cashflow <cite>values[0]</cite> must be zeroed and added to the net
+present value of the future cashflows. This is demonstrated in the
+examples.</p>
+</div>
+<p class="rubric">Notes</p>
+<p>Returns the result of: <a class="reference internal" href="#r5342c7aedf34-g" id="id1">[G]</a></p>
+<div class="math">
+<p><img src="_images/math/efda392f70a68f8628c59861bca01d798260c1b1.png" alt="\sum_{t=0}^{M-1}{\frac{values_t}{(1+rate)^{t}}}"/></p>
+</div><p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="r5342c7aedf34-g"><span class="brackets"><a class="fn-backref" href="#id1">G</a></span></dt>
+<dd><p>L. J. Gitman, “Principles of Managerial Finance, Brief,” 3rd ed.,
+Addison-Wesley, 2003, pg. 346.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Consider a potential project with an initial investment of $40 000 and
+projected cashflows of $5 000, $8 000, $12 000 and $30 000 at the end of
+each period discounted at a rate of 8% per period. To find the project’s
+net present value:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rate</span><span class="p">,</span> <span class="n">cashflows</span> <span class="o">=</span> <span class="mf">0.08</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">40_000</span><span class="p">,</span> <span class="mi">5_000</span><span class="p">,</span> <span class="mi">8_000</span><span class="p">,</span> <span class="mi">12_000</span><span class="p">,</span> <span class="mi">30_000</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">npv</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">cashflows</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">3065.22267</span>
+</pre></div>
+</div>
+<p>It may be preferable to split the projected cashflow into an initial
+investment and expected future cashflows. In this case, the value of
+the initial cashflow is zero and the initial investment is later added
+to the future cashflows net present value:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">initial_cashflow</span> <span class="o">=</span> <span class="n">cashflows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cashflows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">npv</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">cashflows</span><span class="p">)</span> <span class="o">+</span> <span class="n">initial_cashflow</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">3065.22267</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="numpy_financial.nper.html"
+                        title="previous chapter">nper</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="numpy_financial.pmt.html"
+                        title="next chapter">pmt</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="numpy_financial.pmt.html" title="pmt"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="numpy_financial.nper.html" title="nper"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, numpy-financial developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
