@@ -36,8 +36,8 @@ Functions
    numpy_financial.rate
 
 
-Indices and tables
-==================
+Index and Search
+================
 
 * :ref:`genindex`
 * :ref:`search`
