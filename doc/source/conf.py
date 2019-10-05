@@ -52,9 +52,9 @@ version = numpy_financial.__version__
 # a list of builtin themes.
 #
 #html_theme = 'alabaster'
-html_theme = 'pyramid'
+#html_theme = 'pyramid'
 #html_theme = 'nature'
-#html_theme = 'bizstyle'
+html_theme = 'bizstyle'
 #html_theme = 'classic'
 html_copy_source = False
 
