@@ -64,3 +64,4 @@ html_copy_source = False
 html_static_path = ['_static']
 
 html_logo = "_static/numpy_financial_logo.png"
+html_favicon = "_static/numpy_financial_favicon.png"
