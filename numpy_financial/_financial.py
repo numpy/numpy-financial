@@ -26,12 +26,12 @@ array_function_dispatch = functools.partial(
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr']
 
-_when_to_num = {'end':0, 'begin':1,
-                'e':0, 'b':1,
-                0:0, 1:1,
-                'beginning':1,
-                'start':1,
-                'finish':0}
+_when_to_num = {'end': 0, 'begin': 1,
+                'e': 0, 'b': 1,
+                0: 0, 1: 1,
+                'beginning': 1,
+                'start': 1,
+                'finish': 0}
 
 def _convert_when(when):
     #Test to see if when has already been converted to ndarray
