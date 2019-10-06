@@ -13,9 +13,9 @@ import numpy_financial
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-#import os
-#import sys
-#sys.path.insert(0, os.path.abspath('.'))
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
@@ -51,11 +51,11 @@ version = numpy_financial.__version__
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'alabaster'
-#html_theme = 'pyramid'
-#html_theme = 'nature'
+# html_theme = 'alabaster'
+# html_theme = 'pyramid'
+# html_theme = 'nature'
 html_theme = 'bizstyle'
-#html_theme = 'classic'
+# html_theme = 'classic'
 html_copy_source = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
