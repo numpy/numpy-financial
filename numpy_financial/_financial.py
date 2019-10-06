@@ -34,8 +34,8 @@ _when_to_num = {'end': 0, 'begin': 1,
                 'finish': 0}
 
 def _convert_when(when):
-    #Test to see if when has already been converted to ndarray
-    #This will happen if one function calls another, for example ppmt
+    # Test to see if when has already been converted to ndarray
+    # This will happen if one function calls another, for example ppmt
     if isinstance(when, np.ndarray):
         return when
     try:
