@@ -33,6 +33,7 @@ _when_to_num = {'end': 0, 'begin': 1,
                 'start': 1,
                 'finish': 0}
 
+
 def _convert_when(when):
     # Test to see if when has already been converted to ndarray
     # This will happen if one function calls another, for example ppmt
@@ -571,12 +572,18 @@ def pv(rate, nper, pmt, fv=0, when='end'):
 #  p*((r + 1)^n - 1)*(r*w + 1)/r^2 + n*p*(r + 1)^(n - 1)*(r*w + 1)/r +
 #  p*((r + 1)^n - 1)*w/r)
 
+
 def _g_div_gp(r, n, p, x, y, w):
+    # Evaluate g(r_n)/g'(r_n), where g =
+    # fv + pv*(1+rate)**nper + pmt*(1+rate*when)/rate * ((1+rate)**nper - 1)
     t1 = (r+1)**n
     t2 = (r+1)**(n-1)
-    return ((y + t1*x + p*(t1 - 1)*(r*w + 1)/r) /
-                (n*t2*x - p*(t1 - 1)*(r*w + 1)/(r**2) + n*p*t2*(r*w + 1)/r +
-                 p*(t1 - 1)*w/r))
+    g = y + t1*x + p*(t1 - 1) * (r*w + 1) / r
+    gp = (n*t2*x
+          - p*(t1 - 1) * (r*w + 1) / (r**2)
+          + n*p*t2 * (r*w + 1) / r
+          + p*(t1 - 1) * w/r)
+    return g / gp
 
 
 def _rate_dispatcher(nper, pmt, pv, fv, when=None, guess=None, tol=None,
