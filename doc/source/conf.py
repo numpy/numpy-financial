@@ -32,8 +32,8 @@ author = 'numpy-financial developers'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-	'numpydoc',
-	'sphinx.ext.imgmath',
+    'numpydoc',
+    'sphinx.ext.imgmath',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -67,5 +67,5 @@ html_logo = "_static/numpy_financial_logo.png"
 html_favicon = "_static/numpy_financial_favicon.png"
 
 html_sidebars = {
-	'**': ['globaltoc.html', 'searchbox.html'],
+    '**': ['globaltoc.html', 'searchbox.html'],
 }
