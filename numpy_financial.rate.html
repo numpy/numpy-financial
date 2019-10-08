@@ -1,0 +1,150 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>rate &#8212; numpy-financial  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="shortcut icon" href="_static/numpy_financial_favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="pv" href="numpy_financial.pv.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="numpy_financial.pv.html" title="pv"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/numpy_financial_logo.png" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.fv.html">fv</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.ipmt.html">ipmt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.irr.html">irr</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.mirr.html">mirr</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.nper.html">nper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.npv.html">npv</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.pmt.html">pmt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.ppmt.html">ppmt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.pv.html">pv</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">rate</a><ul class="simple">
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="rate">
+<h1>rate<a class="headerlink" href="#rate" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="function">
+<dt id="numpy_financial.rate">
+<code class="sig-prename descclassname">numpy_financial.</code><code class="sig-name descname">rate</code><span class="sig-paren">(</span><em class="sig-param">nper</em>, <em class="sig-param">pmt</em>, <em class="sig-param">pv</em>, <em class="sig-param">fv</em>, <em class="sig-param">when='end'</em>, <em class="sig-param">guess=None</em>, <em class="sig-param">tol=None</em>, <em class="sig-param">maxiter=100</em><span class="sig-paren">)</span><a class="headerlink" href="#numpy_financial.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the rate of interest per period.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>nper</strong><span class="classifier">array_like</span></dt><dd><p>Number of compounding periods</p>
+</dd>
+<dt><strong>pmt</strong><span class="classifier">array_like</span></dt><dd><p>Payment</p>
+</dd>
+<dt><strong>pv</strong><span class="classifier">array_like</span></dt><dd><p>Present value</p>
+</dd>
+<dt><strong>fv</strong><span class="classifier">array_like</span></dt><dd><p>Future value</p>
+</dd>
+<dt><strong>when</strong><span class="classifier">{{‘begin’, 1}, {‘end’, 0}}, {string, int}, optional</span></dt><dd><p>When payments are due (‘begin’ (1) or ‘end’ (0))</p>
+</dd>
+<dt><strong>guess</strong><span class="classifier">Number, optional</span></dt><dd><p>Starting guess for solving the rate of interest, default 0.1</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">Number, optional</span></dt><dd><p>Required tolerance for the solution, default 1e-6</p>
+</dd>
+<dt><strong>maxiter</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum iterations in finding the solution</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The rate of interest is computed by iteratively solving the
+(non-linear) equation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fv</span> <span class="o">+</span> <span class="n">pv</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">rate</span><span class="p">)</span><span class="o">**</span><span class="n">nper</span> <span class="o">+</span> <span class="n">pmt</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">rate</span><span class="o">*</span><span class="n">when</span><span class="p">)</span><span class="o">/</span><span class="n">rate</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">rate</span><span class="p">)</span><span class="o">**</span><span class="n">nper</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>for <code class="docutils literal notranslate"><span class="pre">rate</span></code>.</p>
+<p class="rubric">References</p>
+<p>Wheeler, D. A., E. Rathke, and R. Weir (Eds.) (2009, May). Open Document
+Format for Office Applications (OpenDocument)v1.2, Part 2: Recalculated
+Formula (OpenFormula) Format - Annotated Version, Pre-Draft 12.
+Organization for the Advancement of Structured Information Standards
+(OASIS). Billerica, MA, USA. [ODT Document]. Available:
+<a class="reference external" href="http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula">http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula</a>
+OpenDocument-formula-20090508.odt</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="numpy_financial.pv.html" title="pv"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, numpy-financial developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
