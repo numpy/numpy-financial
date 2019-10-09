@@ -62,7 +62,7 @@ html_copy_source = False
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-html_logo = "_static/numpy_financial_logo.png"
+html_logo = "_static/numpy_financial_logo.svg"
 html_favicon = "_static/numpy_financial_favicon.png"
 
 html_sidebars = {
