@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from os import path
+
 
 def get_version():
     """
@@ -19,16 +21,40 @@ def get_version():
                 return s[1][1:-1]
 
 
-def configuration(parent_package='', top_path=None):
-    from numpy.distutils.misc_util import Configuration
-    config = Configuration(None, parent_package, top_path)
-    config.add_subpackage('numpy_financial')
-    return config
+CLASSIFIERS = """\
+Development Status :: 5 - Production/Stable
+Intended Audience :: Science/Research
+Intended Audience :: Developers
+License :: OSI Approved
+Programming Language :: Python
+Programming Language :: Python :: 3
+Programming Language :: Python :: 3.5
+Programming Language :: Python :: 3.6
+Programming Language :: Python :: 3.7
+Programming Language :: Python :: 3 :: Only
+Topic :: Software Development
+Topic :: Scientific/Engineering
+"""
 
+here = path.abspath(path.dirname(__file__))
+with open(path.join(here, 'README.md'), 'r') as f:
+    long_description = f.read()
 
 if __name__ == "__main__":
-    from numpy.distutils.core import setup
+    from setuptools import setup, find_packages
 
     setup(name='numpy-financial',
           version=get_version(),
-          configuration=configuration)
+          description='Simple financial functions',
+          long_description=long_description,
+          long_description_content_type='text/markdown',
+          packages=find_packages(exclude=['doc']),
+          author='Travis E. Oliphant et al.',
+          license='BSD',
+          python_requires='>=3.5',
+          classifiers=CLASSIFIERS.splitlines(),
+          project_urls={
+              "Bug Tracker": "https://github.com/numpy/numpy-financial/issues",
+              "Documentation": "https://numpy.org/numpy-financial/",
+              "Source Code": "https://github.com/numpy/numpy-financial",
+          })

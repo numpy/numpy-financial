@@ -4,7 +4,6 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
 import numpy_financial
 
 # -- Path setup --------------------------------------------------------------
