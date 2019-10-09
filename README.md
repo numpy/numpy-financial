@@ -11,8 +11,8 @@ NumPy financial functions.
 
 The source code for this package is available at https://github.com/numpy/numpy-financial.
 
-The importable name of the package is `numpy_financial`.  When giving the
-name a shortened alias, `npf` is recommended.  For example,
+The importable name of the package is `numpy_financial`.  The recommended
+alias is `npf`.  For example,
 
 ```
 >>> import numpy_financial as npf
