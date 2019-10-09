@@ -1,0 +1,206 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ipmt &#8212; numpy-financial  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="shortcut icon" href="_static/numpy_financial_favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="irr" href="numpy_financial.irr.html" />
+    <link rel="prev" title="fv" href="numpy_financial.fv.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="numpy_financial.irr.html" title="irr"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="numpy_financial.fv.html" title="fv"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/numpy_financial_logo.svg" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.fv.html">fv</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ipmt</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.irr.html">irr</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.mirr.html">mirr</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.nper.html">nper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.npv.html">npv</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.pmt.html">pmt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.ppmt.html">ppmt</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.pv.html">pv</a></li>
+<li class="toctree-l1"><a class="reference internal" href="numpy_financial.rate.html">rate</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ipmt">
+<h1>ipmt<a class="headerlink" href="#ipmt" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="function">
+<dt id="numpy_financial.ipmt">
+<code class="sig-prename descclassname">numpy_financial.</code><code class="sig-name descname">ipmt</code><span class="sig-paren">(</span><em class="sig-param">rate</em>, <em class="sig-param">per</em>, <em class="sig-param">nper</em>, <em class="sig-param">pv</em>, <em class="sig-param">fv=0</em>, <em class="sig-param">when='end'</em><span class="sig-paren">)</span><a class="headerlink" href="#numpy_financial.ipmt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the interest portion of a payment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rate</strong><span class="classifier">scalar or array_like of shape(M, )</span></dt><dd><p>Rate of interest as decimal (not per cent) per period</p>
+</dd>
+<dt><strong>per</strong><span class="classifier">scalar or array_like of shape(M, )</span></dt><dd><p>Interest paid against the loan changes during the life or the loan.
+The <cite>per</cite> is the payment period to calculate the interest amount.</p>
+</dd>
+<dt><strong>nper</strong><span class="classifier">scalar or array_like of shape(M, )</span></dt><dd><p>Number of compounding periods</p>
+</dd>
+<dt><strong>pv</strong><span class="classifier">scalar or array_like of shape(M, )</span></dt><dd><p>Present value</p>
+</dd>
+<dt><strong>fv</strong><span class="classifier">scalar or array_like of shape(M, ), optional</span></dt><dd><p>Future value</p>
+</dd>
+<dt><strong>when</strong><span class="classifier">{{‘begin’, 1}, {‘end’, 0}}, {string, int}, optional</span></dt><dd><p>When payments are due (‘begin’ (1) or ‘end’ (0)).
+Defaults to {‘end’, 0}.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>out</strong><span class="classifier">ndarray</span></dt><dd><p>Interest portion of payment.  If all input is scalar, returns a scalar
+float.  If any input is array_like, returns interest payment for each
+input element. If multiple inputs are array_like, they all must have
+the same shape.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="numpy_financial.ppmt.html#numpy_financial.ppmt" title="numpy_financial.ppmt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ppmt</span></code></a>, <a class="reference internal" href="numpy_financial.pmt.html#numpy_financial.pmt" title="numpy_financial.pmt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pmt</span></code></a>, <a class="reference internal" href="numpy_financial.pv.html#numpy_financial.pv" title="numpy_financial.pv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pv</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>The total payment is made up of payment against principal plus interest.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pmt</span> <span class="pre">=</span> <span class="pre">ppmt</span> <span class="pre">+</span> <span class="pre">ipmt</span></code></p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy_financial</span> <span class="k">as</span> <span class="nn">npf</span>
+</pre></div>
+</div>
+<p>What is the amortization schedule for a 1 year loan of $2500 at
+8.24% interest per year compounded monthly?</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">principal</span> <span class="o">=</span> <span class="mf">2500.00</span>
+</pre></div>
+</div>
+<p>The ‘per’ variable represents the periods of the loan.  Remember that
+financial equations start the period count at 1!</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">per</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="o">*</span><span class="mi">12</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ipmt</span> <span class="o">=</span> <span class="n">npf</span><span class="o">.</span><span class="n">ipmt</span><span class="p">(</span><span class="mf">0.0824</span><span class="o">/</span><span class="mi">12</span><span class="p">,</span> <span class="n">per</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">12</span><span class="p">,</span> <span class="n">principal</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ppmt</span> <span class="o">=</span> <span class="n">npf</span><span class="o">.</span><span class="n">ppmt</span><span class="p">(</span><span class="mf">0.0824</span><span class="o">/</span><span class="mi">12</span><span class="p">,</span> <span class="n">per</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">12</span><span class="p">,</span> <span class="n">principal</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each element of the sum of the ‘ipmt’ and ‘ppmt’ arrays should equal
+‘pmt’.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pmt</span> <span class="o">=</span> <span class="n">npf</span><span class="o">.</span><span class="n">pmt</span><span class="p">(</span><span class="mf">0.0824</span><span class="o">/</span><span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">12</span><span class="p">,</span> <span class="n">principal</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">ipmt</span> <span class="o">+</span> <span class="n">ppmt</span><span class="p">,</span> <span class="n">pmt</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0:2d}</span><span class="s1"> </span><span class="si">{1:8.2f}</span><span class="s1"> </span><span class="si">{2:8.2f}</span><span class="s1"> </span><span class="si">{3:8.2f}</span><span class="s1">&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">payment</span> <span class="ow">in</span> <span class="n">per</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">index</span> <span class="o">=</span> <span class="n">payment</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="gp">... </span>    <span class="n">principal</span> <span class="o">=</span> <span class="n">principal</span> <span class="o">+</span> <span class="n">ppmt</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">payment</span><span class="p">,</span> <span class="n">ppmt</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">ipmt</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">principal</span><span class="p">))</span>
+<span class="go"> 1  -200.58   -17.17  2299.42</span>
+<span class="go"> 2  -201.96   -15.79  2097.46</span>
+<span class="go"> 3  -203.35   -14.40  1894.11</span>
+<span class="go"> 4  -204.74   -13.01  1689.37</span>
+<span class="go"> 5  -206.15   -11.60  1483.22</span>
+<span class="go"> 6  -207.56   -10.18  1275.66</span>
+<span class="go"> 7  -208.99    -8.76  1066.67</span>
+<span class="go"> 8  -210.42    -7.32   856.25</span>
+<span class="go"> 9  -211.87    -5.88   644.38</span>
+<span class="go">10  -213.32    -4.42   431.05</span>
+<span class="go">11  -214.79    -2.96   216.26</span>
+<span class="go">12  -216.26    -1.49    -0.00</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interestpd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ipmt</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">interestpd</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">-112.98</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="numpy_financial.irr.html" title="irr"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="numpy_financial.fv.html" title="fv"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, numpy-financial developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
