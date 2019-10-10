@@ -1,0 +1,128 @@
+
+body {
+    margin: auto;
+    padding-right: 1em;
+    padding-left: 1em;
+    max-width: 48em;
+    color: black;
+    font-family: sans-serif;
+    font-size: 100%;
+    line-height: 125%;
+    color: #333; 
+}
+pre {
+    border: 1px dotted gray;
+    background-color: #E8E8E8;
+    color: #101010;
+    padding: 0.5em;
+}
+code {
+    font-family: monospace;
+    font-size: 130%;
+    font-weight: bold;
+}
+h1 a, h2 a, h3 a, h4 a, h5 a { 
+    text-decoration: none;
+    color: #336699; 
+}
+h1, h2, h3, h4, h5 {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: #336699; }
+
+h1 {
+        font-size: 130%;
+}
+
+h2 {
+        font-size: 110%;
+        font-style: italic;
+}
+
+h3 {
+        font-size: 95%;
+        font-style: italic;
+}
+
+h4 {
+        font-size: 90%;
+        font-style: italic;
+}
+
+h5 {
+        font-size: 90%;
+        font-style: italic;
+}
+
+h1.title {
+        font-size: 200%;
+        font-weight: bold;
+        padding-top: 0.2em;
+        padding-bottom: 0.2em;
+        text-align: left;
+        border: none;
+}
+
+dt code {
+        font-weight: bold;
+}
+dd p {
+        margin-top: 0;
+}
+
+ul {
+  padding: 0px 0px 0px 16px;
+}
+
+ul li {
+    margin: 0px;
+    padding: 0px;
+}
+
+.link2 {
+    border: solid 1px #000;
+    border-radius: 3x;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    background-color: #FFF;
+    color: #336699;
+    text-decoration: none;
+    text-align: center;
+    width: 180px;
+    margin: 0px 0px 2px 0px;
+    padding: 2px 0 0px 0px;
+    display: inline-block;
+}
+.link2:hover { background-color: #FFF060; }
+
+aside h3 {
+    margin: 10px 0px 2px 0px;
+}
+
+/*
+ *  Specific id styles.
+ */
+
+#logo {
+    border: solid 1px #000;
+    padding: 5px 5px 3px 5px;
+    background-color: #FFFFEA;
+}
+
+#asidelinks {
+    width: 25%;
+    float: right;
+    color: black;
+    background-color: #E8F4FF;
+    padding: 0px 10px 10px 10px;
+    border: solid 1px #000;
+    margin: 0em 0.75em 0em 0.5em;
+    box-shadow: 5px 8px 9px #b0b0b0;
+}
+
+#footer {
+    padding-top: 1em;
+    font-size: 70%;
+    color: gray;
+    text-align: center;
+}
