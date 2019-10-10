@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<svg width="435.3" height="44" xmlns="http://www.w3.org/2000/svg">
+<style> .mytext { font-size: 43px; font-family: monospace; } </style>
+<rect x="0" y="0" width="44" height="44" fill="#336699" stroke-width="0" />
+<rect x="2.0" y="33.25" width="7" height="8.75" fill="#FFF060" stroke-width="0" />
+<rect x="10.25" y="25.4375" width="7" height="16.5625" fill="#FFF060" stroke-width="0" />
+<rect x="18.5" y="17.625" width="7" height="24.375" fill="#FFF060" stroke-width="0" />
+<rect x="26.75" y="9.8125" width="7" height="32.1875" fill="#FFF060" stroke-width="0" />
+<rect x="35.0" y="2.0" width="7" height="40.0" fill="#FFF060" stroke-width="0" />
+<text x="53" y="34.4" fill="#336699" class="mytext">NumPy-Financial</text>
+</svg>
