@@ -62,6 +62,8 @@ jobs:
         git clean -xdf .
         cd dev
         git rm -r '*'
+        touch .nojekyll
+        git add .nojekyll
         echo "Committing emptied dev directory"
         git commit -m "Remove old dev documentation"
         echo "Copying /tmp/html here"
