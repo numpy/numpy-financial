@@ -1,12 +1,8 @@
-.. numpy-financial documentation master file, created by
-   sphinx-quickstart on Tue Oct  1 23:15:00 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 numpy-financial |version|
 =========================
 
-The `numpy-financial` package contains a collection of elementary financial
+The `numpy-financial` package is a collection of elementary financial
 functions.
 
 The `financial functions in NumPy <https://numpy.org/doc/1.17/reference/routines.financial.html>`_
@@ -32,21 +28,40 @@ Functions
 
 .. toctree::
    :maxdepth: 4
-   :caption: Contents:
 
 .. autosummary::
-   :toctree: .
 
-   numpy_financial.fv
-   numpy_financial.ipmt
-   numpy_financial.irr
-   numpy_financial.mirr
-   numpy_financial.nper
-   numpy_financial.npv
-   numpy_financial.pmt
-   numpy_financial.ppmt
-   numpy_financial.pv
-   numpy_financial.rate
+   fv
+   ipmt
+   irr
+   mirr
+   nper
+   npv
+   pmt
+   ppmt
+   pv
+   rate
+
+.. The following "hidden" toctree is a hack to prevent Sphinx warnings
+   about "document isn't included in any toctree"
+
+.. toctree::
+   :hidden:
+
+   fv
+   ipmt
+   irr
+   mirr
+   nper
+   npv
+   pmt
+   ppmt
+   pv
+   rate
+
+
+.. include:: release-notes.rst
+
 
 
 Index and Search
