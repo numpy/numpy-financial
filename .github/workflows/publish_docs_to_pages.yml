@@ -58,16 +58,16 @@ jobs:
         git fetch origin gh-pages
         echo "Checking out gh-pages branch"
         git checkout gh-pages
-        echo "Removing old documentation"
+        echo "Removing old dev documentation"
         git clean -xdf .
+        cd dev
         git rm -r '*'
-        echo "Committing empty repository"
-        git commit -m "Remove old documentation"
+        echo "Committing emptied dev directory"
+        git commit -m "Remove old dev documentation"
         echo "Copying /tmp/html here"
         cp -v -r /tmp/html/* .
-        touch .nojekyll
-        echo "Adding new documentation"
-        git add -A
-        git commit -m "Add new documentation"
+        echo "Adding new dev documentation"
+        git add -A .
+        git commit -m "Add new dev documentation"
         echo "Pushing new documentation to origin"
         git push -v origin gh-pages
