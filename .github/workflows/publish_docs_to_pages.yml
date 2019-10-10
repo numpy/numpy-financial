@@ -69,7 +69,6 @@ jobs:
         cd dev
         echo "Copying /tmp/html here"
         cp -v -r /tmp/html/* .
-        touch .nojekyll
         echo "Adding new dev documentation"
         git add -A .
         git commit -m "Add new dev documentation"
