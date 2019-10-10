@@ -50,11 +50,7 @@ version = numpy_financial.__version__
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = 'alabaster'
-# html_theme = 'pyramid'
-# html_theme = 'nature'
 html_theme = 'bizstyle'
-# html_theme = 'classic'
 html_copy_source = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -66,5 +62,5 @@ html_logo = "_static/numpy_financial_logov.svg"
 html_favicon = "_static/numpy_financial_favicon.png"
 
 html_sidebars = {
-    '**': ['globaltoc.html', 'searchbox.html'],
+    '**': ['localtoc.html', 'searchbox.html'],
 }

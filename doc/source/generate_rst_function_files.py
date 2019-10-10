@@ -11,7 +11,7 @@ import numpy_financial as nf
 def generate_rst_function_files():
     names = [name for name in dir(nf) if not name.startswith('_')]
     for name in names:
-        with open('numpy_financial.' + name + '.rst', 'w') as f:
+        with open(name + '.rst', 'w') as f:
             f.write('''{name}
 {underline}
 
