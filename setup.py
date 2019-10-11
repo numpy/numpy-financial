@@ -23,9 +23,9 @@ def get_version():
 
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
-Intended Audience :: Science/Research
 Intended Audience :: Developers
-License :: OSI Approved
+Intended Audience :: Financial and Insurance Industry
+License :: OSI Approved :: BSD License
 Programming Language :: Python
 Programming Language :: Python :: 3
 Programming Language :: Python :: 3.5
@@ -33,7 +33,9 @@ Programming Language :: Python :: 3.6
 Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3 :: Only
 Topic :: Software Development
-Topic :: Scientific/Engineering
+Topic :: Office/Business :: Financial :: Accounting
+Topic :: Office/Business :: Financial :: Investment
+Topic :: Office/Business :: Financial :: Spreadsheet
 """
 
 here = path.abspath(path.dirname(__file__))
