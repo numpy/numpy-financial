@@ -13,14 +13,8 @@ otherwise stated.
 from __future__ import division, absolute_import, print_function
 
 from decimal import Decimal
-import functools
 
 import numpy as np
-from numpy.core import overrides
-
-
-array_function_dispatch = functools.partial(
-    overrides.array_function_dispatch, module='numpy')
 
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
@@ -45,11 +39,6 @@ def _convert_when(when):
         return [_when_to_num[x] for x in when]
 
 
-def _fv_dispatcher(rate, nper, pmt, pv, when=None):
-    return (rate, nper, pmt, pv)
-
-
-@array_function_dispatch(_fv_dispatcher)
 def fv(rate, nper, pmt, pv, when='end'):
     """
     Compute the future value.
@@ -142,11 +131,6 @@ def fv(rate, nper, pmt, pv, when='end'):
     return -(pv*temp + pmt*fact)
 
 
-def _pmt_dispatcher(rate, nper, pv, fv=None, when=None):
-    return (rate, nper, pv, fv)
-
-
-@array_function_dispatch(_pmt_dispatcher)
 def pmt(rate, nper, pv, fv=0, when='end'):
     """
     Compute the payment against loan principal plus interest.
@@ -242,11 +226,6 @@ def pmt(rate, nper, pv, fv=0, when='end'):
     return -(fv + pv*temp) / fact
 
 
-def _nper_dispatcher(rate, pmt, pv, fv=None, when=None):
-    return (rate, pmt, pv, fv)
-
-
-@array_function_dispatch(_nper_dispatcher)
 def nper(rate, pmt, pv, fv=0, when='end'):
     """
     Compute the number of periodic payments.
@@ -319,11 +298,6 @@ def nper(rate, pmt, pv, fv=0, when='end'):
         return np.where(rate == 0, A, B)
 
 
-def _ipmt_dispatcher(rate, per, nper, pv, fv=None, when=None):
-    return (rate, per, nper, pv, fv)
-
-
-@array_function_dispatch(_ipmt_dispatcher)
 def ipmt(rate, per, nper, pv, fv=0, when='end'):
     """
     Compute the interest portion of a payment.
@@ -433,11 +407,6 @@ def _rbl(rate, per, pmt, pv, when):
     return fv(rate, (per - 1), pmt, pv, when)
 
 
-def _ppmt_dispatcher(rate, per, nper, pv, fv=None, when=None):
-    return (rate, per, nper, pv, fv)
-
-
-@array_function_dispatch(_ppmt_dispatcher)
 def ppmt(rate, per, nper, pv, fv=0, when='end'):
     """
     Compute the payment against loan principal.
@@ -467,11 +436,6 @@ def ppmt(rate, per, nper, pv, fv=0, when='end'):
     return total - ipmt(rate, per, nper, pv, fv, when)
 
 
-def _pv_dispatcher(rate, nper, pmt, fv=None, when=None):
-    return (rate, nper, nper, pv, fv)
-
-
-@array_function_dispatch(_pv_dispatcher)
 def pv(rate, nper, pmt, fv=0, when='end'):
     """
     Compute the present value.
@@ -586,11 +550,6 @@ def _g_div_gp(r, n, p, x, y, w):
     return g / gp
 
 
-def _rate_dispatcher(nper, pmt, pv, fv, when=None, guess=None, tol=None,
-                     maxiter=None):
-    return (nper, pmt, pv, fv)
-
-
 # Use Newton's iteration until the change is less than 1e-6
 #  for all values or a maximum of 100 iterations is reached.
 #  Newton's rule is
@@ -598,7 +557,6 @@ def _rate_dispatcher(nper, pmt, pv, fv, when=None, guess=None, tol=None,
 #     where
 #  g(r) is the formula
 #  g'(r) is the derivative with respect to r.
-@array_function_dispatch(_rate_dispatcher)
 def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
     """
     Compute the rate of interest per period.
@@ -671,11 +629,6 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
         return rn
 
 
-def _irr_dispatcher(values):
-    return (values,)
-
-
-@array_function_dispatch(_irr_dispatcher)
 def irr(values):
     """
     Return the Internal Rate of Return (IRR).
@@ -756,11 +709,6 @@ def irr(values):
     return rate
 
 
-def _npv_dispatcher(rate, values):
-    return (values,)
-
-
-@array_function_dispatch(_npv_dispatcher)
 def npv(rate, values):
     """
     Returns the NPV (Net Present Value) of a cash flow series.
@@ -833,11 +781,6 @@ def npv(rate, values):
     return (values / (1+rate)**np.arange(0, len(values))).sum(axis=0)
 
 
-def _mirr_dispatcher(values, finance_rate, reinvest_rate):
-    return (values,)
-
-
-@array_function_dispatch(_mirr_dispatcher)
 def mirr(values, finance_rate, reinvest_rate):
     """
     Modified internal rate of return.
