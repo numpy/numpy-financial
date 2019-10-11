@@ -53,8 +53,8 @@ if __name__ == "__main__":
           packages=find_packages(exclude=['doc']),
           author='Travis E. Oliphant et al.',
           license='BSD 3-Clause',
-          maintainer = 'Numpy Financial Developers',
-          maintainer_email = 'numpy-discussion@python.org',
+          maintainer='Numpy Financial Developers',
+          maintainer_email='numpy-discussion@python.org',
           install_requires=['numpy>=1.17'],
           python_requires='>=3.5',
           classifiers=CLASSIFIERS.splitlines(),
@@ -64,4 +64,5 @@ if __name__ == "__main__":
               "Bug Tracker": "https://github.com/numpy/numpy-financial/issues",
               "Documentation": "https://numpy.org/numpy-financial/",
               "Source Code": "https://github.com/numpy/numpy-financial",
+              "Funding": "https://numpy.org/#support-numpy",
           })
