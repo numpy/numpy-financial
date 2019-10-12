@@ -51,7 +51,7 @@ if __name__ == "__main__":
           packages=find_packages(exclude=['doc']),
           author='Travis E. Oliphant et al.',
           license='BSD',
-          install_requires=['numpy>=1.17'],
+          install_requires=['numpy>=1.15'],
           python_requires='>=3.5',
           classifiers=CLASSIFIERS.splitlines(),
           project_urls={
