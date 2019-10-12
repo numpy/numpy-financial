@@ -64,5 +64,4 @@ if __name__ == "__main__":
               "Bug Tracker": "https://github.com/numpy/numpy-financial/issues",
               "Documentation": "https://numpy.org/numpy-financial/",
               "Source Code": "https://github.com/numpy/numpy-financial",
-              "Funding": "https://numpy.org/#support-numpy",
           })
