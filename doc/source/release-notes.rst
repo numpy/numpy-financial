@@ -1,5 +1,10 @@
 Release Notes
 -------------
+0.2.0
+~~~~~
+* Removed the use of `numpy.core.overrides.array_function_dispatch` to create
+  wrappers of the financial functions.
+* Support NumPy versions back to 1.15.
 
 0.1.0
 ~~~~~
