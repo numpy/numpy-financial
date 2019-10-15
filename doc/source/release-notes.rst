@@ -1,5 +1,9 @@
 Release Notes
 -------------
+0.3.0
+~~~~~
+* **0.3.0 is not released yet.**
+
 0.2.0
 ~~~~~
 * Removed the use of `numpy.core.overrides.array_function_dispatch` to create
