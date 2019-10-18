@@ -1,5 +1,9 @@
 Release Notes
 -------------
+1.1.0
+~~~~~
+* **1.1.0 is not released yet.**
+
 1.0.0
 ~~~~~
 * The transition of the source code from NumPy to this package is complete.
