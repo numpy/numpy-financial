@@ -1,8 +1,8 @@
 Release Notes
 -------------
-0.3.0
+1.0.0
 ~~~~~
-* **0.3.0 is not released yet.**
+* The transition of the source code from NumPy to this package is complete.
 
 0.2.0
 ~~~~~
