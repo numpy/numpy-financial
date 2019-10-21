@@ -437,3 +437,4 @@ class TestFinancial(object):
         assert_equal(npf.nan, float(rate))
         rate = npf.rate(number_type(12.0), number_type('400.0'), number_type('10000.0'), number_type(0), 'end')
         assert_equal(npf.nan, float(rate))
+
