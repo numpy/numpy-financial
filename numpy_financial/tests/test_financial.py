@@ -421,20 +421,20 @@ class TestFinancial(object):
         Both payments and present value are positive, it is impossible to pay off the existing balance
         by making further withdrawals, regardless of the rate.
         """
-        rate = npf.rate(number_type(12.0), number_type('400.0'), number_type('10000.0'), number_type(0))
+        rate = npf.rate(number_type(12.0), number_type('400'), number_type('10000.0'), number_type(0))
         assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type('400.0'), number_type('10000.0'), number_type(5000))
+        rate = npf.rate(number_type(12.0), number_type('400'), number_type('10000.0'), number_type(5000))
         assert_equal(numpy.nan, float(rate))
 
         # begin
-        rate = npf.rate(number_type(12.0), number_type('400.0'), number_type('10000.0'), number_type(20000), 1)
+        rate = npf.rate(number_type(12.0), number_type('400'), number_type('10000.0'), number_type(20000), 1)
         assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type('400.0'), number_type('10000.0'), number_type(20000), 'begin')
+        rate = npf.rate(number_type(12.0), number_type('400'), number_type('10000.0'), number_type(20000), 'begin')
         assert_equal(numpy.nan, float(rate))
 
         # end
-        rate = npf.rate(number_type(12.0), number_type('400.0'), number_type('10000.0'), number_type(0))
+        rate = npf.rate(number_type(12.0), number_type('400'), number_type('10000.0'), number_type(0))
         assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type('400.0'), number_type('10000.0'), number_type(0), 'end')
+        rate = npf.rate(number_type(12.0), number_type('400'), number_type('10000.0'), number_type(0), 'end')
         assert_equal(numpy.nan, float(rate))
 
