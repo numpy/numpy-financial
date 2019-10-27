@@ -281,21 +281,25 @@ def nper(rate, pmt, pv, fv=0, when='end'):
 
     """
     when = _convert_when(when)
-    (rate, pmt, pv, fv, when) = map(np.asarray, [rate, pmt, pv, fv, when])
+    rate, pmt, pv, fv, when = np.broadcast_arrays(rate, pmt, pv, fv, when)
+    nper_array = np.empty_like(rate, dtype=np.float64)
 
-    use_zero_rate = False
-    with np.errstate(divide="raise"):
-        try:
-            z = pmt*(1+rate*when)/rate
-        except FloatingPointError:
-            use_zero_rate = True
+    zero = rate == 0
+    nonzero = ~zero
 
-    if use_zero_rate:
-        return (-fv + pv) / pmt
-    else:
-        A = -(fv + pv)/(pmt+0)
-        B = np.log((-fv+z) / (pv+z))/np.log(1+rate)
-        return np.where(rate == 0, A, B)
+    with np.errstate(divide='ignore'):
+        # Infinite numbers of payments are okay, so ignore the
+        # potential divide by zero.
+        nper_array[zero] = -(fv[zero] + pv[zero]) / pmt[zero]
+
+    nonzero_rate = rate[nonzero]
+    z = pmt[nonzero] * (1 + nonzero_rate * when[nonzero]) / nonzero_rate
+    nper_array[nonzero] = (
+        np.log((-fv[nonzero] + z) / (pv[nonzero] + z))
+        / np.log(1 + nonzero_rate)
+    )
+
+    return nper_array
 
 
 def ipmt(rate, per, nper, pv, fv=0, when='end'):

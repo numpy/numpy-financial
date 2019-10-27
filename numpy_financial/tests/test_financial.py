@@ -141,14 +141,6 @@ class TestFinancial(object):
         result = npf.ipmt(Decimal('0.1') / Decimal('12'), 1, 24, 2000)
         assert_equal(result.flat[0], Decimal('-16.66666666666666666666666667'))
 
-    def test_nper(self):
-        assert_almost_equal(npf.nper(0.075, -2000, 0, 100000.),
-                            21.54, 2)
-
-    def test_nper2(self):
-        assert_almost_equal(npf.nper(0.0, -2000, 0, 100000.),
-                            50.0, 1)
-
     def test_npv(self):
         assert_almost_equal(
             npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
@@ -410,3 +402,27 @@ class TestFinancial(object):
                             [Decimal('-74.998201'), Decimal('-75.62318601'),
                              Decimal('-75.62318601'), Decimal('-76.88882405'),
                              Decimal('-76.88882405')], 4)
+
+
+class TestNper:
+    def test_basic_values(self):
+        assert_allclose(
+            npf.nper([0, 0.075], -2000, 0, 100000),
+            [50, 21.544944],  # Computed using Google Sheet's NPER
+            rtol=1e-5,
+        )
+
+    def test_gh_18(self):
+        with numpy.errstate(divide='raise'):
+            assert_allclose(
+                npf.nper(0.1, 0, -500, 1500),
+                11.52670461,  # Computed using Google Sheet's NPER
+            )
+
+    def test_infinite_payments(self):
+        with numpy.errstate(divide='raise'):
+            result = npf.nper(0, -0.0, 1000)
+        assert result == numpy.inf
+
+    def test_no_interest(self):
+        assert npf.nper(0, -100, 1000) == 10
