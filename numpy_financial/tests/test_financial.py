@@ -422,7 +422,7 @@ class TestNper:
     def test_infinite_payments(self):
         with numpy.errstate(divide='raise'):
             result = npf.nper(0, -0.0, 1000)
-        assert result == numpy.inf
+        assert_(result == numpy.inf)
 
     def test_no_interest(self):
-        assert npf.nper(0, -100, 1000) == 10
+        assert_(npf.nper(0, -100, 1000) == 10)
