@@ -7,6 +7,7 @@ import numpy
 from numpy.testing import (
     assert_, assert_almost_equal, assert_allclose, assert_equal, assert_raises
     )
+import pytest
 
 import numpy_financial as npf
 
@@ -133,14 +134,6 @@ class TestFinancial(object):
                               Decimal('10000000000')),
                      Decimal('-90238044.2322778884413969909'))
 
-    def test_ipmt(self):
-        assert_almost_equal(numpy.round(npf.ipmt(0.1 / 12, 1, 24, 2000), 2),
-                            -16.67)
-
-    def test_ipmt_decimal(self):
-        result = npf.ipmt(Decimal('0.1') / Decimal('12'), 1, 24, 2000)
-        assert_equal(result.flat[0], Decimal('-16.66666666666666666666666667'))
-
     def test_npv(self):
         assert_almost_equal(
             npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
@@ -230,15 +223,6 @@ class TestFinancial(object):
                      npf.ppmt(0.1 / 12, 1, 60, 55000, 0, 'end'))
         assert_equal(npf.ppmt(0.1 / 12, 1, 60, 55000, 0, 0),
                      npf.ppmt(0.1 / 12, 1, 60, 55000, 0, 'end'))
-
-        # begin
-        assert_equal(npf.ipmt(0.1 / 12, 1, 24, 2000, 0, 1),
-                     npf.ipmt(0.1 / 12, 1, 24, 2000, 0, 'begin'))
-        # end
-        assert_equal(npf.ipmt(0.1 / 12, 1, 24, 2000, 0),
-                     npf.ipmt(0.1 / 12, 1, 24, 2000, 0, 'end'))
-        assert_equal(npf.ipmt(0.1 / 12, 1, 24, 2000, 0, 0),
-                     npf.ipmt(0.1 / 12, 1, 24, 2000, 0, 'end'))
 
         # begin
         assert_equal(npf.nper(0.075, -2000, 0, 100000., 1),
@@ -364,44 +348,40 @@ class TestFinancial(object):
         assert_almost_equal(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
                             [21.5449442, 20.76156441], 4)
 
-        assert_almost_equal(npf.ipmt(0.1 / 12, list(range(5)), 24, 2000),
-                            [-17.29165168, -16.66666667, -16.03647345,
-                             -15.40102862, -14.76028842], 4)
-
         assert_almost_equal(npf.ppmt(0.1 / 12, list(range(5)), 24, 2000),
-                            [-74.998201, -75.62318601, -76.25337923,
+                            [numpy.nan, -75.62318601, -76.25337923,
                              -76.88882405, -77.52956425], 4)
 
         assert_almost_equal(npf.ppmt(0.1 / 12, list(range(5)), 24, 2000, 0,
                                      [0, 0, 1, 'end', 'begin']),
-                            [-74.998201, -75.62318601, -75.62318601,
+                            [numpy.nan, -75.62318601, -75.62318601,
                              -76.88882405, -76.88882405], 4)
 
     def test_broadcast_decimal(self):
         # Use almost equal because precision is tested in the explicit tests,
         # this test is to ensure broadcast with Decimal is not broken.
-        assert_almost_equal(npf.ipmt(Decimal('0.1') / Decimal('12'),
-                                     list(range(5)), Decimal('24'),
-                                     Decimal('2000')),
-                            [Decimal('-17.29165168'), Decimal('-16.66666667'),
-                             Decimal('-16.03647345'), Decimal('-15.40102862'),
-                             Decimal('-14.76028842')], 4)
-
         assert_almost_equal(npf.ppmt(Decimal('0.1') / Decimal('12'),
-                                     list(range(5)), Decimal('24'),
+                                     list(range(1, 5)), Decimal('24'),
                                      Decimal('2000')),
-                            [Decimal('-74.998201'), Decimal('-75.62318601'),
+                            [Decimal('-75.62318601'),
                              Decimal('-76.25337923'), Decimal('-76.88882405'),
                              Decimal('-77.52956425')], 4)
 
-        assert_almost_equal(npf.ppmt(Decimal('0.1') / Decimal('12'),
-                                     list(range(5)), Decimal('24'),
-                                     Decimal('2000'), Decimal('0'),
-                                     [Decimal('0'), Decimal('0'), Decimal('1'),
-                                      'end', 'begin']),
-                            [Decimal('-74.998201'), Decimal('-75.62318601'),
-                             Decimal('-75.62318601'), Decimal('-76.88882405'),
-                             Decimal('-76.88882405')], 4)
+        result = npf.ppmt(
+            Decimal('0.1') / Decimal('12'),
+            list(range(1, 5)),
+            Decimal('24'),
+            Decimal('2000'),
+            Decimal('0'),
+            [Decimal('0'), Decimal('1'), 'end', 'begin']
+        )
+        desired = [
+            Decimal('-75.62318601'),
+            Decimal('-75.62318601'),
+            Decimal('-76.88882405'),
+            Decimal('-76.88882405')
+        ]
+        assert_almost_equal(result, desired, decimal=4)
 
 
 class TestNper:
@@ -426,3 +406,72 @@ class TestNper:
 
     def test_no_interest(self):
         assert_(npf.nper(0, -100, 1000) == 10)
+
+
+class TestIpmt:
+    def test_float(self):
+        assert_allclose(
+            npf.ipmt(0.1 / 12, 1, 24, 2000),
+            -16.666667,  # Computed using Google Sheet's IPMT
+            rtol=1e-6,
+        )
+
+    def test_decimal(self):
+        result = npf.ipmt(Decimal('0.1') / Decimal('12'), 1, 24, 2000)
+        assert result == Decimal('-16.66666666666666666666666667')
+
+    @pytest.mark.parametrize('when', [1, 'begin'])
+    def test_when_is_begin(self, when):
+        assert npf.ipmt(0.1 / 12, 1, 24, 2000, 0, when) == 0
+
+    @pytest.mark.parametrize('when', [None, 0, 'end'])
+    def test_when_is_end(self, when):
+        if when is None:
+            result = npf.ipmt(0.1 / 12, 1, 24, 2000)
+        else:
+            result = npf.ipmt(0.1 / 12, 1, 24, 2000, 0, when)
+        assert_allclose(result, -16.666667, rtol=1e-6)
+
+    @pytest.mark.parametrize('per, desired', [
+        (0, numpy.nan),
+        (1, 0),
+        (2, -594.107158),
+        (3, -592.971592),
+    ])
+    def test_gh_17(self, per, desired):
+        # All desired results computed using Google Sheet's IPMT
+        rate = 0.001988079518355057
+        result = npf.ipmt(rate, per, 360, 300000, when="begin")
+        if numpy.isnan(desired):
+            assert numpy.isnan(result)
+        else:
+            assert_allclose(result, desired, rtol=1e-6)
+
+    def test_broadcasting(self):
+        desired = [
+            numpy.nan,
+            -16.66666667,
+            -16.03647345,
+            -15.40102862,
+            -14.76028842
+        ]
+        assert_allclose(
+            npf.ipmt(0.1 / 12, numpy.arange(5), 24, 2000),
+            desired,
+            rtol=1e-6,
+        )
+
+    def test_decimal_broadcasting(self):
+        desired = [
+            Decimal('-16.66666667'),
+            Decimal('-16.03647345'),
+            Decimal('-15.40102862'),
+            Decimal('-14.76028842')
+        ]
+        result = npf.ipmt(
+            Decimal('0.1') / Decimal('12'),
+            list(range(1, 5)),
+            Decimal('24'),
+            Decimal('2000')
+        )
+        assert_almost_equal(result, desired, decimal=4)
