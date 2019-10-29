@@ -307,7 +307,7 @@ def _value_like(arr, value):
     if isinstance(entry, Decimal):
         return Decimal(value)
     else:
-        return value
+        return np.array(value, dtype=arr.dtype).item(0)
 
 
 def ipmt(rate, per, nper, pv, fv=0, when='end'):
