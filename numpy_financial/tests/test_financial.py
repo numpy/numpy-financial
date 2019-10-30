@@ -55,14 +55,6 @@ class TestFinancial(object):
                             Decimal('0')),
                      Decimal('-127128.1709461939327295222005'))
 
-    def test_fv(self):
-        assert_equal(npf.fv(0.075, 20, -2000, 0, 0), 86609.362673042924)
-
-    def test_fv_decimal(self):
-        assert_equal(npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'),
-                            0, 0),
-                     Decimal('86609.36267304300040536731624'))
-
     def test_pmt(self):
         res = npf.pmt(0.08 / 12, 5 * 12, 15000)
         tgt = -304.145914
@@ -198,15 +190,6 @@ class TestFinancial(object):
                      npf.pv(0.07, 20, 12000, 0, 'end'))
 
         # begin
-        assert_equal(npf.fv(0.075, 20, -2000, 0, 1),
-                     npf.fv(0.075, 20, -2000, 0, 'begin'))
-        # end
-        assert_equal(npf.fv(0.075, 20, -2000, 0),
-                     npf.fv(0.075, 20, -2000, 0, 'end'))
-        assert_equal(npf.fv(0.075, 20, -2000, 0, 0),
-                     npf.fv(0.075, 20, -2000, 0, 'end'))
-
-        # begin
         assert_equal(npf.pmt(0.08 / 12, 5 * 12, 15000., 0, 1),
                      npf.pmt(0.08 / 12, 5 * 12, 15000., 0, 'begin'))
         # end
@@ -265,21 +248,6 @@ class TestFinancial(object):
         assert_equal(npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
                             Decimal('0'), Decimal('0')),
                      npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
-                            Decimal('0'), 'end'))
-
-        # begin
-        assert_equal(npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'),
-                            Decimal('0'), Decimal('1')),
-                     npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'),
-                            Decimal('0'), 'begin'))
-        # end
-        assert_equal(npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'),
-                            Decimal('0')),
-                     npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'),
-                            Decimal('0'), 'end'))
-        assert_equal(npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'),
-                            Decimal('0'), Decimal('0')),
-                     npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'),
                             Decimal('0'), 'end'))
 
         # begin
@@ -475,3 +443,80 @@ class TestIpmt:
             Decimal('2000')
         )
         assert_almost_equal(result, desired, decimal=4)
+
+
+class TestFv:
+    def test_float(self):
+        assert_allclose(
+            npf.fv(0.075, 20, -2000, 0, 0),
+            86609.362673042924,
+            rtol=1e-10,
+        )
+
+    def test_decimal(self):
+        assert_almost_equal(
+            npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'), 0, 0),
+            Decimal('86609.36267304300040536731624'),
+            decimal=10,
+        )
+
+    @pytest.mark.parametrize('when', [1, 'begin'])
+    def test_when_is_begin_float(self, when):
+        assert_allclose(
+            npf.fv(0.075, 20, -2000, 0, when),
+            93105.064874,  # Computed using Google Sheet's FV
+            rtol=1e-10,
+        )
+
+    @pytest.mark.parametrize('when', [Decimal('1'), 'begin'])
+    def test_when_is_begin_decimal(self, when):
+        result = npf.fv(
+            Decimal('0.075'),
+            Decimal('20'),
+            Decimal('-2000'),
+            Decimal('0'),
+            when,
+        )
+        assert_almost_equal(result, Decimal('93105.064874'), decimal=5)
+
+    @pytest.mark.parametrize('when', [None, 0, 'end'])
+    def test_when_is_end_float(self, when):
+        args = (0.075, 20, -2000, 0)
+        if when is None:
+            result = npf.fv(*args)
+        else:
+            result = npf.fv(*args, when)
+        assert_allclose(
+            result,
+            86609.362673,  # Computed using Google Sheet's FV
+            rtol=1e-10,
+        )
+
+    @pytest.mark.parametrize('when', [None, Decimal('0'), 'end'])
+    def test_when_is_end_decimal(self, when):
+        args = (
+            Decimal('0.075'),
+            Decimal('20'),
+            Decimal('-2000'),
+            Decimal('0'),
+        )
+        if when is None:
+            result = npf.fv(*args)
+        else:
+            result = npf.fv(*args, when)
+        assert_almost_equal(result, Decimal('86609.362673'), decimal=5)
+
+    def test_broadcast(self):
+        result = npf.fv([[0.1], [0.2]], 5, 100, 0, [0, 1])
+        # All values computed using Google Sheet's FV
+        desired = [[-610.510000, -671.561000],
+                   [-744.160000, -892.992000]]
+        assert_allclose(result, desired, rtol=1e-10)
+
+    def test_some_rates_zero(self):
+        # Check that the logical indexing is working correctly.
+        assert_allclose(
+            npf.fv([0, 0.1], 5, 100, 0),
+            [-500, -610.51],  # Computed using Google Sheet's FV
+            rtol=1e-10,
+        )
