@@ -302,6 +302,14 @@ def nper(rate, pmt, pv, fv=0, when='end'):
     return nper_array
 
 
+def _value_like(arr, value):
+    entry = arr.item(0)
+    if isinstance(entry, Decimal):
+        return Decimal(value)
+    else:
+        return np.array(value, dtype=arr.dtype).item(0)
+
+
 def ipmt(rate, per, nper, pv, fv=0, when='end'):
     """
     Compute the interest portion of a payment.
@@ -391,13 +399,22 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
     when = _convert_when(when)
     rate, per, nper, pv, fv, when = np.broadcast_arrays(rate, per, nper,
                                                         pv, fv, when)
+
     total_pmt = pmt(rate, nper, pv, fv, when)
-    ipmt = _rbl(rate, per, total_pmt, pv, when)*rate
-    try:
-        ipmt = np.where(when == 1, ipmt/(1 + rate), ipmt)
-        ipmt = np.where(np.logical_and(when == 1, per == 1), 0, ipmt)
-    except IndexError:
-        pass
+    ipmt = np.array(_rbl(rate, per, total_pmt, pv, when) * rate)
+
+    # Payments start at the first period, so payments before that
+    # don't make any sense.
+    ipmt[per < 1] = _value_like(ipmt, np.nan)
+    # If payments occur at the beginning of a period and this is the
+    # first period, then no interest has accrued.
+    per1_and_begin = (when == 1) & (per == 1)
+    ipmt[per1_and_begin] = _value_like(ipmt, 0)
+    # If paying at the beginning we need to discount by one period.
+    per_gt_1_and_begin = (when == 1) & (per > 1)
+    ipmt[per_gt_1_and_begin] = (
+        ipmt[per_gt_1_and_begin] / (1 + rate[per_gt_1_and_begin])
+    )
     return ipmt
 
 
