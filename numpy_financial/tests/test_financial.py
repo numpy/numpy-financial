@@ -480,7 +480,6 @@ class TestNper:
 
 
 class TestIpmt:
-
     def test_float(self):
         assert_allclose(
             npf.ipmt(0.1 / 12, 1, 24, 2000),
@@ -546,4 +545,5 @@ class TestIpmt:
             Decimal('24'),
             Decimal('2000')
         )
+        
         assert_almost_equal(result, desired, decimal=4)
