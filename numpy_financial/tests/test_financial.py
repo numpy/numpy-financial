@@ -437,7 +437,6 @@ class TestFinancial(object):
         assert_equal(numpy.nan, float(rate))
         rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(0), 'end')
         assert_equal(numpy.nan, float(rate))
-
         result = npf.ppmt(
             Decimal('0.1') / Decimal('12'),
             list(range(1, 5)),
@@ -545,5 +544,4 @@ class TestIpmt:
             Decimal('24'),
             Decimal('2000')
         )
-        
         assert_almost_equal(result, desired, decimal=4)
