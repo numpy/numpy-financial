@@ -547,4 +547,3 @@ class TestIpmt:
             Decimal('2000')
         )
         assert_almost_equal(result, desired, decimal=4)
-
