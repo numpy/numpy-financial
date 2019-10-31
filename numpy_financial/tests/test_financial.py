@@ -438,3 +438,113 @@ class TestFinancial(object):
         rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(0), 'end')
         assert_equal(numpy.nan, float(rate))
 
+        result = npf.ppmt(
+            Decimal('0.1') / Decimal('12'),
+            list(range(1, 5)),
+            Decimal('24'),
+            Decimal('2000'),
+            Decimal('0'),
+            [Decimal('0'), Decimal('1'), 'end', 'begin']
+        )
+        desired = [
+            Decimal('-75.62318601'),
+            Decimal('-75.62318601'),
+            Decimal('-76.88882405'),
+            Decimal('-76.88882405')
+        ]
+        assert_almost_equal(result, desired, decimal=4)
+
+
+class TestNper:
+    def test_basic_values(self):
+        assert_allclose(
+            npf.nper([0, 0.075], -2000, 0, 100000),
+            [50, 21.544944],  # Computed using Google Sheet's NPER
+            rtol=1e-5,
+        )
+
+    def test_gh_18(self):
+        with numpy.errstate(divide='raise'):
+            assert_allclose(
+                npf.nper(0.1, 0, -500, 1500),
+                11.52670461,  # Computed using Google Sheet's NPER
+            )
+
+    def test_infinite_payments(self):
+        with numpy.errstate(divide='raise'):
+            result = npf.nper(0, -0.0, 1000)
+        assert_(result == numpy.inf)
+
+    def test_no_interest(self):
+        assert_(npf.nper(0, -100, 1000) == 10)
+
+
+class TestIpmt:
+
+    def test_float(self):
+        assert_allclose(
+            npf.ipmt(0.1 / 12, 1, 24, 2000),
+            -16.666667,  # Computed using Google Sheet's IPMT
+            rtol=1e-6,
+        )
+
+    def test_decimal(self):
+        result = npf.ipmt(Decimal('0.1') / Decimal('12'), 1, 24, 2000)
+        assert result == Decimal('-16.66666666666666666666666667')
+
+    @pytest.mark.parametrize('when', [1, 'begin'])
+    def test_when_is_begin(self, when):
+        assert npf.ipmt(0.1 / 12, 1, 24, 2000, 0, when) == 0
+
+    @pytest.mark.parametrize('when', [None, 0, 'end'])
+    def test_when_is_end(self, when):
+        if when is None:
+            result = npf.ipmt(0.1 / 12, 1, 24, 2000)
+        else:
+            result = npf.ipmt(0.1 / 12, 1, 24, 2000, 0, when)
+        assert_allclose(result, -16.666667, rtol=1e-6)
+
+    @pytest.mark.parametrize('per, desired', [
+        (0, numpy.nan),
+        (1, 0),
+        (2, -594.107158),
+        (3, -592.971592),
+    ])
+    def test_gh_17(self, per, desired):
+        # All desired results computed using Google Sheet's IPMT
+        rate = 0.001988079518355057
+        result = npf.ipmt(rate, per, 360, 300000, when="begin")
+        if numpy.isnan(desired):
+            assert numpy.isnan(result)
+        else:
+            assert_allclose(result, desired, rtol=1e-6)
+
+    def test_broadcasting(self):
+        desired = [
+            numpy.nan,
+            -16.66666667,
+            -16.03647345,
+            -15.40102862,
+            -14.76028842
+        ]
+        assert_allclose(
+            npf.ipmt(0.1 / 12, numpy.arange(5), 24, 2000),
+            desired,
+            rtol=1e-6,
+        )
+
+    def test_decimal_broadcasting(self):
+        desired = [
+            Decimal('-16.66666667'),
+            Decimal('-16.03647345'),
+            Decimal('-15.40102862'),
+            Decimal('-14.76028842')
+        ]
+        result = npf.ipmt(
+            Decimal('0.1') / Decimal('12'),
+            list(range(1, 5)),
+            Decimal('24'),
+            Decimal('2000')
+        )
+        assert_almost_equal(result, desired, decimal=4)
+
