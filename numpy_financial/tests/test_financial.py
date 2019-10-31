@@ -403,40 +403,6 @@ class TestFinancial(object):
                              Decimal('-76.25337923'), Decimal('-76.88882405'),
                              Decimal('-77.52956425')], 4)
 
-        assert_almost_equal(npf.ppmt(Decimal('0.1') / Decimal('12'),
-                                     list(range(5)), Decimal('24'),
-                                     Decimal('2000'), Decimal('0'),
-                                     [Decimal('0'), Decimal('0'), Decimal('1'),
-                                      'end', 'begin']),
-                            [Decimal('-74.998201'), Decimal('-75.62318601'),
-                             Decimal('-75.62318601'), Decimal('-76.88882405'),
-                             Decimal('-76.88882405')], 4)
-
-    @pytest.mark.parametrize('number_type', [Decimal, float])
-    def test_rate_nan(self, number_type):
-        """
-        Test for checking inputs whose output is NaN
-        Rate will return NaN, if newton raphson method's change or diff was not able to become
-        less than default tolerance value i.e. 1e-6 in max iterations possible,
-        Both payments and present value are positive, it is impossible to pay off the existing balance
-        by making further withdrawals, regardless of the rate.
-        """
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(0))
-        assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(5000))
-        assert_equal(numpy.nan, float(rate))
-
-        # begin
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(20000), 1)
-        assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(20000), 'begin')
-        assert_equal(numpy.nan, float(rate))
-
-        # end
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(0))
-        assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(0), 'end')
-        assert_equal(numpy.nan, float(rate))
         result = npf.ppmt(
             Decimal('0.1') / Decimal('12'),
             list(range(1, 5)),
