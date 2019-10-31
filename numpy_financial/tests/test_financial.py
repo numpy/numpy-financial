@@ -482,10 +482,7 @@ class TestFv:
     @pytest.mark.parametrize('when', [None, 0, 'end'])
     def test_when_is_end_float(self, when):
         args = (0.075, 20, -2000, 0)
-        if when is None:
-            result = npf.fv(*args)
-        else:
-            result = npf.fv(*args, when)
+        result = npf.fv(*args) if when is None else npf.fv(*args, when)
         assert_allclose(
             result,
             86609.362673,  # Computed using Google Sheet's FV
@@ -500,10 +497,7 @@ class TestFv:
             Decimal('-2000'),
             Decimal('0'),
         )
-        if when is None:
-            result = npf.fv(*args)
-        else:
-            result = npf.fv(*args, when)
+        result = npf.fv(*args) if when is None else npf.fv(*args, when)
         assert_almost_equal(result, Decimal('86609.362673'), decimal=5)
 
     def test_broadcast(self):

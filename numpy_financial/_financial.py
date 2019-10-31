@@ -133,10 +133,9 @@ def fv(rate, nper, pmt, pv, when='end'):
     fv_array[zero] = -(pv[zero] + pmt[zero] * nper[zero])
 
     rate_nonzero = rate[nonzero]
-    nper_nonzero = nper[nonzero]
     temp = (1 + rate_nonzero)**nper[nonzero]
     fv_array[nonzero] = (
-        -pv[nonzero] * temp
+        - pv[nonzero] * temp
         - pmt[nonzero] * (1 + rate_nonzero * when[nonzero]) / rate_nonzero
         * (temp - 1)
     )
