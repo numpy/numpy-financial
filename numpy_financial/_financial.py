@@ -666,6 +666,35 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
         return rn
 
 
+def _roots(p):
+    """Modified version of NumPy's roots function.
+
+    NumPy's roots uses the companion matrix method, which divides by
+    p[0]. This can causes overflows/underflows. Instead form a
+    modified companion matrix that is scaled by 2^c * p[0], where the
+    exponent c is chosen to balance the magnitudes of the
+    coefficients. Since scaling the matrix just scales the
+    eigenvalues, we can remove the scaling at the end.
+
+    Scaling by a power of 2 is chosen to avoid rounding errors.
+
+    """
+    _, e = np.frexp(p)
+    # Balance the most extreme exponents e_max and e_min by solving
+    # the equation
+    #
+    # |c + e_max| = |c + e_min|.
+    #
+    # Round the exponent to an integer to avoid rounding errors.
+    c = int(-0.5 * (np.max(e) + np.min(e)))
+    p = np.ldexp(p, c)
+
+    A = np.diag(np.full(p.size - 2, p[0]), k=-1)
+    A[0,:] = -p[1:]
+    eigenvalues = np.linalg.eigvals(A)
+    return eigenvalues / p[0]
+
+
 def irr(values):
     """
     Return the Internal Rate of Return (IRR).
@@ -729,12 +758,17 @@ def irr(values):
     0.0886
 
     """
-    # `np.roots` call is why this function does not support Decimal type.
-    #
-    # Ultimately Decimal support needs to be added to np.roots, which has
-    # greater implications on the entire linear algebra module and how it does
-    # eigenvalue computations.
-    res = np.roots(values[::-1])
+    values = np.atleast_1d(values)
+    if values.ndim != 1:
+        raise ValueError("Cashflows must be a rank-1 array")
+
+    # Strip leading and trailing zeros. Since we only care about
+    # positive roots we can neglect roots at zero.
+    non_zero = np.nonzero(np.ravel(values))[0]
+    values = values[int(non_zero[0]):int(non_zero[-1])+1]
+
+    res = _roots(values[::-1])
+
     mask = (res.imag == 0) & (res.real > 0)
     if not mask.any():
         return np.nan

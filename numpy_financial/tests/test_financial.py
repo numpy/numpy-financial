@@ -13,13 +13,6 @@ import numpy_financial as npf
 
 
 class TestFinancial(object):
-    def test_npv_irr_congruence(self):
-        # IRR is defined as the rate required for the present value of a
-        # a series of cashflows to be zero i.e. NPV(IRR(x), x) = 0
-        cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
-        assert_allclose(npf.npv(npf.irr(cashflows), cashflows), 0,
-                        atol=1e-10, rtol=0)
-
     def test_rate(self):
         assert_almost_equal(npf.rate(10, 0, -3500, 10000), 0.1107, 4)
 
@@ -27,25 +20,6 @@ class TestFinancial(object):
         rate = npf.rate(Decimal('10'), Decimal('0'), Decimal('-3500'),
                         Decimal('10000'))
         assert_equal(Decimal('0.1106908537142689284704528100'), rate)
-
-    def test_irr(self):
-        v = [-150000, 15000, 25000, 35000, 45000, 60000]
-        assert_almost_equal(npf.irr(v), 0.0524, 2)
-        v = [-100, 0, 0, 74]
-        assert_almost_equal(npf.irr(v), -0.0955, 2)
-        v = [-100, 39, 59, 55, 20]
-        assert_almost_equal(npf.irr(v), 0.28095, 2)
-        v = [-100, 100, 0, -7]
-        assert_almost_equal(npf.irr(v), -0.0833, 2)
-        v = [-100, 100, 0, 7]
-        assert_almost_equal(npf.irr(v), 0.06206, 2)
-        v = [-5, 10.5, 1, -8, 1]
-        assert_almost_equal(npf.irr(v), 0.0886, 2)
-
-        # Test that if there is no solution then npf.irr returns nan
-        # Fixes gh-6744
-        v = [-1, -2, -3]
-        assert_equal(npf.irr(v), numpy.nan)
 
     def test_pv(self):
         assert_almost_equal(npf.pv(0.07, 20, 12000, 0), -127128.17, 2)
@@ -514,3 +488,81 @@ class TestFv:
             [-500, -610.51],  # Computed using Google Sheet's FV
             rtol=1e-10,
         )
+
+
+class TestIrr:
+    def test_npv_irr_congruence(self):
+        # IRR is defined as the rate required for the present value of
+        # a a series of cashflows to be zero, so we should have
+        #
+        # NPV(IRR(x), x) = 0.
+        cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
+        assert_allclose(
+            npf.npv(npf.irr(cashflows), cashflows),
+            0,
+            atol=1e-10,
+            rtol=0,
+        )
+
+    @pytest.mark.parametrize('v, desired', [
+        ([-150000, 15000, 25000, 35000, 45000, 60000], 0.0524),
+        ([-100, 0, 0, 74], -0.0955),
+        ([-100, 39, 59, 55, 20], 0.28095),
+        ([-100, 100, 0, -7], -0.0833),
+        ([-100, 100, 0, 7], 0.06206),
+        ([-5, 10.5, 1, -8, 1], 0.0886),
+    ])
+    def test_basic_values(self, v, desired):
+        assert_almost_equal(npf.irr(v), desired, decimal=2)
+
+    def test_trailing_zeros(self):
+        assert_almost_equal(
+            npf.irr([-5, 10.5, 1, -8, 1, 0, 0, 0]),
+            0.0886,
+            decimal=2,
+        )
+
+    def test_numpy_gh_6744(self):
+        # Test that if there is no solution then npf.irr returns nan.
+        v = [-1, -2, -3]
+        assert numpy.isnan(npf.irr(v))
+
+    def test_gh_15(self):
+        v = [
+            -3000.0,
+            2.3926932267015667e-07,
+            4.1672087103345505e-16,
+            5.3965110036378706e-25,
+            5.1962551071806174e-34,
+            3.7202955645436402e-43,
+            1.9804961711632469e-52,
+            7.8393517651814181e-62,
+            2.3072565113911438e-71,
+            5.0491839233308912e-81,
+            8.2159177668499263e-91,
+            9.9403244366963527e-101,
+            8.942410813633967e-111,
+            5.9816122646481191e-121,
+            2.9750309031844241e-131,
+            1.1002067043497954e-141,
+            3.0252876563518021e-152,
+            6.1854121948207909e-163,
+            9.4032980015353301e-174,
+            1.0629218520017728e-184,
+            8.9337141847171845e-196,
+            5.5830607698467935e-207,
+            2.5943122036622652e-218,
+            8.9635842466507006e-230,
+            2.3027710094332358e-241,
+            4.3987510596745562e-253,
+            6.2476630372575209e-265,
+            6.598046841695288e-277,
+            5.1811095266842017e-289,
+            3.0250999925830644e-301,
+            1.3133070599585015e-313,
+        ]
+        result = npf.irr(v)
+        assert numpy.isfinite(result)
+        # Very rough approximation taken from the issue.
+        desired = -0.9999999990596069
+        assert_allclose(result, desired, rtol=1e-9)
