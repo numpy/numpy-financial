@@ -124,11 +124,27 @@ def fv(rate, nper, pmt, pv, when='end'):
 
     """
     when = _convert_when(when)
-    (rate, nper, pmt, pv, when) = map(np.asarray, [rate, nper, pmt, pv, when])
-    temp = (1+rate)**nper
-    fact = np.where(rate == 0, nper,
-                    (1 + rate*when)*(temp - 1)/rate)
-    return -(pv*temp + pmt*fact)
+    rate, nper, pmt, pv, when = np.broadcast_arrays(rate, nper, pmt, pv, when)
+
+    fv_array = np.empty_like(rate)
+    zero = rate == 0
+    nonzero = ~zero
+
+    fv_array[zero] = -(pv[zero] + pmt[zero] * nper[zero])
+
+    rate_nonzero = rate[nonzero]
+    temp = (1 + rate_nonzero)**nper[nonzero]
+    fv_array[nonzero] = (
+        - pv[nonzero] * temp
+        - pmt[nonzero] * (1 + rate_nonzero * when[nonzero]) / rate_nonzero
+        * (temp - 1)
+    )
+
+    if np.ndim(fv_array) == 0:
+        # Follow the ufunc convention of returning scalars for scalar
+        # and 0d array inputs.
+        return fv_array.item(0)
+    return fv_array
 
 
 def pmt(rate, nper, pv, fv=0, when='end'):
