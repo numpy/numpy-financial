@@ -265,27 +265,6 @@ class TestFinancial(object):
                               Decimal('60'), Decimal('55000'), Decimal('0'),
                               'end'))
 
-        # begin
-        assert_equal(npf.ipmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('24'), Decimal('2000'),
-                              Decimal('0'), Decimal('1')).flat[0],
-                     npf.ipmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('24'), Decimal('2000'),
-                              Decimal('0'), 'begin').flat[0])
-        # end
-        assert_equal(npf.ipmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('24'), Decimal('2000'),
-                              Decimal('0')).flat[0],
-                     npf.ipmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('24'), Decimal('2000'),
-                              Decimal('0'), 'end').flat[0])
-        assert_equal(npf.ipmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('24'), Decimal('2000'),
-                              Decimal('0'), Decimal('0')).flat[0],
-                     npf.ipmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('24'), Decimal('2000'),
-                              Decimal('0'), 'end').flat[0])
-
     def test_broadcast(self):
         assert_almost_equal(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
                             [21.5449442, 20.76156441], 4)
@@ -374,6 +353,33 @@ class TestIpmt:
             result = npf.ipmt(0.1 / 12, 1, 24, 2000, 0, when)
         assert_allclose(result, -16.666667, rtol=1e-6)
 
+
+    @pytest.mark.parametrize('when', [Decimal('1'), 'begin'])
+    def test_when_is_begin_decimal(self, when):
+        result = npf.ipmt(
+            Decimal('0.1') / Decimal('12'),
+            Decimal('1'),
+            Decimal('24'),
+            Decimal('2000'),
+            Decimal('0'),
+            when,
+        )
+        assert result == 0
+
+    @pytest.mark.parametrize('when', [None, Decimal('0'), 'end'])
+    def test_when_is_end_decimal(self, when):
+        # Computed using Google Sheet's IPMT
+        desired = Decimal('-16.666667')
+        args = (
+            Decimal('0.1') / Decimal('12'),
+            Decimal('1'),
+            Decimal('24'),
+            Decimal('2000'),
+            Decimal('0')
+        )
+        result = npf.ipmt(*args) if when is None else npf.ipmt(*args, when)
+        assert_almost_equal(result, desired, decimal=5)
+
     @pytest.mark.parametrize('per, desired', [
         (0, numpy.nan),
         (1, 0),
@@ -417,6 +423,14 @@ class TestIpmt:
             Decimal('2000')
         )
         assert_almost_equal(result, desired, decimal=4)
+
+    def test_0d_inputs(self):
+        args = (0.1 / 12, 1, 24, 2000)
+        # Scalar inputs should return a scalar.
+        assert numpy.isscalar(npf.ipmt(*args))
+        args = (numpy.array(args[0]),) + args[1:]
+        # 0d array inputs should return a scalar.
+        assert numpy.isscalar(npf.ipmt(*args))
 
 
 class TestFv:
