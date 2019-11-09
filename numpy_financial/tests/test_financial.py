@@ -1,11 +1,11 @@
-
 from decimal import Decimal
+import math
 
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
 from numpy.testing import (
-    assert_, assert_almost_equal, assert_allclose, assert_equal, assert_raises
+    assert_, assert_almost_equal, assert_allclose, assert_equal
     )
 import pytest
 
@@ -70,35 +70,6 @@ class TestFinancial(object):
         assert_equal(res[0][1], tgt[0][1])
         assert_equal(res[1][0], tgt[1][0])
         assert_equal(res[1][1], tgt[1][1])
-
-    def test_ppmt(self):
-        assert_equal(numpy.round(npf.ppmt(0.1 / 12, 1, 60, 55000), 2), -710.25)
-
-    def test_ppmt_decimal(self):
-        assert_equal(npf.ppmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('60'), Decimal('55000')),
-                     Decimal('-710.2541257864217612489830917'))
-
-    # Two tests showing how Decimal is actually getting at a more exact result
-    # .23 / 12 does not come out nicely as a float but does as a decimal
-    def test_ppmt_special_rate(self):
-        assert_equal(numpy.round(npf.ppmt(0.23 / 12, 1, 60, 10000000000), 8),
-                     -90238044.232277036)
-
-    def test_ppmt_special_rate_decimal(self):
-        # When rounded out to 8 decimal places like the float based test,
-        # this should not equal the same value as the float, substituted
-        # for the decimal
-        def raise_error_because_not_equal():
-            assert_equal(
-                round(npf.ppmt(Decimal('0.23') / Decimal('12'), 1, 60,
-                               Decimal('10000000000')), 8),
-                Decimal('-90238044.232277036'))
-
-        assert_raises(AssertionError, raise_error_because_not_equal)
-        assert_equal(npf.ppmt(Decimal('0.23') / Decimal('12'), 1, 60,
-                              Decimal('10000000000')),
-                     Decimal('-90238044.2322778884413969909'))
 
     def test_npv(self):
         assert_almost_equal(
@@ -173,15 +144,6 @@ class TestFinancial(object):
                      npf.pmt(0.08 / 12, 5 * 12, 15000., 0, 'end'))
 
         # begin
-        assert_equal(npf.ppmt(0.1 / 12, 1, 60, 55000, 0, 1),
-                     npf.ppmt(0.1 / 12, 1, 60, 55000, 0, 'begin'))
-        # end
-        assert_equal(npf.ppmt(0.1 / 12, 1, 60, 55000, 0),
-                     npf.ppmt(0.1 / 12, 1, 60, 55000, 0, 'end'))
-        assert_equal(npf.ppmt(0.1 / 12, 1, 60, 55000, 0, 0),
-                     npf.ppmt(0.1 / 12, 1, 60, 55000, 0, 'end'))
-
-        # begin
         assert_equal(npf.nper(0.075, -2000, 0, 100000., 1),
                      npf.nper(0.075, -2000, 0, 100000., 'begin'))
         # end
@@ -224,85 +186,9 @@ class TestFinancial(object):
                      npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
                             Decimal('0'), 'end'))
 
-        # begin
-        assert_equal(npf.pmt(Decimal('0.08') / Decimal('12'),
-                             Decimal('5') * Decimal('12'), Decimal('15000.'),
-                             Decimal('0'), Decimal('1')),
-                     npf.pmt(Decimal('0.08') / Decimal('12'),
-                             Decimal('5') * Decimal('12'), Decimal('15000.'),
-                             Decimal('0'), 'begin'))
-        # end
-        assert_equal(npf.pmt(Decimal('0.08') / Decimal('12'),
-                             Decimal('5') * Decimal('12'), Decimal('15000.'),
-                             Decimal('0')),
-                     npf.pmt(Decimal('0.08') / Decimal('12'),
-                             Decimal('5') * Decimal('12'), Decimal('15000.'),
-                             Decimal('0'), 'end'))
-        assert_equal(npf.pmt(Decimal('0.08') / Decimal('12'),
-                             Decimal('5') * Decimal('12'), Decimal('15000.'),
-                             Decimal('0'), Decimal('0')),
-                     npf.pmt(Decimal('0.08') / Decimal('12'),
-                             Decimal('5') * Decimal('12'), Decimal('15000.'),
-                             Decimal('0'), 'end'))
-
-        # begin
-        assert_equal(npf.ppmt(Decimal('0.1') / Decimal('12'),
-                              Decimal('1'), Decimal('60'), Decimal('55000'),
-                              Decimal('0'), Decimal('1')),
-                     npf.ppmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('60'), Decimal('55000'),
-                              Decimal('0'), 'begin'))
-        # end
-        assert_equal(npf.ppmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('60'), Decimal('55000'), Decimal('0')),
-                     npf.ppmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('60'), Decimal('55000'), Decimal('0'),
-                              'end'))
-        assert_equal(npf.ppmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('60'), Decimal('55000'), Decimal('0'),
-                              Decimal('0')),
-                     npf.ppmt(Decimal('0.1') / Decimal('12'), Decimal('1'),
-                              Decimal('60'), Decimal('55000'), Decimal('0'),
-                              'end'))
-
     def test_broadcast(self):
         assert_almost_equal(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
                             [21.5449442, 20.76156441], 4)
-
-        assert_almost_equal(npf.ppmt(0.1 / 12, list(range(5)), 24, 2000),
-                            [numpy.nan, -75.62318601, -76.25337923,
-                             -76.88882405, -77.52956425], 4)
-
-        assert_almost_equal(npf.ppmt(0.1 / 12, list(range(5)), 24, 2000, 0,
-                                     [0, 0, 1, 'end', 'begin']),
-                            [numpy.nan, -75.62318601, -75.62318601,
-                             -76.88882405, -76.88882405], 4)
-
-    def test_broadcast_decimal(self):
-        # Use almost equal because precision is tested in the explicit tests,
-        # this test is to ensure broadcast with Decimal is not broken.
-        assert_almost_equal(npf.ppmt(Decimal('0.1') / Decimal('12'),
-                                     list(range(1, 5)), Decimal('24'),
-                                     Decimal('2000')),
-                            [Decimal('-75.62318601'),
-                             Decimal('-76.25337923'), Decimal('-76.88882405'),
-                             Decimal('-77.52956425')], 4)
-
-        result = npf.ppmt(
-            Decimal('0.1') / Decimal('12'),
-            list(range(1, 5)),
-            Decimal('24'),
-            Decimal('2000'),
-            Decimal('0'),
-            [Decimal('0'), Decimal('1'), 'end', 'begin']
-        )
-        desired = [
-            Decimal('-75.62318601'),
-            Decimal('-75.62318601'),
-            Decimal('-76.88882405'),
-            Decimal('-76.88882405')
-        ]
-        assert_almost_equal(result, desired, decimal=4)
 
 
 class TestNper:
@@ -329,6 +215,129 @@ class TestNper:
         assert_(npf.nper(0, -100, 1000) == 10)
 
 
+class TestPpmt:
+    def test_float(self):
+        assert_allclose(
+            npf.ppmt(0.1 / 12, 1, 60, 55000),
+            -710.25,
+            rtol=1e-4
+        )
+
+    def test_decimal(self):
+        result = npf.ppmt(
+            Decimal('0.1') / Decimal('12'),
+            Decimal('1'),
+            Decimal('60'),
+            Decimal('55000')
+        )
+        assert_equal(
+            result,
+            Decimal('-710.2541257864217612489830917'),
+        )
+
+    @pytest.mark.parametrize('when', [1, 'begin'])
+    def test_when_is_begin(self, when):
+        assert_allclose(
+            npf.ppmt(0.1 / 12, 1, 60, 55000, 0, when),
+            -1158.929712,  # Computed using Google Sheet's PPMT
+            rtol=1e-9,
+        )
+
+    @pytest.mark.parametrize('when', [None, 0, 'end'])
+    def test_when_is_end(self, when):
+        args = (0.1 / 12, 1, 60, 55000, 0)
+        result = npf.ppmt(*args) if when is None else npf.ppmt(*args, when)
+        assert_allclose(
+            result,
+            -710.254126,  # Computed using Google Sheet's PPMT
+            rtol=1e-9,
+        )
+
+    @pytest.mark.parametrize('when', [Decimal('1'), 'begin'])
+    def test_when_is_begin_decimal(self, when):
+        result = npf.ppmt(
+            Decimal('0.08') / Decimal('12'),
+            Decimal('1'),
+            Decimal('60'),
+            Decimal('15000.'),
+            Decimal('0'),
+            when
+        )
+        assert_almost_equal(
+            result,
+            Decimal('-302.131703'),  # Computed using Google Sheet's PPMT
+            decimal=5,
+        )
+
+    @pytest.mark.parametrize('when', [None, Decimal('0'), 'end'])
+    def test_when_is_end_decimal(self, when):
+        args = (
+            Decimal('0.08') / Decimal('12'),
+            Decimal('1'),
+            Decimal('60'),
+            Decimal('15000.'),
+            Decimal('0')
+        )
+        result = npf.ppmt(*args) if when is None else npf.ppmt(*args, when)
+        assert_almost_equal(
+            result,
+            Decimal('-204.145914'),  # Computed using Google Sheet's PPMT
+            decimal=5,
+        )
+
+    @pytest.mark.parametrize('args', [
+        (0.1 / 12, 0, 60, 15000),
+        (Decimal('0.012'), Decimal('0'), Decimal('60'), Decimal('15000'))
+    ])
+    def test_invalid_per(self, args):
+        # Note that math.isnan() handles Decimal NaN correctly.
+        assert math.isnan(npf.ppmt(*args))
+
+    @pytest.mark.parametrize('when, desired', [
+        (
+            None,
+            [-75.62318601, -76.25337923, -76.88882405, -77.52956425],
+        ), (
+            [0, 1, 'end', 'begin'],
+            [-75.62318601, -75.62318601, -76.88882405, -76.88882405],
+        )
+    ])
+    def test_broadcast(self, when, desired):
+        args = (0.1 / 12, numpy.arange(1, 5), 24, 2000, 0)
+        result = npf.ppmt(*args) if when is None else npf.ppmt(*args, when)
+        assert_allclose(result, desired, rtol=1e-5)
+
+    @pytest.mark.parametrize('when, desired', [
+        (
+            None,
+            [
+                Decimal('-75.62318601'),
+                Decimal('-76.25337923'),
+                Decimal('-76.88882405'),
+                Decimal('-77.52956425')
+            ],
+        ), (
+            [Decimal('0'), Decimal('1'), 'end', 'begin'],
+            [
+                Decimal('-75.62318601'),
+                Decimal('-75.62318601'),
+                Decimal('-76.88882405'),
+                Decimal('-76.88882405')
+            ]
+        )
+    ])
+    def test_broadcast_decimal(self, when, desired):
+        args = (
+            Decimal('0.1') / Decimal('12'),
+            numpy.arange(1, 5),
+            Decimal('24'),
+            Decimal('2000'),
+            Decimal('0')
+        )
+        result = npf.ppmt(*args) if when is None else npf.ppmt(*args, when)
+        assert_almost_equal(result, desired, decimal=8)
+
+
 class TestIpmt:
     def test_float(self):
         assert_allclose(
@@ -352,7 +361,6 @@ class TestIpmt:
         else:
             result = npf.ipmt(0.1 / 12, 1, 24, 2000, 0, when)
         assert_allclose(result, -16.666667, rtol=1e-6)
-
 
     @pytest.mark.parametrize('when', [Decimal('1'), 'begin'])
     def test_when_is_begin_decimal(self, when):
