@@ -7,9 +7,9 @@ import numpy
 from numpy.testing import (
     assert_, assert_almost_equal, assert_allclose, assert_equal, assert_raises
     )
+import pytest
 
 import numpy_financial as npf
-import pytest
 
 
 class TestFinancial(object):
@@ -22,6 +22,25 @@ class TestFinancial(object):
 
     def test_rate(self):
         assert_almost_equal(npf.rate(10, 0, -3500, 10000), 0.1107, 4)
+
+    @pytest.mark.parametrize('number_type', [Decimal, float])
+    @pytest.mark.parametrize('when', [0, 1, 'end', 'begin'])
+    def test_rate_with_infeasible_solution(self, number_type, when):
+        """
+        Test when no feasible rate can be found.
+
+        Rate will return NaN, if the Newton Raphson method cannot find a
+        feasible rate within the required tolerance or number of iterations.
+        This can occur if both `pmt` and `pv` have the same sign, as it is
+        impossible to repay a loan by making further withdrawls.
+        """
+        result = npf.rate(number_type(12.0),
+                          number_type(400.0),
+                          number_type(10000.0),
+                          number_type(5000.0),
+                          when=when)
+        is_nan = Decimal.is_nan if number_type == Decimal else numpy.isnan
+        assert is_nan(result)
 
     def test_rate_decimal(self):
         rate = npf.rate(Decimal('10'), Decimal('0'), Decimal('-3500'),
@@ -411,30 +430,3 @@ class TestFinancial(object):
                             [Decimal('-74.998201'), Decimal('-75.62318601'),
                              Decimal('-75.62318601'), Decimal('-76.88882405'),
                              Decimal('-76.88882405')], 4)
-
-    @pytest.mark.parametrize('number_type', [Decimal, float])
-    def test_rate_nan(self, number_type):
-        """
-        Test for checking inputs whose output is NaN
-        Rate will return NaN, if newton raphson method's change or diff was not able to become
-        less than default tolerance value i.e. 1e-6 in max iterations possible,
-        Both payments and present value are positive, it is impossible to pay off the existing balance
-        by making further withdrawals, regardless of the rate.
-        """
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(0))
-        assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(5000))
-        assert_equal(numpy.nan, float(rate))
-
-        # begin
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(20000), 1)
-        assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(20000), 'begin')
-        assert_equal(numpy.nan, float(rate))
-
-        # end
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(0))
-        assert_equal(numpy.nan, float(rate))
-        rate = npf.rate(number_type(12.0), number_type(400), number_type(10000.0), number_type(0), 'end')
-        assert_equal(numpy.nan, float(rate))
-
