@@ -666,7 +666,7 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
         rn = rnp1
     if not close:
         # Return nan's in array of the same shape as rn
-        return np.nan + rn
+        return default_type(np.nan) + rn
     else:
         return rn
 

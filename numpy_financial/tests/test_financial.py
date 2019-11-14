@@ -16,6 +16,25 @@ class TestFinancial(object):
     def test_rate(self):
         assert_almost_equal(npf.rate(10, 0, -3500, 10000), 0.1107, 4)
 
+    @pytest.mark.parametrize('number_type', [Decimal, float])
+    @pytest.mark.parametrize('when', [0, 1, 'end', 'begin'])
+    def test_rate_with_infeasible_solution(self, number_type, when):
+        """
+        Test when no feasible rate can be found.
+
+        Rate will return NaN, if the Newton Raphson method cannot find a
+        feasible rate within the required tolerance or number of iterations.
+        This can occur if both `pmt` and `pv` have the same sign, as it is
+        impossible to repay a loan by making further withdrawls.
+        """
+        result = npf.rate(number_type(12.0),
+                          number_type(400.0),
+                          number_type(10000.0),
+                          number_type(5000.0),
+                          when=when)
+        is_nan = Decimal.is_nan if number_type == Decimal else numpy.isnan
+        assert is_nan(result)
+
     def test_rate_decimal(self):
         rate = npf.rate(Decimal('10'), Decimal('0'), Decimal('-3500'),
                         Decimal('10000'))
