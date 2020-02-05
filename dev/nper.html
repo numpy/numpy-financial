@@ -1,0 +1,153 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>nper &#8212; numpy-financial  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="shortcut icon" href="_static/numpy_financial_favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="npv" href="npv.html" />
+    <link rel="prev" title="mirr" href="mirr.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="npv.html" title="npv"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="mirr.html" title="mirr"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/numpy_financial_logov.svg" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="nper">
+<h1>nper<a class="headerlink" href="#nper" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<dl class="function">
+<dt id="numpy_financial.nper">
+<code class="sig-prename descclassname">numpy_financial.</code><code class="sig-name descname">nper</code><span class="sig-paren">(</span><em class="sig-param">rate</em>, <em class="sig-param">pmt</em>, <em class="sig-param">pv</em>, <em class="sig-param">fv=0</em>, <em class="sig-param">when='end'</em><span class="sig-paren">)</span><a class="headerlink" href="#numpy_financial.nper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the number of periodic payments.</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">decimal.Decimal</span></code> type is not supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rate</strong><span class="classifier">array_like</span></dt><dd><p>Rate of interest (per period)</p>
+</dd>
+<dt><strong>pmt</strong><span class="classifier">array_like</span></dt><dd><p>Payment</p>
+</dd>
+<dt><strong>pv</strong><span class="classifier">array_like</span></dt><dd><p>Present value</p>
+</dd>
+<dt><strong>fv</strong><span class="classifier">array_like, optional</span></dt><dd><p>Future value</p>
+</dd>
+<dt><strong>when</strong><span class="classifier">{{‘begin’, 1}, {‘end’, 0}}, {string, int}, optional</span></dt><dd><p>When payments are due (‘begin’ (1) or ‘end’ (0))</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The number of periods <code class="docutils literal notranslate"><span class="pre">nper</span></code> is computed by solving the equation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fv</span> <span class="o">+</span> <span class="n">pv</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">rate</span><span class="p">)</span><span class="o">**</span><span class="n">nper</span> <span class="o">+</span> <span class="n">pmt</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">rate</span><span class="o">*</span><span class="n">when</span><span class="p">)</span><span class="o">/</span><span class="n">rate</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">rate</span><span class="p">)</span><span class="o">**</span><span class="n">nper</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>but if <code class="docutils literal notranslate"><span class="pre">rate</span> <span class="pre">=</span> <span class="pre">0</span></code> then:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fv</span> <span class="o">+</span> <span class="n">pv</span> <span class="o">+</span> <span class="n">pmt</span><span class="o">*</span><span class="n">nper</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy_financial</span> <span class="k">as</span> <span class="nn">npf</span>
+</pre></div>
+</div>
+<p>If you only had $150/month to pay towards the loan, how long would it take
+to pay-off a loan of $8,000 at 7% annual interest?</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">npf</span><span class="o">.</span><span class="n">nper</span><span class="p">(</span><span class="mf">0.07</span><span class="o">/</span><span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">150</span><span class="p">,</span> <span class="mi">8000</span><span class="p">),</span> <span class="mi">5</span><span class="p">))</span>
+<span class="go">64.07335</span>
+</pre></div>
+</div>
+<p>So, over 64 months would be required to pay off the loan.</p>
+<p>The same analysis could be done with several different interest rates
+and/or payments and/or total amounts to produce an entire table.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">npf</span><span class="o">.</span><span class="n">nper</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ogrid</span><span class="p">[</span><span class="mf">0.07</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="mf">0.08</span><span class="o">/</span><span class="mi">12</span><span class="p">:</span> <span class="mf">0.01</span><span class="o">/</span><span class="mi">12</span><span class="p">,</span>
+<span class="gp">... </span>                    <span class="o">-</span><span class="mi">150</span>   <span class="p">:</span> <span class="o">-</span><span class="mi">99</span>    <span class="p">:</span> <span class="mi">50</span>    <span class="p">,</span>
+<span class="gp">... </span>                    <span class="mi">8000</span>   <span class="p">:</span> <span class="mi">9001</span>   <span class="p">:</span> <span class="mi">1000</span><span class="p">]))</span>
+<span class="go">array([[[ 64.07334877,  74.06368256],</span>
+<span class="go">        [108.07548412, 127.99022654]],</span>
+<span class="go">       [[ 66.12443902,  76.87897353],</span>
+<span class="go">        [114.70165583, 137.90124779]]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="npv.html" title="npv"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="mirr.html" title="mirr"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">numpy-financial  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, numpy-financial developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
+    </div>
+  </body>
+</html>
