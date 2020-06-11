@@ -937,7 +937,7 @@ def profit_ind(rate, values):
     each period discounted at a rate of 8% per period. To find the project's
     net present value:
 
-    >>> rate, cashflows = 0.08, [-40_000, 20_000, 18_000, 10_000]
+    >>> rate, cashflows = 0.06, [-40_000, 20_000, 18_000, 10_000]
     >>> npf.profit_ind(rate, cashflows).round(5)
     1.08134
 
