@@ -933,9 +933,9 @@ def profit_ind(rate, values):
     >>> import numpy_financial as npf
 
     Consider a potential project with an initial investment of $40 000 and
-    projected cashflows of $5 000, $8 000, $12 000 and $30 000 at the end of
-    each period discounted at a rate of 8% per period. To find the project's
-    net present value:
+    projected cashflows of $20 000, $18 000 and $10 000 at the end of
+    each period discounted at a rate of 6% per period. To find the project's
+    profitability index:
 
     >>> rate, cashflows = 0.06, [-40_000, 20_000, 18_000, 10_000]
     >>> npf.profit_ind(rate, cashflows).round(5)
