@@ -895,7 +895,7 @@ def mirr(values, finance_rate, reinvest_rate):
     denom = np.abs(npv(finance_rate, values*neg))
     return (numer/denom)**(1/(n - 1))*(1 + reinvest_rate) - 1
 
-def pi(rate, values):
+def profit_ind(rate, values):
     """
     Returns the PI (Profitability Index) of a cash flow series.
 
@@ -920,13 +920,12 @@ def pi(rate, values):
 
     Warnings
     --------
-    ``pi`` considers a series of cashflows starting in the present (t = 0).
+    ``profit_ind`` considers a series of cashflows starting in the present (t = 0).
 
 
     References
     ----------
-    .. [G] L. J. Gitman, "Principles of Managerial Finance, Brief," 3rd ed.,
-       Addison-Wesley, 2003, pg. 346.
+
 
     Examples
     --------
@@ -938,22 +937,13 @@ def pi(rate, values):
     each period discounted at a rate of 8% per period. To find the project's
     net present value:
 
-    >>> rate, cashflows = 0.08, [-40_000, 5_000, 8_000, 12_000, 30_000]
-    >>> npf.npv(rate, cashflows).round(5)
-    3065.22267
-
-    It may be preferable to split the projected cashflow into an initial
-    investment and expected future cashflows. In this case, the value of
-    the initial cashflow is zero and the initial investment is later added
-    to the future cashflows net present value:
-
-    >>> initial_cashflow = cashflows[0]
-    >>> cashflows[0] = 0
-    >>> np.round(npf.npv(rate, cashflows) + initial_cashflow, 5)
-    3065.22267
+    >>> rate, cashflows = 0.08, [-40_000, 20_000, 18_000, 10_000]
+    >>> npf.profit_ind(rate, cashflows).round(5)
+    1.08134
 
     """
+    
     values = np.asarray(values)
     initial_inv = values[0]
     future_cashflow = np.delete(values, 0)
-    return ((values / (1+rate)**np.arange(0, len(values))).sum(axis=0)) / initial_inv
+    return (((values / (1+rate)**np.arange(0, len(values))).sum(axis=0)) / initial_inv)
