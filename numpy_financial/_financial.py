@@ -326,7 +326,7 @@ def _value_like(arr, value):
         return np.array(value, dtype=arr.dtype).item(0)
 
 
-def ipmt(rate, per, nper, pv, fv=0, when='end'):
+def ipmt(rate, per=None, nper, pv, fv=0, when='end'):
     """
     Compute the interest portion of a payment.
 
@@ -337,6 +337,7 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
     per : scalar or array_like of shape(M, )
         Interest paid against the loan changes during the life or the loan.
         The `per` is the payment period to calculate the interest amount.
+        Defaults to np.array([1,2,3,...,nper]).
     nper : scalar or array_like of shape(M, )
         Number of compounding periods
     pv : scalar or array_like of shape(M, )
@@ -412,6 +413,10 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
     -112.98
 
     """
+    # Default for 'per'
+    if per is None:
+        per = np.arange(nper) + 1
+
     when = _convert_when(when)
     rate, per, nper, pv, fv, when = np.broadcast_arrays(rate, per, nper,
                                                         pv, fv, when)
@@ -449,7 +454,7 @@ def _rbl(rate, per, pmt, pv, when):
     return fv(rate, (per - 1), pmt, pv, when)
 
 
-def ppmt(rate, per, nper, pv, fv=0, when='end'):
+def ppmt(rate, per=None, nper, pv, fv=0, when='end'):
     """
     Compute the payment against loan principal.
 
@@ -460,6 +465,7 @@ def ppmt(rate, per, nper, pv, fv=0, when='end'):
     per : array_like, int
         Amount paid against the loan changes.  The `per` is the period of
         interest.
+        Defaults to np.array([1,2,3,...,nper]).
     nper : array_like
         Number of compounding periods
     pv : array_like
@@ -599,7 +605,7 @@ def _g_div_gp(r, n, p, x, y, w):
 #     where
 #  g(r) is the formula
 #  g'(r) is the derivative with respect to r.
-def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
+def rate(nper, pmt, pv, fv=0, when='end', guess=None, tol=None, maxiter=100):
     """
     Compute the rate of interest per period.
 
@@ -612,7 +618,8 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
     pv : array_like
         Present value
     fv : array_like
-        Future value
+        Future value.
+        Defaults to 0.
     when : {{'begin', 1}, {'end', 0}}, {string, int}, optional
         When payments are due ('begin' (1) or 'end' (0))
     guess : Number, optional
