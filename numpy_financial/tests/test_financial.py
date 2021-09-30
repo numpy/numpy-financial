@@ -48,48 +48,6 @@ class TestFinancial(object):
                             Decimal('0')),
                      Decimal('-127128.1709461939327295222005'))
 
-    def test_pmt(self):
-        res = npf.pmt(0.08 / 12, 5 * 12, 15000)
-        tgt = -304.145914
-        assert_allclose(res, tgt)
-        # Test the edge case where rate == 0.0
-        res = npf.pmt(0.0, 5 * 12, 15000)
-        tgt = -250.0
-        assert_allclose(res, tgt)
-        # Test the case where we use broadcast and
-        # the arguments passed in are arrays.
-        res = npf.pmt([[0.0, 0.8], [0.3, 0.8]], [12, 3], [2000, 20000])
-        tgt = numpy.array([[-166.66667, -19311.258], [-626.90814, -19311.258]])
-        assert_allclose(res, tgt)
-
-    def test_pmt_decimal(self):
-        res = npf.pmt(Decimal('0.08') / Decimal('12'), 5 * 12, 15000)
-        tgt = Decimal('-304.1459143262052370338701494')
-        assert_equal(res, tgt)
-        # Test the edge case where rate == 0.0
-        res = npf.pmt(Decimal('0'), Decimal('60'), Decimal('15000'))
-        tgt = -250
-        assert_equal(res, tgt)
-
-        # Test the case where we use broadcast and
-        # the arguments passed in are arrays.
-        res = npf.pmt([[Decimal('0'), Decimal('0.8')],
-                       [Decimal('0.3'), Decimal('0.8')]],
-                      [Decimal('12'), Decimal('3')],
-                      [Decimal('2000'), Decimal('20000')])
-        tgt = numpy.array([[Decimal('-166.6666666666666666666666667'),
-                            Decimal('-19311.25827814569536423841060')],
-                           [Decimal('-626.9081401700757748402586600'),
-                            Decimal('-19311.25827814569536423841060')]])
-
-        # Cannot use the `assert_allclose` because it uses isfinite under
-        # the covers which does not support the Decimal type
-        # See issue: https://github.com/numpy/numpy/issues/9954
-        assert_equal(res[0][0], tgt[0][0])
-        assert_equal(res[0][1], tgt[0][1])
-        assert_equal(res[1][0], tgt[1][0])
-        assert_equal(res[1][1], tgt[1][1])
-
     def test_npv(self):
         assert_almost_equal(
             npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
@@ -170,6 +128,50 @@ class TestFinancial(object):
                             Decimal('0'), Decimal('0')),
                      npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
                             Decimal('0'), 'end'))
+
+
+class TestPmt:
+    def test_pmt(self):
+        res = npf.pmt(0.08 / 12, 5 * 12, 15000)
+        tgt = -304.145914
+        assert_allclose(res, tgt)
+        # Test the edge case where rate == 0.0
+        res = npf.pmt(0.0, 5 * 12, 15000)
+        tgt = -250.0
+        assert_allclose(res, tgt)
+        # Test the case where we use broadcast and
+        # the arguments passed in are arrays.
+        res = npf.pmt([[0.0, 0.8], [0.3, 0.8]], [12, 3], [2000, 20000])
+        tgt = numpy.array([[-166.66667, -19311.258], [-626.90814, -19311.258]])
+        assert_allclose(res, tgt)
+
+    def test_pmt_decimal(self):
+        res = npf.pmt(Decimal('0.08') / Decimal('12'), 5 * 12, 15000)
+        tgt = Decimal('-304.1459143262052370338701494')
+        assert_equal(res, tgt)
+        # Test the edge case where rate == 0.0
+        res = npf.pmt(Decimal('0'), Decimal('60'), Decimal('15000'))
+        tgt = -250
+        assert_equal(res, tgt)
+
+        # Test the case where we use broadcast and
+        # the arguments passed in are arrays.
+        res = npf.pmt([[Decimal('0'), Decimal('0.8')],
+                       [Decimal('0.3'), Decimal('0.8')]],
+                      [Decimal('12'), Decimal('3')],
+                      [Decimal('2000'), Decimal('20000')])
+        tgt = numpy.array([[Decimal('-166.6666666666666666666666667'),
+                            Decimal('-19311.25827814569536423841060')],
+                           [Decimal('-626.9081401700757748402586600'),
+                            Decimal('-19311.25827814569536423841060')]])
+
+        # Cannot use the `assert_allclose` because it uses isfinite under
+        # the covers which does not support the Decimal type
+        # See issue: https://github.com/numpy/numpy/issues/9954
+        assert_equal(res[0][0], tgt[0][0])
+        assert_equal(res[0][1], tgt[0][1])
+        assert_equal(res[1][0], tgt[1][0])
+        assert_equal(res[1][1], tgt[1][1])
 
 
 class TestMirr:
