@@ -205,10 +205,6 @@ class TestFinancial(object):
                      npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
                             Decimal('0'), 'end'))
 
-    def test_broadcast(self):
-        assert_almost_equal(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
-                            [21.5449442, 20.76156441], 4)
-
 
 class TestNper:
     def test_basic_values(self):
@@ -232,6 +228,10 @@ class TestNper:
 
     def test_no_interest(self):
         assert_(npf.nper(0, -100, 1000) == 10)
+
+    def test_broadcast(self):
+        assert_almost_equal(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
+                            [21.5449442, 20.76156441], 4)
 
 
 class TestPpmt:
