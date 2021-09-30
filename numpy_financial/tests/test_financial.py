@@ -137,29 +137,36 @@ class TestNpv:
 
 
 class TestPmt:
-    def test_pmt(self):
+    def test_pmt_simple(self):
         res = npf.pmt(0.08 / 12, 5 * 12, 15000)
         tgt = -304.145914
         assert_allclose(res, tgt)
+
+    def test_pmt_zero_rate(self):
         # Test the edge case where rate == 0.0
         res = npf.pmt(0.0, 5 * 12, 15000)
         tgt = -250.0
         assert_allclose(res, tgt)
+
+    def test_pmt_broadcast(self):
         # Test the case where we use broadcast and
         # the arguments passed in are arrays.
         res = npf.pmt([[0.0, 0.8], [0.3, 0.8]], [12, 3], [2000, 20000])
         tgt = numpy.array([[-166.66667, -19311.258], [-626.90814, -19311.258]])
         assert_allclose(res, tgt)
 
-    def test_pmt_decimal(self):
+    def test_pmt_decimal_simple(self):
         res = npf.pmt(Decimal('0.08') / Decimal('12'), 5 * 12, 15000)
         tgt = Decimal('-304.1459143262052370338701494')
         assert_equal(res, tgt)
+
+    def test_pmt_decimal_zero_rate(self):
         # Test the edge case where rate == 0.0
         res = npf.pmt(Decimal('0'), Decimal('60'), Decimal('15000'))
         tgt = -250
         assert_equal(res, tgt)
 
+    def test_pmt_decimal_broadcast(self):
         # Test the case where we use broadcast and
         # the arguments passed in are arrays.
         res = npf.pmt([[Decimal('0'), Decimal('0.8')],
