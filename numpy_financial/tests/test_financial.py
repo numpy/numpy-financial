@@ -13,14 +13,6 @@ import numpy_financial as npf
 
 
 class TestFinancial(object):
-    def test_pv(self):
-        assert_almost_equal(npf.pv(0.07, 20, 12000, 0), -127128.17, 2)
-
-    def test_pv_decimal(self):
-        assert_equal(npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
-                            Decimal('0')),
-                     Decimal('-127128.1709461939327295222005'))
-
     def test_when(self):
         # begin
         assert_equal(npf.rate(10, 20, -3500, 10000, 1),
@@ -91,6 +83,16 @@ class TestFinancial(object):
                             Decimal('0'), Decimal('0')),
                      npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
                             Decimal('0'), 'end'))
+
+
+class TestPV:
+    def test_pv(self):
+        assert_almost_equal(npf.pv(0.07, 20, 12000, 0), -127128.17, 2)
+
+    def test_pv_decimal(self):
+        assert_equal(npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
+                            Decimal('0')),
+                     Decimal('-127128.1709461939327295222005'))
 
 
 class TestRate:
