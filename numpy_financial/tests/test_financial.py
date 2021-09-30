@@ -48,16 +48,6 @@ class TestFinancial(object):
                             Decimal('0')),
                      Decimal('-127128.1709461939327295222005'))
 
-    def test_npv(self):
-        assert_almost_equal(
-            npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
-            122.89, 2)
-
-    def test_npv_decimal(self):
-        assert_equal(
-            npf.npv(Decimal('0.05'), [-15000, 1500, 2500, 3500, 4500, 6000]),
-            Decimal('122.894854950942692161628715'))
-
     def test_when(self):
         # begin
         assert_equal(npf.rate(10, 20, -3500, 10000, 1),
@@ -128,6 +118,18 @@ class TestFinancial(object):
                             Decimal('0'), Decimal('0')),
                      npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
                             Decimal('0'), 'end'))
+
+
+class TestNpv:
+    def test_npv(self):
+        assert_almost_equal(
+            npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
+            122.89, 2)
+
+    def test_npv_decimal(self):
+        assert_equal(
+            npf.npv(Decimal('0.05'), [-15000, 1500, 2500, 3500, 4500, 6000]),
+            Decimal('122.894854950942692161628715'))
 
 
 class TestPmt:
