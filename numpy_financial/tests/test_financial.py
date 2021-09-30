@@ -100,40 +100,6 @@ class TestFinancial(object):
             npf.npv(Decimal('0.05'), [-15000, 1500, 2500, 3500, 4500, 6000]),
             Decimal('122.894854950942692161628715'))
 
-    def test_mirr(self):
-        val = [-4500, -800, 800, 800, 600, 600, 800, 800, 700, 3000]
-        assert_almost_equal(npf.mirr(val, 0.08, 0.055), 0.0666, 4)
-
-        val = [-120000, 39000, 30000, 21000, 37000, 46000]
-        assert_almost_equal(npf.mirr(val, 0.10, 0.12), 0.126094, 6)
-
-        val = [100, 200, -50, 300, -200]
-        assert_almost_equal(npf.mirr(val, 0.05, 0.06), 0.3428, 4)
-
-        val = [39000, 30000, 21000, 37000, 46000]
-        assert_(numpy.isnan(npf.mirr(val, 0.10, 0.12)))
-
-    def test_mirr_decimal(self):
-        val = [Decimal('-4500'), Decimal('-800'), Decimal('800'),
-               Decimal('800'), Decimal('600'), Decimal('600'), Decimal('800'),
-               Decimal('800'), Decimal('700'), Decimal('3000')]
-        assert_equal(npf.mirr(val, Decimal('0.08'), Decimal('0.055')),
-                     Decimal('0.066597175031553548874239618'))
-
-        val = [Decimal('-120000'), Decimal('39000'), Decimal('30000'),
-               Decimal('21000'), Decimal('37000'), Decimal('46000')]
-        assert_equal(npf.mirr(val, Decimal('0.10'), Decimal('0.12')),
-                     Decimal('0.126094130365905145828421880'))
-
-        val = [Decimal('100'), Decimal('200'), Decimal('-50'),
-               Decimal('300'), Decimal('-200')]
-        assert_equal(npf.mirr(val, Decimal('0.05'), Decimal('0.06')),
-                     Decimal('0.342823387842176663647819868'))
-
-        val = [Decimal('39000'), Decimal('30000'), Decimal('21000'),
-               Decimal('37000'), Decimal('46000')]
-        assert_(numpy.isnan(npf.mirr(val, Decimal('0.10'), Decimal('0.12'))))
-
     def test_when(self):
         # begin
         assert_equal(npf.rate(10, 20, -3500, 10000, 1),
@@ -204,6 +170,42 @@ class TestFinancial(object):
                             Decimal('0'), Decimal('0')),
                      npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
                             Decimal('0'), 'end'))
+
+
+class TestMirr:
+    def test_mirr(self):
+        val = [-4500, -800, 800, 800, 600, 600, 800, 800, 700, 3000]
+        assert_almost_equal(npf.mirr(val, 0.08, 0.055), 0.0666, 4)
+
+        val = [-120000, 39000, 30000, 21000, 37000, 46000]
+        assert_almost_equal(npf.mirr(val, 0.10, 0.12), 0.126094, 6)
+
+        val = [100, 200, -50, 300, -200]
+        assert_almost_equal(npf.mirr(val, 0.05, 0.06), 0.3428, 4)
+
+        val = [39000, 30000, 21000, 37000, 46000]
+        assert_(numpy.isnan(npf.mirr(val, 0.10, 0.12)))
+
+    def test_mirr_decimal(self):
+        val = [Decimal('-4500'), Decimal('-800'), Decimal('800'),
+               Decimal('800'), Decimal('600'), Decimal('600'), Decimal('800'),
+               Decimal('800'), Decimal('700'), Decimal('3000')]
+        assert_equal(npf.mirr(val, Decimal('0.08'), Decimal('0.055')),
+                     Decimal('0.066597175031553548874239618'))
+
+        val = [Decimal('-120000'), Decimal('39000'), Decimal('30000'),
+               Decimal('21000'), Decimal('37000'), Decimal('46000')]
+        assert_equal(npf.mirr(val, Decimal('0.10'), Decimal('0.12')),
+                     Decimal('0.126094130365905145828421880'))
+
+        val = [Decimal('100'), Decimal('200'), Decimal('-50'),
+               Decimal('300'), Decimal('-200')]
+        assert_equal(npf.mirr(val, Decimal('0.05'), Decimal('0.06')),
+                     Decimal('0.342823387842176663647819868'))
+
+        val = [Decimal('39000'), Decimal('30000'), Decimal('21000'),
+               Decimal('37000'), Decimal('46000')]
+        assert_(numpy.isnan(npf.mirr(val, Decimal('0.10'), Decimal('0.12'))))
 
 
 class TestNper:
