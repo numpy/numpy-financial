@@ -13,127 +13,6 @@ import numpy_financial as npf
 
 
 class TestFinancial(object):
-    def test_rate(self):
-        assert_almost_equal(npf.rate(10, 0, -3500, 10000), 0.1107, 4)
-
-    @pytest.mark.parametrize('number_type', [Decimal, float])
-    @pytest.mark.parametrize('when', [0, 1, 'end', 'begin'])
-    def test_rate_with_infeasible_solution(self, number_type, when):
-        """
-        Test when no feasible rate can be found.
-
-        Rate will return NaN, if the Newton Raphson method cannot find a
-        feasible rate within the required tolerance or number of iterations.
-        This can occur if both `pmt` and `pv` have the same sign, as it is
-        impossible to repay a loan by making further withdrawls.
-        """
-        result = npf.rate(number_type(12.0),
-                          number_type(400.0),
-                          number_type(10000.0),
-                          number_type(5000.0),
-                          when=when)
-        is_nan = Decimal.is_nan if number_type == Decimal else numpy.isnan
-        assert is_nan(result)
-
-    def test_rate_decimal(self):
-        rate = npf.rate(Decimal('10'), Decimal('0'), Decimal('-3500'),
-                        Decimal('10000'))
-        assert_equal(Decimal('0.1106908537142689284704528100'), rate)
-
-    def test_pv(self):
-        assert_almost_equal(npf.pv(0.07, 20, 12000, 0), -127128.17, 2)
-
-    def test_pv_decimal(self):
-        assert_equal(npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
-                            Decimal('0')),
-                     Decimal('-127128.1709461939327295222005'))
-
-    def test_pmt(self):
-        res = npf.pmt(0.08 / 12, 5 * 12, 15000)
-        tgt = -304.145914
-        assert_allclose(res, tgt)
-        # Test the edge case where rate == 0.0
-        res = npf.pmt(0.0, 5 * 12, 15000)
-        tgt = -250.0
-        assert_allclose(res, tgt)
-        # Test the case where we use broadcast and
-        # the arguments passed in are arrays.
-        res = npf.pmt([[0.0, 0.8], [0.3, 0.8]], [12, 3], [2000, 20000])
-        tgt = numpy.array([[-166.66667, -19311.258], [-626.90814, -19311.258]])
-        assert_allclose(res, tgt)
-
-    def test_pmt_decimal(self):
-        res = npf.pmt(Decimal('0.08') / Decimal('12'), 5 * 12, 15000)
-        tgt = Decimal('-304.1459143262052370338701494')
-        assert_equal(res, tgt)
-        # Test the edge case where rate == 0.0
-        res = npf.pmt(Decimal('0'), Decimal('60'), Decimal('15000'))
-        tgt = -250
-        assert_equal(res, tgt)
-
-        # Test the case where we use broadcast and
-        # the arguments passed in are arrays.
-        res = npf.pmt([[Decimal('0'), Decimal('0.8')],
-                       [Decimal('0.3'), Decimal('0.8')]],
-                      [Decimal('12'), Decimal('3')],
-                      [Decimal('2000'), Decimal('20000')])
-        tgt = numpy.array([[Decimal('-166.6666666666666666666666667'),
-                            Decimal('-19311.25827814569536423841060')],
-                           [Decimal('-626.9081401700757748402586600'),
-                            Decimal('-19311.25827814569536423841060')]])
-
-        # Cannot use the `assert_allclose` because it uses isfinite under
-        # the covers which does not support the Decimal type
-        # See issue: https://github.com/numpy/numpy/issues/9954
-        assert_equal(res[0][0], tgt[0][0])
-        assert_equal(res[0][1], tgt[0][1])
-        assert_equal(res[1][0], tgt[1][0])
-        assert_equal(res[1][1], tgt[1][1])
-
-    def test_npv(self):
-        assert_almost_equal(
-            npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
-            122.89, 2)
-
-    def test_npv_decimal(self):
-        assert_equal(
-            npf.npv(Decimal('0.05'), [-15000, 1500, 2500, 3500, 4500, 6000]),
-            Decimal('122.894854950942692161628715'))
-
-    def test_mirr(self):
-        val = [-4500, -800, 800, 800, 600, 600, 800, 800, 700, 3000]
-        assert_almost_equal(npf.mirr(val, 0.08, 0.055), 0.0666, 4)
-
-        val = [-120000, 39000, 30000, 21000, 37000, 46000]
-        assert_almost_equal(npf.mirr(val, 0.10, 0.12), 0.126094, 6)
-
-        val = [100, 200, -50, 300, -200]
-        assert_almost_equal(npf.mirr(val, 0.05, 0.06), 0.3428, 4)
-
-        val = [39000, 30000, 21000, 37000, 46000]
-        assert_(numpy.isnan(npf.mirr(val, 0.10, 0.12)))
-
-    def test_mirr_decimal(self):
-        val = [Decimal('-4500'), Decimal('-800'), Decimal('800'),
-               Decimal('800'), Decimal('600'), Decimal('600'), Decimal('800'),
-               Decimal('800'), Decimal('700'), Decimal('3000')]
-        assert_equal(npf.mirr(val, Decimal('0.08'), Decimal('0.055')),
-                     Decimal('0.066597175031553548874239618'))
-
-        val = [Decimal('-120000'), Decimal('39000'), Decimal('30000'),
-               Decimal('21000'), Decimal('37000'), Decimal('46000')]
-        assert_equal(npf.mirr(val, Decimal('0.10'), Decimal('0.12')),
-                     Decimal('0.126094130365905145828421880'))
-
-        val = [Decimal('100'), Decimal('200'), Decimal('-50'),
-               Decimal('300'), Decimal('-200')]
-        assert_equal(npf.mirr(val, Decimal('0.05'), Decimal('0.06')),
-                     Decimal('0.342823387842176663647819868'))
-
-        val = [Decimal('39000'), Decimal('30000'), Decimal('21000'),
-               Decimal('37000'), Decimal('46000')]
-        assert_(numpy.isnan(npf.mirr(val, Decimal('0.10'), Decimal('0.12'))))
-
     def test_when(self):
         # begin
         assert_equal(npf.rate(10, 20, -3500, 10000, 1),
@@ -205,9 +84,143 @@ class TestFinancial(object):
                      npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
                             Decimal('0'), 'end'))
 
-    def test_broadcast(self):
-        assert_almost_equal(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
-                            [21.5449442, 20.76156441], 4)
+
+class TestPV:
+    def test_pv(self):
+        assert_almost_equal(npf.pv(0.07, 20, 12000, 0), -127128.17, 2)
+
+    def test_pv_decimal(self):
+        assert_equal(npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
+                            Decimal('0')),
+                     Decimal('-127128.1709461939327295222005'))
+
+
+class TestRate:
+    def test_rate(self):
+        assert_almost_equal(npf.rate(10, 0, -3500, 10000), 0.1107, 4)
+
+    @pytest.mark.parametrize('number_type', [Decimal, float])
+    @pytest.mark.parametrize('when', [0, 1, 'end', 'begin'])
+    def test_rate_with_infeasible_solution(self, number_type, when):
+        """
+        Test when no feasible rate can be found.
+
+        Rate will return NaN, if the Newton Raphson method cannot find a
+        feasible rate within the required tolerance or number of iterations.
+        This can occur if both `pmt` and `pv` have the same sign, as it is
+        impossible to repay a loan by making further withdrawls.
+        """
+        result = npf.rate(number_type(12.0),
+                          number_type(400.0),
+                          number_type(10000.0),
+                          number_type(5000.0),
+                          when=when)
+        is_nan = Decimal.is_nan if number_type == Decimal else numpy.isnan
+        assert is_nan(result)
+
+    def test_rate_decimal(self):
+        rate = npf.rate(Decimal('10'), Decimal('0'), Decimal('-3500'),
+                        Decimal('10000'))
+        assert_equal(Decimal('0.1106908537142689284704528100'), rate)
+
+
+class TestNpv:
+    def test_npv(self):
+        assert_almost_equal(
+            npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
+            122.89, 2)
+
+    def test_npv_decimal(self):
+        assert_equal(
+            npf.npv(Decimal('0.05'), [-15000, 1500, 2500, 3500, 4500, 6000]),
+            Decimal('122.894854950942692161628715'))
+
+
+class TestPmt:
+    def test_pmt_simple(self):
+        res = npf.pmt(0.08 / 12, 5 * 12, 15000)
+        tgt = -304.145914
+        assert_allclose(res, tgt)
+
+    def test_pmt_zero_rate(self):
+        # Test the edge case where rate == 0.0
+        res = npf.pmt(0.0, 5 * 12, 15000)
+        tgt = -250.0
+        assert_allclose(res, tgt)
+
+    def test_pmt_broadcast(self):
+        # Test the case where we use broadcast and
+        # the arguments passed in are arrays.
+        res = npf.pmt([[0.0, 0.8], [0.3, 0.8]], [12, 3], [2000, 20000])
+        tgt = numpy.array([[-166.66667, -19311.258], [-626.90814, -19311.258]])
+        assert_allclose(res, tgt)
+
+    def test_pmt_decimal_simple(self):
+        res = npf.pmt(Decimal('0.08') / Decimal('12'), 5 * 12, 15000)
+        tgt = Decimal('-304.1459143262052370338701494')
+        assert_equal(res, tgt)
+
+    def test_pmt_decimal_zero_rate(self):
+        # Test the edge case where rate == 0.0
+        res = npf.pmt(Decimal('0'), Decimal('60'), Decimal('15000'))
+        tgt = -250
+        assert_equal(res, tgt)
+
+    def test_pmt_decimal_broadcast(self):
+        # Test the case where we use broadcast and
+        # the arguments passed in are arrays.
+        res = npf.pmt([[Decimal('0'), Decimal('0.8')],
+                       [Decimal('0.3'), Decimal('0.8')]],
+                      [Decimal('12'), Decimal('3')],
+                      [Decimal('2000'), Decimal('20000')])
+        tgt = numpy.array([[Decimal('-166.6666666666666666666666667'),
+                            Decimal('-19311.25827814569536423841060')],
+                           [Decimal('-626.9081401700757748402586600'),
+                            Decimal('-19311.25827814569536423841060')]])
+
+        # Cannot use the `assert_allclose` because it uses isfinite under
+        # the covers which does not support the Decimal type
+        # See issue: https://github.com/numpy/numpy/issues/9954
+        assert_equal(res[0][0], tgt[0][0])
+        assert_equal(res[0][1], tgt[0][1])
+        assert_equal(res[1][0], tgt[1][0])
+        assert_equal(res[1][1], tgt[1][1])
+
+
+class TestMirr:
+    def test_mirr(self):
+        val = [-4500, -800, 800, 800, 600, 600, 800, 800, 700, 3000]
+        assert_almost_equal(npf.mirr(val, 0.08, 0.055), 0.0666, 4)
+
+        val = [-120000, 39000, 30000, 21000, 37000, 46000]
+        assert_almost_equal(npf.mirr(val, 0.10, 0.12), 0.126094, 6)
+
+        val = [100, 200, -50, 300, -200]
+        assert_almost_equal(npf.mirr(val, 0.05, 0.06), 0.3428, 4)
+
+        val = [39000, 30000, 21000, 37000, 46000]
+        assert_(numpy.isnan(npf.mirr(val, 0.10, 0.12)))
+
+    def test_mirr_decimal(self):
+        val = [Decimal('-4500'), Decimal('-800'), Decimal('800'),
+               Decimal('800'), Decimal('600'), Decimal('600'), Decimal('800'),
+               Decimal('800'), Decimal('700'), Decimal('3000')]
+        assert_equal(npf.mirr(val, Decimal('0.08'), Decimal('0.055')),
+                     Decimal('0.066597175031553548874239618'))
+
+        val = [Decimal('-120000'), Decimal('39000'), Decimal('30000'),
+               Decimal('21000'), Decimal('37000'), Decimal('46000')]
+        assert_equal(npf.mirr(val, Decimal('0.10'), Decimal('0.12')),
+                     Decimal('0.126094130365905145828421880'))
+
+        val = [Decimal('100'), Decimal('200'), Decimal('-50'),
+               Decimal('300'), Decimal('-200')]
+        assert_equal(npf.mirr(val, Decimal('0.05'), Decimal('0.06')),
+                     Decimal('0.342823387842176663647819868'))
+
+        val = [Decimal('39000'), Decimal('30000'), Decimal('21000'),
+               Decimal('37000'), Decimal('46000')]
+        assert_(numpy.isnan(npf.mirr(val, Decimal('0.10'), Decimal('0.12'))))
 
 
 class TestNper:
@@ -232,6 +245,10 @@ class TestNper:
 
     def test_no_interest(self):
         assert_(npf.nper(0, -100, 1000) == 10)
+
+    def test_broadcast(self):
+        assert_almost_equal(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
+                            [21.5449442, 20.76156441], 4)
 
 
 class TestPpmt:
