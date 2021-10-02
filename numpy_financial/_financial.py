@@ -781,6 +781,12 @@ def irr(values):
     # NPV(rate) = 0 can have more than one solution so we return
     # only the solution closest to zero.
     rate = 1/res - 1
+
+    # If there are any positive solutions prefer those over negative
+    # rates.
+    if (rate > 0).any():
+        rate = np.where(rate > 0, rate, np.inf)
+
     rate = rate.item(np.argmin(np.abs(rate)))
     return rate
 
