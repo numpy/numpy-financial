@@ -6,4 +6,4 @@ This code of conduct should be honored by everyone who participates in the NumPy
 
 This code is not exhaustive or complete. It serves to distill our common understanding of a collaborative, shared environment and goals. Please try to follow this code in spirit as much as in letter, to create a friendly and productive environment that enriches the surrounding community.
 
-To view the full Code of Conduct, please see: https://www.numpy.org/devdocs/dev/conduct/code_of_conduct.html
+To view the full Code of Conduct, please see: https://numpy.org/code-of-conduct/
