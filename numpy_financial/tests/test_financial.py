@@ -637,3 +637,8 @@ class TestIrr:
             -38270.0, -45606.8402312253, -52943.680462450604,
             -60280.520693675906, -67617.36092490121])
         assert_almost_equal(npf.irr(cashflows), 0.12)
+
+    def test_gh_44(self):
+        # "true" value as calculated by Google sheets
+        cf = [-1678.87, 771.96, 1814.05, 3520.30, 3552.95, 3584.99, 4789.91, -1]
+        assert_almost_equal(npf.irr(cf), 1.00426, 4)
