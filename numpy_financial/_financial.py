@@ -690,7 +690,7 @@ def irr(values, guess=0.1):
         the initial investment, will typically be negative.
     guess : float, optional
         Initial guess of the IRR for the iterative solver. If no guess is
-        given 0.1 is used instead.
+        given an initial guess of 0.1 (i.e. 10%) is assumed instead.
 
     Returns
     -------
