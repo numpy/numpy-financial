@@ -700,7 +700,7 @@ def irr(values, guess=0.1):
     Notes
     -----
     The IRR is perhaps best understood through an example (illustrated
-    using np.irr in the Examples section below).  Suppose one invests 100
+    using np.irr in the Examples section below). Suppose one invests 100
     units and then makes the following withdrawals at regular (fixed)
     intervals: 39, 59, 55, 20.  Assuming the ending value is 0, one's 100
     unit investment yields 173 units; however, due to the combination of
@@ -741,23 +741,20 @@ def irr(values, guess=0.1):
     if values.ndim != 1:
         raise ValueError("Cashflows must be a rank-1 array")
 
-    solution_found = False
-    p = np.polynomial.Polynomial(values)
-    pp = p.deriv()
+    # NPV = V0 * (1+eirr)^0 + V1 * (1+eirr)^-1 + ...
+    #  let x = 1 / (1+eirr)
+    # NPV = V0 * x^0        + V1 * x^1         + ...
+    npv_ = np.polynomial.Polynomial(values)
+    d_npv = npv_.deriv()
     x = 1 / (1 + guess)
 
-    for i in range(100):
-        x_new = x - (p(x) / pp(x))
+    for _ in range(100):
+        x_new = x - (npv_(x) / d_npv(x))
         if abs(x_new - x) < 1e-12:
-            solution_found = True
-            break
+            return 1 / x_new - 1
         x = x_new
 
-    if solution_found:
-        return 1 / x - 1
-    else:
-        return np.nan
-
+    return np.nan
 
 
 def npv(rate, values):
