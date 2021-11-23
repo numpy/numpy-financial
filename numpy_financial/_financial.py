@@ -741,9 +741,19 @@ def irr(values, guess=0.1):
     if values.ndim != 1:
         raise ValueError("Cashflows must be a rank-1 array")
 
-    # NPV = V0 * (1+eirr)^0 + V1 * (1+eirr)^-1 + ...
-    #  let x = 1 / (1+eirr)
-    # NPV = V0 * x^0        + V1 * x^1         + ...
+    # We aim to solve eirr such that NPV is exactly zero. This can be framed as
+    # simply finding the closest root of a polynomial to a given initial guess
+    # as follows:
+    #           V0           V1           V2           V3
+    # NPV = ---------- + ---------- + ---------- + ---------- + ...
+    #       (1+eirr)^0   (1+eirr)^1   (1+eirr)^2   (1+eirr)^3
+    #
+    # by letting x = 1 / (1+eirr), we substitute to get
+    #
+    # NPV = V0 * x^0   + V1 * x^1   +  V2 * x^2  +  V3 * x^3  + ...
+    # 
+    # which we solve using Newton-Raphson and then reverse out the solution 
+    # as eirr = 1/x - 1 (if we are close enough to a solution)
     npv_ = np.polynomial.Polynomial(values)
     d_npv = npv_.deriv()
     x = 1 / (1 + guess)
