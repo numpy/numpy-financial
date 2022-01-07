@@ -580,9 +580,12 @@ class TestIrr:
             decimal=2,
         )
 
-    def test_numpy_gh_6744(self):
+    @pytest.mark.parametrize('v', [
+        (1, 2, 3),
+        (-1, -2, -3),
+    ])
+    def test_numpy_gh_6744(self, v):
         # Test that if there is no solution then npf.irr returns nan.
-        v = [-1, -2, -3]
         assert numpy.isnan(npf.irr(v))
 
     def test_gh_15(self):

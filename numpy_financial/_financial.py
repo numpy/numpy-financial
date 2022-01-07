@@ -741,6 +741,12 @@ def irr(values, guess=0.1):
     if values.ndim != 1:
         raise ValueError("Cashflows must be a rank-1 array")
 
+    # If all values are of the same sign no solution exists
+    # we don't perform any further calculations and exit early
+    same_sign = np.all(values > 0) if values[0] > 0 else np.all(values < 0)
+    if same_sign:
+        return np.nan
+
     # We aim to solve eirr such that NPV is exactly zero. This can be framed as
     # simply finding the closest root of a polynomial to a given initial guess
     # as follows:
