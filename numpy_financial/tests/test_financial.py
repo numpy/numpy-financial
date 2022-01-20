@@ -551,7 +551,7 @@ class TestFv:
 class TestIrr:
     def test_npv_irr_congruence(self):
         # IRR is defined as the rate required for the present value of
-        # a a series of cashflows to be zero, so we should have
+        # a series of cashflows to be zero, so we should have
         #
         # NPV(IRR(x), x) = 0.
         cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])

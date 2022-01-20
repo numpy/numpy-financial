@@ -671,7 +671,7 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
         return rn
 
 
-def irr(values, guess=0.1):
+def irr(values, guess=0.1, tol=1e-12, maxiter=100):
     """
     Return the Internal Rate of Return (IRR).
 
@@ -691,6 +691,10 @@ def irr(values, guess=0.1):
     guess : float, optional
         Initial guess of the IRR for the iterative solver. If no guess is
         given an initial guess of 0.1 (i.e. 10%) is assumed instead.
+    tol : float, optional
+        Required tolerance to accept solution. Default is 1e-12.
+    maxiter : int, optional
+        Maximum iterations to perform in finding a solution. Default is 100.
 
     Returns
     -------
@@ -764,9 +768,9 @@ def irr(values, guess=0.1):
     d_npv = npv_.deriv()
     x = 1 / (1 + guess)
 
-    for _ in range(100):
+    for _ in range(maxiter):
         x_new = x - (npv_(x) / d_npv(x))
-        if abs(x_new - x) < 1e-12:
+        if abs(x_new - x) < tol:
             return 1 / x_new - 1
         x = x_new
 
