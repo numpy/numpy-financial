@@ -658,17 +658,21 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
     rn = guess
     iterator = 0
     close = False
-    while (iterator < maxiter) and not close:
+    while (iterator < maxiter) and not np.all(close):
         rnp1 = rn - _g_div_gp(rn, nper, pmt, pv, fv, when)
         diff = abs(rnp1-rn)
-        close = np.all(diff < tol)
+        close = diff < tol
         iterator += 1
         rn = rnp1
-    if not close:
-        # Return nan's in array of the same shape as rn
-        return default_type(np.nan) + rn
-    else:
-        return rn
+
+    if not np.all(close):
+        if np.isscalar(rn):
+            return default_type(np.nan)
+        else:
+            # Return nan's in array of the same shape as rn
+            # where the solution is not close to tol.
+            rn[~close] = np.nan
+    return rn
 
 
 def _roots(p):

@@ -123,6 +123,19 @@ class TestRate:
                         Decimal('10000'))
         assert_equal(Decimal('0.1106908537142689284704528100'), rate)
 
+    def test_gh48(self):
+        """
+        Test the correct result is returned with only infeasible solutions
+        converted to nan.
+        """
+        des = [-0.39920185, -0.02305873, -0.41818459, 0.26513414, numpy.nan]
+        nper = 2
+        pmt = 0
+        pv = [-593.06, -4725.38, -662.05, -428.78, -13.65]
+        fv = [214.07, 4509.97, 224.11, 686.29, -329.67]
+        actual = npf.rate(nper, pmt, pv, fv)
+        assert_allclose(actual, des)
+
 
 class TestNpv:
     def test_npv(self):
