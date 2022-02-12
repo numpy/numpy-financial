@@ -9,8 +9,8 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
-        numpy-version: [1.15, 1.16, 1.17, 1.18, 1.19, 1.20, 1.21, 1.22]
+        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
+        numpy-version: [1.15, 1.16, 1.17, 1.18, 1.19, "1.20", 1.21, 1.22]
 
     steps:
     - uses: actions/checkout@v1
