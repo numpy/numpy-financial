@@ -564,7 +564,7 @@ class TestFv:
 class TestIrr:
     def test_npv_irr_congruence(self):
         # IRR is defined as the rate required for the present value of
-        # a a series of cashflows to be zero, so we should have
+        # a series of cashflows to be zero, so we should have
         #
         # NPV(IRR(x), x) = 0.
         cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
@@ -593,9 +593,12 @@ class TestIrr:
             decimal=2,
         )
 
-    def test_numpy_gh_6744(self):
+    @pytest.mark.parametrize('v', [
+        (1, 2, 3),
+        (-1, -2, -3),
+    ])
+    def test_numpy_gh_6744(self, v):
         # Test that if there is no solution then npf.irr returns nan.
-        v = [-1, -2, -3]
         assert numpy.isnan(npf.irr(v))
 
     def test_gh_15(self):

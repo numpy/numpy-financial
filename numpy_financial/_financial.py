@@ -675,36 +675,7 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
     return rn
 
 
-def _roots(p):
-    """Modified version of NumPy's roots function.
-
-    NumPy's roots uses the companion matrix method, which divides by
-    p[0]. This can causes overflows/underflows. Instead form a
-    modified companion matrix that is scaled by 2^c * p[0], where the
-    exponent c is chosen to balance the magnitudes of the
-    coefficients. Since scaling the matrix just scales the
-    eigenvalues, we can remove the scaling at the end.
-
-    Scaling by a power of 2 is chosen to avoid rounding errors.
-
-    """
-    _, e = np.frexp(p)
-    # Balance the most extreme exponents e_max and e_min by solving
-    # the equation
-    #
-    # |c + e_max| = |c + e_min|.
-    #
-    # Round the exponent to an integer to avoid rounding errors.
-    c = int(-0.5 * (np.max(e) + np.min(e)))
-    p = np.ldexp(p, c)
-
-    A = np.diag(np.full(p.size - 2, p[0]), k=-1)
-    A[0,:] = -p[1:]
-    eigenvalues = np.linalg.eigvals(A)
-    return eigenvalues / p[0]
-
-
-def irr(values):
+def irr(values, guess=0.1, tol=1e-12, maxiter=100):
     """
     Return the Internal Rate of Return (IRR).
 
@@ -721,6 +692,13 @@ def irr(values):
         are negative and net "withdrawals" are positive.  Thus, for
         example, at least the first element of `values`, which represents
         the initial investment, will typically be negative.
+    guess : float, optional
+        Initial guess of the IRR for the iterative solver. If no guess is
+        given an initial guess of 0.1 (i.e. 10%) is assumed instead.
+    tol : float, optional
+        Required tolerance to accept solution. Default is 1e-12.
+    maxiter : int, optional
+        Maximum iterations to perform in finding a solution. Default is 100.
 
     Returns
     -------
@@ -730,7 +708,7 @@ def irr(values):
     Notes
     -----
     The IRR is perhaps best understood through an example (illustrated
-    using np.irr in the Examples section below).  Suppose one invests 100
+    using np.irr in the Examples section below). Suppose one invests 100
     units and then makes the following withdrawals at regular (fixed)
     intervals: 39, 59, 55, 20.  Assuming the ending value is 0, one's 100
     unit investment yields 173 units; however, due to the combination of
@@ -771,28 +749,36 @@ def irr(values):
     if values.ndim != 1:
         raise ValueError("Cashflows must be a rank-1 array")
 
-    # Strip leading and trailing zeros. Since we only care about
-    # positive roots we can neglect roots at zero.
-    non_zero = np.nonzero(np.ravel(values))[0]
-    values = values[int(non_zero[0]):int(non_zero[-1])+1]
-
-    res = _roots(values[::-1])
-
-    mask = (res.imag == 0) & (res.real > 0)
-    if not mask.any():
+    # If all values are of the same sign no solution exists
+    # we don't perform any further calculations and exit early
+    same_sign = np.all(values > 0) if values[0] > 0 else np.all(values < 0)
+    if same_sign:
         return np.nan
-    res = res[mask].real
-    # NPV(rate) = 0 can have more than one solution so we return
-    # only the solution closest to zero.
-    rate = 1/res - 1
 
-    # If there are any positive solutions prefer those over negative
-    # rates.
-    if (rate > 0).any():
-        rate = np.where(rate > 0, rate, np.inf)
+    # We aim to solve eirr such that NPV is exactly zero. This can be framed as
+    # simply finding the closest root of a polynomial to a given initial guess
+    # as follows:
+    #           V0           V1           V2           V3
+    # NPV = ---------- + ---------- + ---------- + ---------- + ...
+    #       (1+eirr)^0   (1+eirr)^1   (1+eirr)^2   (1+eirr)^3
+    #
+    # by letting x = 1 / (1+eirr), we substitute to get
+    #
+    # NPV = V0 * x^0   + V1 * x^1   +  V2 * x^2  +  V3 * x^3  + ...
+    # 
+    # which we solve using Newton-Raphson and then reverse out the solution 
+    # as eirr = 1/x - 1 (if we are close enough to a solution)
+    npv_ = np.polynomial.Polynomial(values)
+    d_npv = npv_.deriv()
+    x = 1 / (1 + guess)
 
-    rate = rate.item(np.argmin(np.abs(rate)))
-    return rate
+    for _ in range(maxiter):
+        x_new = x - (npv_(x) / d_npv(x))
+        if abs(x_new - x) < tol:
+            return 1 / x_new - 1
+        x = x_new
+
+    return np.nan
 
 
 def npv(rate, values):
