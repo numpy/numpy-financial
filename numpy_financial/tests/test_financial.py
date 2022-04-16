@@ -148,6 +148,19 @@ class TestNpv:
             npf.npv(Decimal('0.05'), [-15000, 1500, 2500, 3500, 4500, 6000]),
             Decimal('122.894854950942692161628715'))
 
+    def test_npv_broadcast(self):
+        cashflows = [
+            [-15000, 1500, 2500, 3500, 4500, 6000],
+            [-15000, 1500, 2500, 3500, 4500, 6000],
+            [-15000, 1500, 2500, 3500, 4500, 6000],
+            [-15000, 1500, 2500, 3500, 4500, 6000],
+        ]
+        expected_npvs = [
+            122.8948549, 122.8948549, 122.8948549, 122.8948549
+        ]
+        actual_npvs = npf.npv(0.05, cashflows)
+        assert_allclose(actual_npvs, expected_npvs)
+
 
 class TestPmt:
     def test_pmt_simple(self):

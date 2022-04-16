@@ -863,8 +863,15 @@ def npv(rate, values):
     3065.22267
 
     """
-    values = np.asarray(values)
-    return (values / (1+rate)**np.arange(0, len(values))).sum(axis=0)
+    values = np.atleast_2d(values)
+    timestep_array = np.arange(0, values.shape[1])
+    npv = (values / (1 + rate) ** timestep_array).sum(axis=1)
+    try:
+        # If size of array is one, return scalar
+        return npv.item()
+    except ValueError:
+        # Otherwise, return entire array
+        return npv
 
 
 def mirr(values, finance_rate, reinvest_rate):
