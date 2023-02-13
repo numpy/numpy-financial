@@ -773,10 +773,10 @@ def irr(values, guess=0.1, tol=1e-12, maxiter=100):
     x = 1 / (1 + guess)
 
     for _ in range(maxiter):
-        x_new = x - (npv_(x) / d_npv(x))
-        if abs(x_new - x) < tol:
-            return 1 / x_new - 1
-        x = x_new
+        delta = npv_(x) / d_npv(x)
+        if abs(delta) < tol:
+            return 1 / (x - delta) - 1
+        x -= delta
 
     return np.nan
 
