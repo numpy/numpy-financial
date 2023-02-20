@@ -10,12 +10,11 @@ or arrays (or other sequences).
 Functions support the :class:`decimal.Decimal` type unless
 otherwise stated.
 """
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 from decimal import Decimal
 
 import numpy as np
-
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr']
@@ -675,7 +674,7 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
     return rn
 
 
-def irr(values, guess=0.1, tol=1e-12, maxiter=100):
+def irr(values, guess=None, tol=1e-12, maxiter=100):
     """
     Return the Internal Rate of Return (IRR).
 
@@ -694,7 +693,8 @@ def irr(values, guess=0.1, tol=1e-12, maxiter=100):
         the initial investment, will typically be negative.
     guess : float, optional
         Initial guess of the IRR for the iterative solver. If no guess is
-        given an initial guess of 0.1 (i.e. 10%) is assumed instead.
+        given an heuristic is used to estimate the guess through the ratio of
+        positive to negative cash lows
     tol : float, optional
         Required tolerance to accept solution. Default is 1e-12.
     maxiter : int, optional
@@ -755,28 +755,38 @@ def irr(values, guess=0.1, tol=1e-12, maxiter=100):
     if same_sign:
         return np.nan
 
+    # If no value is passed for `guess`, then make a heuristic estimate
+    if guess is None:
+        inflow = sum(x for x in values if x > 0)
+        outflow = -sum(x for x in values if x < 0)
+        guess = inflow / outflow - 1
+
     # We aim to solve eirr such that NPV is exactly zero. This can be framed as
     # simply finding the closest root of a polynomial to a given initial guess
     # as follows:
     #           V0           V1           V2           V3
-    # NPV = ---------- + ---------- + ---------- + ---------- + ...
+    # NPV = ---------- + ---------- + ---------- + ---------- + ... = 0
     #       (1+eirr)^0   (1+eirr)^1   (1+eirr)^2   (1+eirr)^3
     #
-    # by letting x = 1 / (1+eirr), we substitute to get
+    # by letting g = (1+eirr), we substitute to get
     #
-    # NPV = V0 * x^0   + V1 * x^1   +  V2 * x^2  +  V3 * x^3  + ...
-    # 
-    # which we solve using Newton-Raphson and then reverse out the solution 
-    # as eirr = 1/x - 1 (if we are close enough to a solution)
-    npv_ = np.polynomial.Polynomial(values)
+    # NPV = V0 * 1/g^0   + V1 * 1/g^1   +  V2 * 1/x^2  +  V3 * 1/g^3  + ... = 0
+    #
+    # Multiplying by g^N this becomes
+    #
+    # V0 * g^N   + V1 * g^{N-1}   +  V2 * g^{N-2}  +  V3 * g^{N-3}  + ... = 0
+    #
+    # which we solve using Newton-Raphson and then reverse out the solution
+    # as eirr = g - 1 (if we are close enough to a solution)
+    npv_ = np.polynomial.Polynomial(values[::-1])
     d_npv = npv_.deriv()
-    x = 1 / (1 + guess)
+    g = 1 + guess
 
     for _ in range(maxiter):
-        delta = npv_(x) / d_npv(x)
+        delta = npv_(g) / d_npv(g)
         if abs(delta) < tol:
-            return 1 / (x - delta) - 1
-        x -= delta
+            return g - 1
+        g -= delta
 
     return np.nan
 
