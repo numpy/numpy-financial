@@ -757,8 +757,9 @@ def irr(values, guess=None, tol=1e-12, maxiter=100):
 
     # If no value is passed for `guess`, then make a heuristic estimate
     if guess is None:
-        inflow = sum(x for x in values if x > 0)
-        outflow = -sum(x for x in values if x < 0)
+        positive_cashflow = values > 0
+        inflow = values.sum(where=positive_cashflow)
+        outflow = -values.sum(where=~positive_cashflow)
         guess = inflow / outflow - 1
 
     # We aim to solve eirr such that NPV is exactly zero. This can be framed as
