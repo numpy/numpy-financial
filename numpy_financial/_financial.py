@@ -688,8 +688,8 @@ def irr_guess(values, axis=-1):
     negative_npv = np.sum(negative_part, axis=axis)
     positive_npv = np.sum(positive_part, axis=axis)
     times = np.arange(values.shape[axis])
-    negative_duration = np.sum(negative_part * times, axis=axis)/positive_npv
-    positive_duration = np.sum(positive_part * times, axis=axis)/negative_npv
+    negative_duration = np.sum(negative_part * times, axis=axis)/negative_npv
+    positive_duration = np.sum(positive_part * times, axis=axis)/positive_npv
     delta_t = positive_duration - negative_duration
     return (positive_npv/negative_npv)**(1/delta_t) - 1
 
