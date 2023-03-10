@@ -753,6 +753,9 @@ def irr(values, guess=None, tol=1e-12, maxiter=100):
     # we don't perform any further calculations and exit early
     same_sign = np.all(values > 0) if values[0] > 0 else np.all(values < 0)
     if same_sign:
+        print('No solution exists for IRR since all'
+              'cashflows are of the same sign. Returning'
+              'np.nan')
         return np.nan
 
     # If no value is passed for `guess`, then make a heuristic estimate
