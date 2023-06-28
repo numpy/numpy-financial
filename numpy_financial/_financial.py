@@ -26,6 +26,24 @@ _when_to_num = {'end': 0, 'begin': 1,
                 'start': 1,
                 'finish': 0}
 
+# Define custom Exceptions
+
+class NoRealSolutionException(Exception):
+    """ No real solution to the problem. """
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
+class IterationsExceededException(Exception):
+    """ Maximum number of iterations reached. """
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
 
 def _convert_when(when):
     # Test to see if when has already been converted to ndarray
@@ -598,7 +616,7 @@ def _g_div_gp(r, n, p, x, y, w):
 #     where
 #  g(r) is the formula
 #  g'(r) is the derivative with respect to r.
-def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, raise_exceptions=False):
+def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, *, raise_exceptions=False):
     """
     Compute the rate of interest per period.
 
@@ -621,7 +639,7 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, raise
     maxiter : int, optional
         Maximum iterations in finding the solution
     raise_exceptions: bool, optional
-        Flag to raise an exception when the at least one of the rates
+        Flag to raise an exception when at least one of the rates
         cannot be computed due to having reached the maximum number of
         iterations (IterationsExceededException). Set to False as default,
         thus returning NaNs for those rates.
@@ -669,29 +687,22 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, raise
         iterator += 1
         rn = rnp1
 
-    # Define the custom Exceptions in case the flag raise_exceptions
-    # is set to True
-    if raise_exceptions:
-        class IterationsExceededException(Exception):
-            "Raised when the maximum number of iterations is reached"
-            pass
-
     if not np.all(close):
         if np.isscalar(rn):
             if raise_exceptions:
-                raise IterationsExceededException('\n Maximum number of iterations exceeded.')
+                raise IterationsExceededException('Maximum number of iterations exceeded.')
             return default_type(np.nan)
         else:
             # Return nan's in array of the same shape as rn
             # where the solution is not close to tol.
             if raise_exceptions:
-                raise IterationsExceededException(f'\n Maximum number of iterations exceeded in '
+                raise IterationsExceededException(f'Maximum number of iterations exceeded in '
                                                   f'{len(close)-close.sum()} rate(s).')
             rn[~close] = np.nan
     return rn
 
 
-def irr(values, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
+def irr(values, guess=None, *, tol=1e-12, maxiter=100, raise_exceptions=False):
     """
     Return the Internal Rate of Return (IRR).
 
@@ -772,23 +783,13 @@ def irr(values, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     if values.ndim != 1:
         raise ValueError("Cashflows must be a rank-1 array")
 
-    # Define the custom Exceptions in case the flag raise_exceptions
-    # is set to True
-    if raise_exceptions:
-        class NoRealSolutionException(Exception):
-            "Raised when all the input cashflows are of the same sign"
-            pass
-        class IterationsExceededException(Exception):
-            "Raised when the maximum number of iterations is reached"
-            pass
-
     # If all values are of the same sign no solution exists
     # we don't perform any further calculations and exit early
     same_sign = np.all(values > 0) if values[0] > 0 else np.all(values < 0)
     if same_sign:
         if raise_exceptions:
-            raise NoRealSolutionException('\nNo real solution exists for IRR since all '
-                                          'cashflows are of the same sign.\n')
+            raise NoRealSolutionException('No real solution exists for IRR since all '
+                                          'cashflows are of the same sign.')
         return np.nan
 
     # If no value is passed for `guess`, then make a heuristic estimate
@@ -826,7 +827,7 @@ def irr(values, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
         g -= delta
 
     if raise_exceptions:
-        raise IterationsExceededException('\n Maximum number of iterations exceeded.')
+        raise IterationsExceededException('Maximum number of iterations exceeded.')
 
     return np.nan
 
@@ -910,7 +911,7 @@ def npv(rate, values):
         return npv
 
 
-def mirr(values, finance_rate, reinvest_rate,raise_exceptions=False):
+def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     """
     Modified internal rate of return.
 
@@ -939,13 +940,6 @@ def mirr(values, finance_rate, reinvest_rate,raise_exceptions=False):
     values = np.asarray(values)
     n = values.size
 
-    # Define the custom Exception in case the flag raise_exceptions
-    # is set to True
-    if raise_exceptions:
-        class NoRealSolutionException(Exception):
-            "Raised when all the input cashflows are of the same sign"
-            pass
-
     # Without this explicit cast the 1/(n - 1) computation below
     # becomes a float, which causes TypeError when using Decimal
     # values.
@@ -956,8 +950,8 @@ def mirr(values, finance_rate, reinvest_rate,raise_exceptions=False):
     neg = values < 0
     if not (pos.any() and neg.any()):
         if raise_exceptions:
-            raise NoRealSolutionException('\nNo real solution exists for IRR since'
-                                          ' all cashflows are of the same sign.\n')
+            raise NoRealSolutionException('No real solution exists for MIRR since'
+                                          ' all cashflows are of the same sign.')
         return np.nan
     numer = np.abs(npv(reinvest_rate, values*pos))
     denom = np.abs(npv(finance_rate, values*neg))
