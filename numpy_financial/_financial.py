@@ -17,7 +17,8 @@ from decimal import Decimal
 import numpy as np
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
-           'irr', 'npv', 'mirr']
+           'irr', 'npv', 'mirr',
+           'NoRealSolutionException', 'IterationsExceededException']
 
 _when_to_num = {'end': 0, 'begin': 1,
                 'e': 0, 'b': 1,
