@@ -30,19 +30,13 @@ _when_to_num = {'end': 0, 'begin': 1,
 
 class NoRealSolutionException(Exception):
     """ No real solution to the problem. """
-    def __init__(self, message):
-        self.message = message
 
-    def __str__(self):
-        return self.message
+    pass
 
 class IterationsExceededException(Exception):
     """ Maximum number of iterations reached. """
-    def __init__(self, message):
-        self.message = message
 
-    def __str__(self):
-        return self.message
+    pass
 
 
 def _convert_when(when):
