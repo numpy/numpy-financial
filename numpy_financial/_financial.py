@@ -17,7 +17,8 @@ from decimal import Decimal
 import numpy as np
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
-           'irr', 'npv', 'mirr']
+           'irr', 'npv', 'mirr',
+           'NoRealSolutionException', 'IterationsExceededException']
 
 _when_to_num = {'end': 0, 'begin': 1,
                 'e': 0, 'b': 1,
@@ -25,6 +26,18 @@ _when_to_num = {'end': 0, 'begin': 1,
                 'beginning': 1,
                 'start': 1,
                 'finish': 0}
+
+# Define custom Exceptions
+
+class NoRealSolutionException(Exception):
+    """ No real solution to the problem. """
+
+    pass
+
+class IterationsExceededException(Exception):
+    """ Maximum number of iterations reached. """
+
+    pass
 
 
 def _convert_when(when):
@@ -598,7 +611,7 @@ def _g_div_gp(r, n, p, x, y, w):
 #     where
 #  g(r) is the formula
 #  g'(r) is the derivative with respect to r.
-def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
+def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, *, raise_exceptions=False):
     """
     Compute the rate of interest per period.
 
@@ -620,6 +633,11 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
         Required tolerance for the solution, default 1e-6
     maxiter : int, optional
         Maximum iterations in finding the solution
+    raise_exceptions: bool, optional
+        Flag to raise an exception when at least one of the rates
+        cannot be computed due to having reached the maximum number of
+        iterations (IterationsExceededException). Set to False as default,
+        thus returning NaNs for those rates.
 
     Notes
     -----
@@ -666,15 +684,20 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100):
 
     if not np.all(close):
         if np.isscalar(rn):
+            if raise_exceptions:
+                raise IterationsExceededException('Maximum number of iterations exceeded.')
             return default_type(np.nan)
         else:
             # Return nan's in array of the same shape as rn
             # where the solution is not close to tol.
+            if raise_exceptions:
+                raise IterationsExceededException(f'Maximum number of iterations exceeded in '
+                                                  f'{len(close)-close.sum()} rate(s).')
             rn[~close] = np.nan
     return rn
 
 
-def irr(values, guess=None, tol=1e-12, maxiter=100):
+def irr(values, guess=None, *, tol=1e-12, maxiter=100, raise_exceptions=False):
     """
     Return the Internal Rate of Return (IRR).
 
@@ -699,6 +722,12 @@ def irr(values, guess=None, tol=1e-12, maxiter=100):
         Required tolerance to accept solution. Default is 1e-12.
     maxiter : int, optional
         Maximum iterations to perform in finding a solution. Default is 100.
+    raise_exceptions: bool, optional
+        Flag to raise an exception when the irr cannot be computed due to
+        either having all cashflows of the same sign (NoRealSolutionException) or
+        having reached the maximum number of iterations (IterationsExceededException).
+        Set to False as default, thus returning NaNs in the two previous
+        cases.
 
     Returns
     -------
@@ -753,6 +782,9 @@ def irr(values, guess=None, tol=1e-12, maxiter=100):
     # we don't perform any further calculations and exit early
     same_sign = np.all(values > 0) if values[0] > 0 else np.all(values < 0)
     if same_sign:
+        if raise_exceptions:
+            raise NoRealSolutionException('No real solution exists for IRR since all '
+                                          'cashflows are of the same sign.')
         return np.nan
 
     # If no value is passed for `guess`, then make a heuristic estimate
@@ -788,6 +820,9 @@ def irr(values, guess=None, tol=1e-12, maxiter=100):
         if abs(delta) < tol:
             return g - 1
         g -= delta
+
+    if raise_exceptions:
+        raise IterationsExceededException('Maximum number of iterations exceeded.')
 
     return np.nan
 
@@ -871,7 +906,7 @@ def npv(rate, values):
         return npv
 
 
-def mirr(values, finance_rate, reinvest_rate):
+def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     """
     Modified internal rate of return.
 
@@ -885,6 +920,11 @@ def mirr(values, finance_rate, reinvest_rate):
         Interest rate paid on the cash flows
     reinvest_rate : scalar
         Interest rate received on the cash flows upon reinvestment
+    raise_exceptions: bool, optional
+        Flag to raise an exception when the mirr cannot be computed due to
+        having all cashflows of the same sign (NoRealSolutionException).
+        Set to False as default, thus returning NaNs in the previous
+        case.
 
     Returns
     -------
@@ -904,6 +944,9 @@ def mirr(values, finance_rate, reinvest_rate):
     pos = values > 0
     neg = values < 0
     if not (pos.any() and neg.any()):
+        if raise_exceptions:
+            raise NoRealSolutionException('No real solution exists for MIRR since'
+                                          ' all cashflows are of the same sign.')
         return np.nan
     numer = np.abs(npv(reinvest_rate, values*pos))
     denom = np.abs(npv(finance_rate, values*neg))

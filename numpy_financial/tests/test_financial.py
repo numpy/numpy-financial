@@ -5,7 +5,7 @@ import math
 # the versions in numpy instead of numpy_financial.
 import numpy
 from numpy.testing import (
-    assert_, assert_almost_equal, assert_allclose, assert_equal
+    assert_, assert_almost_equal, assert_allclose, assert_equal, assert_raises
     )
 import pytest
 
@@ -136,6 +136,26 @@ class TestRate:
         actual = npf.rate(nper, pmt, pv, fv)
         assert_allclose(actual, des)
 
+    def test_rate_maximum_iterations_exception_scalar(self):
+        # Test that if the maximum number of iterations is reached,
+        # then npf.rate returns IterationsExceededException
+        # when raise_exceptions is set to True.
+        assert_raises(npf.IterationsExceededException, npf.rate, Decimal(12.0),
+                      Decimal(400.0), Decimal(10000.0), Decimal(5000.0),
+                      raise_exceptions=True)
+
+    def test_rate_maximum_iterations_exception_array(self):
+        # Test that if the maximum number of iterations is reached in at least
+        # one rate, then npf.rate returns IterationsExceededException
+        # when raise_exceptions is set to True.
+        nper = 2
+        pmt = 0
+        pv = [-593.06, -4725.38, -662.05, -428.78, -13.65]
+        fv = [214.07, 4509.97, 224.11, 686.29, -329.67]
+        assert_raises(npf.IterationsExceededException, npf.rate, nper,
+                      pmt, pv, fv,
+                      raise_exceptions=True)
+
 
 class TestNpv:
     def test_npv(self):
@@ -247,6 +267,13 @@ class TestMirr:
         val = [Decimal('39000'), Decimal('30000'), Decimal('21000'),
                Decimal('37000'), Decimal('46000')]
         assert_(numpy.isnan(npf.mirr(val, Decimal('0.10'), Decimal('0.12'))))
+
+    def test_mirr_no_real_solution_exception(self):
+        # Test that if there is no solution because all the cashflows
+        # have the same sign, then npf.mirr returns NoRealSolutionException
+        # when raise_exceptions is set to True.
+        val = [39000, 30000, 21000, 37000, 46000]
+        assert_raises(npf.NoRealSolutionException, npf.mirr, val, 0.10, 0.12, raise_exceptions=True)
 
 
 class TestNper:
@@ -575,6 +602,7 @@ class TestFv:
 
 
 class TestIrr:
+
     def test_npv_irr_congruence(self):
         # IRR is defined as the rate required for the present value of
         # a series of cashflows to be zero, so we should have
@@ -671,3 +699,18 @@ class TestIrr:
         # "true" value as calculated by Google sheets
         cf = [-1678.87, 771.96, 1814.05, 3520.30, 3552.95, 3584.99, 4789.91, -1]
         assert_almost_equal(npf.irr(cf), 1.00426, 4)
+
+    def test_irr_no_real_solution_exception(self):
+        # Test that if there is no solution because all the cashflows
+        # have the same sign, then npf.irr returns NoRealSolutionException
+        # when raise_exceptions is set to True.
+        cashflows = numpy.array([40000, 5000, 8000, 12000, 30000])
+        assert_raises(npf.NoRealSolutionException, npf.irr, cashflows, raise_exceptions=True)
+
+    def test_irr_maximum_iterations_exception(self):
+        # Test that if the maximum number of iterations is reached,
+        # then npf.irr returns IterationsExceededException
+        # when raise_exceptions is set to True.
+        cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
+        assert_raises(npf.IterationsExceededException, npf.irr, cashflows,
+                      maxiter=1, raise_exceptions=True)
