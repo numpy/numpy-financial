@@ -1,0 +1,55 @@
+[tool.poetry]
+name = "numpy-financial"
+version = "1.1.0"
+description = "Simple financial functions"
+license = "BSD-3-Clause"
+authors = ["Travis E. Oliphant et al."]
+maintainers = ["Numpy Financial Developers <numpy-discussion@python.org>"]
+readme = "README.md"
+homepage = "https://numpy.org/numpy-financial/latest/"
+repository = "https://github.com/numpy/numpy-financial"
+documentation = "https://numpy.org/numpy-financial/latest/#functions"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development",
+    "Topic :: Office/Business :: Financial :: Accounting",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Office/Business :: Financial :: Spreadsheet",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+]
+packages = [{include = "numpy_financial"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.23"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4"
+
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "^7.0"
+numpydoc = "^1.5"
+
+
+[tool.poetry.group.lint.dependencies]
+flake8 = "^6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
