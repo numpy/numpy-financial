@@ -27,16 +27,14 @@ _when_to_num = {'end': 0, 'begin': 1,
                 'start': 1,
                 'finish': 0}
 
-# Define custom Exceptions
 
 class NoRealSolutionException(Exception):
     """ No real solution to the problem. """
-
     pass
+
 
 class IterationsExceededException(Exception):
     """ Maximum number of iterations reached. """
-
     pass
 
 
