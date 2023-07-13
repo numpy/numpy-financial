@@ -47,7 +47,7 @@ numpydoc = "^1.5"
 
 
 [tool.poetry.group.lint.dependencies]
-flake8 = "^6.0"
+flake8 = "*"
 
 
 [build-system]
