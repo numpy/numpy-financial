@@ -6,7 +6,7 @@ import math
 import numpy
 from numpy.testing import (
     assert_, assert_almost_equal, assert_allclose, assert_equal, assert_raises
-    )
+)
 import pytest
 
 import numpy_financial as npf
