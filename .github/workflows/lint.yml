@@ -1,11 +1,12 @@
 name: Lint
 
 on:
+  push:
+    branches:
+      - "*"
   pull_request:
     branches:
       - main
-      - push
-      - pull_request
 
 permissions:
    contents: read  # to fetch code (actions/checkout)
