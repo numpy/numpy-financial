@@ -36,7 +36,7 @@ The `git fetch` command downloads commits, files and refs from a remote repo int
 Then run:
 
 ```shell
-git git merge --ff-only
+git merge --ff-only
 ```
 
 The `git merge` command is Git's way of putting independent branches back together. The `--ff-only` flag tells git to
