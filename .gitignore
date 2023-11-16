@@ -105,5 +105,9 @@ Thumbs.db
 ##########################
 /.pytest_cache
 
+# Poetry lock file #
+####################
+poetry.lock
+
 # Things specific to this project #
 ###################################
