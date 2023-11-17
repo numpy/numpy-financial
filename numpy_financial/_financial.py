@@ -695,7 +695,7 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, *, ra
     return rn
 
 
-def irr(values, guess=None, *, tol=1e-12, maxiter=100, raise_exceptions=False):
+def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     """
     Return the Internal Rate of Return (IRR).
 
