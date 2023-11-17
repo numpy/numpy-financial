@@ -249,30 +249,36 @@ class TestMirr:
         else:
             assert_(numpy.isnan(result))
 
+    @pytest.mark.parametrize('number_type', [Decimal, float])
     @pytest.mark.parametrize(
         "args, expected",
         [
-            ({'values': [Decimal('-4500'), Decimal('-800'), Decimal('800'), Decimal('800'),
-                         Decimal('600'), Decimal('600'), Decimal('800'), Decimal('800'),
-                         Decimal('700'), Decimal('3000')],
-              'finance_rate': Decimal('0.08'), 'reinvest_rate': Decimal('0.055')},
-             Decimal('0.066597175031553548874239618')),
-            ({'values': [Decimal('-120000'), Decimal('39000'), Decimal('30000'), Decimal('21000'),
-                         Decimal('37000'), Decimal('46000')],
-              'finance_rate': Decimal('0.10'), 'reinvest_rate': Decimal('0.12')},
-             Decimal('0.126094130365905145828421880')),
-            ({'values': [Decimal('100'), Decimal('200'), Decimal('-50'), Decimal('300'), Decimal('-200')],
-              'finance_rate': Decimal('0.05'), 'reinvest_rate': Decimal('0.06')},
-             Decimal('0.342823387842176663647819868')),
-            ({'values': [Decimal('39000'), Decimal('30000'), Decimal('21000'), Decimal('37000'),
-                         Decimal('46000')],
-              'finance_rate': Decimal('0.10'), 'reinvest_rate': Decimal('0.12')},
-             numpy.nan),
+            ({'values': ['-4500', '-800', '800', '800', '600', '600', '800', '800', '700', '3000'],
+              'finance_rate': '0.08', 'reinvest_rate': '0.055'
+              }, '0.066597175031553548874239618'
+             ),
+            ({'values': ['-120000', '39000', '30000', '21000', '37000', '46000'],
+              'finance_rate': '0.10', 'reinvest_rate': '0.12'
+              }, '0.126094130365905145828421880'
+             ),
+            ({'values': ['100', '200', '-50', '300', '-200'],
+              'finance_rate': '0.05', 'reinvest_rate': '0.06'
+              }, '0.342823387842176663647819868'
+             ),
+            ({'values': ['39000', '30000', '21000', '37000', '46000'],
+              'finance_rate': '0.10', 'reinvest_rate': '0.12'
+              }, numpy.nan
+             ),
         ],
     )
-    def test_mirr_decimal(self, args, expected):
-        result = npf.mirr(**args)
-        assert_equal(result, expected)
+    def test_mirr_decimal(self, number_type, args, expected):
+        values = [number_type(v) for v in args['values']]
+        result = npf.mirr(values, number_type(args['finance_rate']), number_type(args['reinvest_rate']))
+
+        if expected is not numpy.nan:
+            assert_almost_equal(result, number_type(expected), 15)
+        else:
+            assert numpy.isnan(result)
 
     def test_mirr_no_real_solution_exception(self):
         # Test that if there is no solution because all the cashflows
