@@ -140,7 +140,7 @@ class TestRate:
         # Test that if the maximum number of iterations is reached,
         # then npf.rate returns IterationsExceededException
         # when raise_exceptions is set to True.
-        assert_raises(npf.IterationsExceededException, npf.rate, Decimal(12.0),
+        assert_raises(npf.IterationsExceededError, npf.rate, Decimal(12.0),
                       Decimal(400.0), Decimal(10000.0), Decimal(5000.0),
                       raise_exceptions=True)
 
@@ -152,7 +152,7 @@ class TestRate:
         pmt = 0
         pv = [-593.06, -4725.38, -662.05, -428.78, -13.65]
         fv = [214.07, 4509.97, 224.11, 686.29, -329.67]
-        assert_raises(npf.IterationsExceededException, npf.rate, nper,
+        assert_raises(npf.IterationsExceededError, npf.rate, nper,
                       pmt, pv, fv,
                       raise_exceptions=True)
 
@@ -285,7 +285,7 @@ class TestMirr:
         # have the same sign, then npf.mirr returns NoRealSolutionException
         # when raise_exceptions is set to True.
         val = [39000, 30000, 21000, 37000, 46000]
-        assert_raises(npf.NoRealSolutionException, npf.mirr, val, 0.10, 0.12, raise_exceptions=True)
+        assert_raises(npf.NoRealSolutionError, npf.mirr, val, 0.10, 0.12, raise_exceptions=True)
 
 
 class TestNper:
@@ -717,12 +717,12 @@ class TestIrr:
         # have the same sign, then npf.irr returns NoRealSolutionException
         # when raise_exceptions is set to True.
         cashflows = numpy.array([40000, 5000, 8000, 12000, 30000])
-        assert_raises(npf.NoRealSolutionException, npf.irr, cashflows, raise_exceptions=True)
+        assert_raises(npf.NoRealSolutionError, npf.irr, cashflows, raise_exceptions=True)
 
     def test_irr_maximum_iterations_exception(self):
         # Test that if the maximum number of iterations is reached,
         # then npf.irr returns IterationsExceededException
         # when raise_exceptions is set to True.
         cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
-        assert_raises(npf.IterationsExceededException, npf.irr, cashflows,
+        assert_raises(npf.IterationsExceededError, npf.irr, cashflows,
                       maxiter=1, raise_exceptions=True)

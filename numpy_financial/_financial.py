@@ -1,4 +1,4 @@
-"""Some simple financial calculations
+"""Some simple financial calculations.
 
 patterned after spreadsheet computations.
 
@@ -10,7 +10,6 @@ or arrays (or other sequences).
 Functions support the :class:`decimal.Decimal` type unless
 otherwise stated.
 """
-from __future__ import absolute_import, division, print_function
 
 from decimal import Decimal
 
@@ -18,7 +17,7 @@ import numpy as np
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
-           'NoRealSolutionException', 'IterationsExceededException']
+           'NoRealSolutionError', 'IterationsExceededError']
 
 _when_to_num = {'end': 0, 'begin': 1,
                 'e': 0, 'b': 1,
@@ -28,14 +27,12 @@ _when_to_num = {'end': 0, 'begin': 1,
                 'finish': 0}
 
 
-class NoRealSolutionException(Exception):
-    """ No real solution to the problem. """
-    pass
+class NoRealSolutionError(Exception):
+    """No real solution to the problem."""
 
 
-class IterationsExceededException(Exception):
-    """ Maximum number of iterations reached. """
-    pass
+class IterationsExceededError(Exception):
+    """Maximum number of iterations reached."""
 
 
 def _convert_when(when):
@@ -50,8 +47,7 @@ def _convert_when(when):
 
 
 def fv(rate, nper, pmt, pv, when='end'):
-    """
-    Compute the future value.
+    """Compute the future value.
 
     Given:
      * a present value, `pv`
@@ -143,11 +139,11 @@ def fv(rate, nper, pmt, pv, when='end'):
     fv_array[zero] = -(pv[zero] + pmt[zero] * nper[zero])
 
     rate_nonzero = rate[nonzero]
-    temp = (1 + rate_nonzero)**nper[nonzero]
+    temp = (1 + rate_nonzero) ** nper[nonzero]
     fv_array[nonzero] = (
-        - pv[nonzero] * temp
-        - pmt[nonzero] * (1 + rate_nonzero * when[nonzero]) / rate_nonzero
-        * (temp - 1)
+            - pv[nonzero] * temp
+            - pmt[nonzero] * (1 + rate_nonzero * when[nonzero]) / rate_nonzero
+            * (temp - 1)
     )
 
     if np.ndim(fv_array) == 0:
@@ -158,8 +154,7 @@ def fv(rate, nper, pmt, pv, when='end'):
 
 
 def pmt(rate, nper, pv, fv=0, when='end'):
-    """
-    Compute the payment against loan principal plus interest.
+    """Compute the payment against loan principal plus interest.
 
     Given:
      * a present value, `pv` (e.g., an amount borrowed)
@@ -244,17 +239,16 @@ def pmt(rate, nper, pv, fv=0, when='end'):
     """
     when = _convert_when(when)
     (rate, nper, pv, fv, when) = map(np.array, [rate, nper, pv, fv, when])
-    temp = (1 + rate)**nper
+    temp = (1 + rate) ** nper
     mask = (rate == 0)
     masked_rate = np.where(mask, 1, rate)
     fact = np.where(mask != 0, nper,
-                    (1 + masked_rate*when)*(temp - 1)/masked_rate)
-    return -(fv + pv*temp) / fact
+                    (1 + masked_rate * when) * (temp - 1) / masked_rate)
+    return -(fv + pv * temp) / fact
 
 
 def nper(rate, pmt, pv, fv=0, when='end'):
-    """
-    Compute the number of periodic payments.
+    """Compute the number of periodic payments.
 
     :class:`decimal.Decimal` type is not supported.
 
@@ -321,8 +315,8 @@ def nper(rate, pmt, pv, fv=0, when='end'):
     nonzero_rate = rate[nonzero]
     z = pmt[nonzero] * (1 + nonzero_rate * when[nonzero]) / nonzero_rate
     nper_array[nonzero] = (
-        np.log((-fv[nonzero] + z) / (pv[nonzero] + z))
-        / np.log(1 + nonzero_rate)
+            np.log((-fv[nonzero] + z) / (pv[nonzero] + z))
+            / np.log(1 + nonzero_rate)
     )
 
     return nper_array
@@ -332,13 +326,11 @@ def _value_like(arr, value):
     entry = arr.item(0)
     if isinstance(entry, Decimal):
         return Decimal(value)
-    else:
-        return np.array(value, dtype=arr.dtype).item(0)
+    return np.array(value, dtype=arr.dtype).item(0)
 
 
 def ipmt(rate, per, nper, pv, fv=0, when='end'):
-    """
-    Compute the interest portion of a payment.
+    """Compute the interest portion of a payment.
 
     Parameters
     ----------
@@ -439,7 +431,7 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
     # If paying at the beginning we need to discount by one period.
     per_gt_1_and_begin = (when == 1) & (per > 1)
     ipmt_array[per_gt_1_and_begin] = (
-        ipmt_array[per_gt_1_and_begin] / (1 + rate[per_gt_1_and_begin])
+            ipmt_array[per_gt_1_and_begin] / (1 + rate[per_gt_1_and_begin])
     )
 
     if np.ndim(ipmt_array) == 0:
@@ -450,7 +442,8 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
 
 
 def _rbl(rate, per, pmt, pv, when):
-    """
+    """Remaining balance on loan.
+
     This function is here to simply have a different name for the 'fv'
     function to not interfere with the 'fv' keyword argument within the 'ipmt'
     function.  It is the 'remaining balance on loan' which might be useful as
@@ -460,8 +453,7 @@ def _rbl(rate, per, pmt, pv, when):
 
 
 def ppmt(rate, per, nper, pv, fv=0, when='end'):
-    """
-    Compute the payment against loan principal.
+    """Compute the payment against loan principle.
 
     Parameters
     ----------
@@ -489,8 +481,7 @@ def ppmt(rate, per, nper, pv, fv=0, when='end'):
 
 
 def pv(rate, nper, pmt, fv=0, when='end'):
-    """
-    Compute the present value.
+    """Compute the present value.
 
     Given:
      * a future value, `fv`
@@ -579,9 +570,10 @@ def pv(rate, nper, pmt, fv=0, when='end'):
     """
     when = _convert_when(when)
     (rate, nper, pmt, fv, when) = map(np.asarray, [rate, nper, pmt, fv, when])
-    temp = (1+rate)**nper
-    fact = np.where(rate == 0, nper, (1+rate*when)*(temp-1)/rate)
-    return -(fv + pmt*fact)/temp
+    temp = (1 + rate) ** nper
+    fact = np.where(rate == 0, nper, (1 + rate * when) * (temp - 1) / rate)
+    return -(fv + pmt * fact) / temp
+
 
 # Computed with Sage
 #  (y + (r + 1)^n*x + p*((r + 1)^n - 1)*(r*w + 1)/r)/(n*(r + 1)^(n - 1)*x -
@@ -592,13 +584,13 @@ def pv(rate, nper, pmt, fv=0, when='end'):
 def _g_div_gp(r, n, p, x, y, w):
     # Evaluate g(r_n)/g'(r_n), where g =
     # fv + pv*(1+rate)**nper + pmt*(1+rate*when)/rate * ((1+rate)**nper - 1)
-    t1 = (r+1)**n
-    t2 = (r+1)**(n-1)
-    g = y + t1*x + p*(t1 - 1) * (r*w + 1) / r
-    gp = (n*t2*x
-          - p*(t1 - 1) * (r*w + 1) / (r**2)
-          + n*p*t2 * (r*w + 1) / r
-          + p*(t1 - 1) * w/r)
+    t1 = (r + 1) ** n
+    t2 = (r + 1) ** (n - 1)
+    g = y + t1 * x + p * (t1 - 1) * (r * w + 1) / r
+    gp = (n * t2 * x
+          - p * (t1 - 1) * (r * w + 1) / (r ** 2)
+          + n * p * t2 * (r * w + 1) / r
+          + p * (t1 - 1) * w / r)
     return g / gp
 
 
@@ -609,9 +601,18 @@ def _g_div_gp(r, n, p, x, y, w):
 #     where
 #  g(r) is the formula
 #  g'(r) is the derivative with respect to r.
-def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, *, raise_exceptions=False):
-    """
-    Compute the rate of interest per period.
+def rate(
+        nper,
+        pmt,
+        pv,
+        fv,
+        when='end',
+        guess=None,
+        tol=None,
+        maxiter=100,
+        *,
+        raise_exceptions=False):
+    """Compute the rate of interest per period.
 
     Parameters
     ----------
@@ -675,7 +676,7 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, *, ra
     close = False
     while (iterator < maxiter) and not np.all(close):
         rnp1 = rn - _g_div_gp(rn, nper, pmt, pv, fv, when)
-        diff = abs(rnp1-rn)
+        diff = abs(rnp1 - rn)
         close = diff < tol
         iterator += 1
         rn = rnp1
@@ -683,21 +684,20 @@ def rate(nper, pmt, pv, fv, when='end', guess=None, tol=None, maxiter=100, *, ra
     if not np.all(close):
         if np.isscalar(rn):
             if raise_exceptions:
-                raise IterationsExceededException('Maximum number of iterations exceeded.')
+                raise IterationsExceededError('Maximum number of iterations exceeded.')
             return default_type(np.nan)
         else:
             # Return nan's in array of the same shape as rn
             # where the solution is not close to tol.
             if raise_exceptions:
-                raise IterationsExceededException(f'Maximum number of iterations exceeded in '
-                                                  f'{len(close)-close.sum()} rate(s).')
+                raise IterationsExceededError(f'Maximum iterations exceeded in '
+                                              f'{len(close) - close.sum()} rate(s).')
             rn[~close] = np.nan
     return rn
 
 
 def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
-    """
-    Return the Internal Rate of Return (IRR).
+    r"""Return the Internal Rate of Return (IRR).
 
     This is the "average" periodically compounded rate of return
     that gives a net present value of 0.0; for a more complete explanation,
@@ -781,8 +781,8 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     same_sign = np.all(values > 0) if values[0] > 0 else np.all(values < 0)
     if same_sign:
         if raise_exceptions:
-            raise NoRealSolutionException('No real solution exists for IRR since all '
-                                          'cashflows are of the same sign.')
+            raise NoRealSolutionError('No real solution exists for IRR since all '
+                                      'cashflows are of the same sign.')
         return np.nan
 
     # If no value is passed for `guess`, then make a heuristic estimate
@@ -820,14 +820,13 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
         g -= delta
 
     if raise_exceptions:
-        raise IterationsExceededException('Maximum number of iterations exceeded.')
+        raise IterationsExceededError('Maximum number of iterations exceeded.')
 
     return np.nan
 
 
 def npv(rate, values):
-    """
-    Returns the NPV (Net Present Value) of a cash flow series.
+    r"""Return the NPV (Net Present Value) of a cash flow series.
 
     Parameters
     ----------
@@ -905,8 +904,7 @@ def npv(rate, values):
 
 
 def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
-    """
-    Modified internal rate of return.
+    r"""Return the modified internal rate of return.
 
     Parameters
     ----------
@@ -943,9 +941,9 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     neg = values < 0
     if not (pos.any() and neg.any()):
         if raise_exceptions:
-            raise NoRealSolutionException('No real solution exists for MIRR since'
-                                          ' all cashflows are of the same sign.')
+            raise NoRealSolutionError('No real solution exists for MIRR since'
+                                      ' all cashflows are of the same sign.')
         return np.nan
-    numer = np.abs(npv(reinvest_rate, values*pos))
-    denom = np.abs(npv(finance_rate, values*neg))
-    return (numer/denom)**(1/(n - 1))*(1 + reinvest_rate) - 1
+    numer = np.abs(npv(reinvest_rate, values * pos))
+    denom = np.abs(npv(finance_rate, values * neg))
+    return (numer / denom) ** (1 / (n - 1)) * (1 + reinvest_rate) - 1
