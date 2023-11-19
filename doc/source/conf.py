@@ -20,7 +20,7 @@ import numpy_financial
 # -- Project information -----------------------------------------------------
 
 project = 'numpy-financial'
-copyright = '2019, numpy-financial developers'
+copyright = '2023, numpy-financial developers'
 author = 'numpy-financial developers'
 
 
@@ -32,7 +32,7 @@ author = 'numpy-financial developers'
 extensions = [
     'sphinx.ext.autodoc',
     'numpydoc',
-    'sphinx.ext.imgmath',
+    'sphinx.ext.mathjax',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -50,7 +50,7 @@ version = numpy_financial.__version__
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'bizstyle'
+html_theme = 'pydata_sphinx_theme'
 html_copy_source = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
