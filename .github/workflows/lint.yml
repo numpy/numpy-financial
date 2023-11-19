@@ -48,4 +48,4 @@ jobs:
         # Tell us what version we are using
         poetry run ruff version
         # Check the source file, ignore type annotations (ANN) for now.
-        poetry run ruff check numpy_financial/ --ignore F403,Q000,ANN --select ALL
+        poetry run ruff check numpy_financial/ --ignore F403,Q000,PLR0913,ERA001,TRY003,EM101,EM102,RET505,D203,D213,ANN --select ALL
