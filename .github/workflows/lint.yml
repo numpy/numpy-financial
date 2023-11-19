@@ -42,7 +42,7 @@ jobs:
         poetry env use ${{ matrix.python-version }}
         poetry install --with=lint
 
-    - name: Lint with flake8
+    - name: Lint with Ruff
       run: |
         set -euo pipefail
         # Tell us what version we are using
