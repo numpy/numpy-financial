@@ -52,5 +52,7 @@ numpydoc = "^1.5"
 pydata-sphinx-theme = "^0.14.3"
 
 
+
 [tool.poetry.group.lint.dependencies]
-flake8 = "*"
+ruff = "^0.1.6"
+
