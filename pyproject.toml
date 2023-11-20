@@ -56,3 +56,7 @@ pydata-sphinx-theme = "^0.14.3"
 [tool.poetry.group.lint.dependencies]
 ruff = "^0.1.6"
 
+
+[tool.poetry.group.bench.dependencies]
+asv = "^0.6.1"
+
