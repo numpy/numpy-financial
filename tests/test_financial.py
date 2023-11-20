@@ -1,13 +1,17 @@
-from decimal import Decimal
 import math
+from decimal import Decimal
 
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
-from numpy.testing import (
-    assert_, assert_almost_equal, assert_allclose, assert_equal, assert_raises
-)
 import pytest
+from numpy.testing import (
+    assert_,
+    assert_allclose,
+    assert_almost_equal,
+    assert_equal,
+    assert_raises,
+)
 
 import numpy_financial as npf
 
