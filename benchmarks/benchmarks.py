@@ -6,7 +6,7 @@ class Npv1DCashflow:
 
     param_names = ["cashflow_length"]
     params = [
-        (10, 100, 1000),
+        (1, 10, 100, 1000),
     ]
 
     def __init__(self):
@@ -24,8 +24,8 @@ class Npv2DCashflows:
 
     param_names = ["n_cashflows", "cashflow_lengths"]
     params = [
-        (10, 100, 1000),
-        (10, 100, 1000),
+        (1, 10, 100, 1000),
+        (1, 10, 100, 1000),
     ]
 
     def __init__(self):
