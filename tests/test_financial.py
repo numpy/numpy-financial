@@ -3,10 +3,8 @@ from decimal import Decimal
 
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
-
 import numpy
 import pytest
-
 from numpy.testing import (
     assert_,
     assert_allclose,
