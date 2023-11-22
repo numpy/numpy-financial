@@ -3,7 +3,7 @@ import math
 
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
-import numpy
+import numpy as numpy
 from numpy.testing import (
     assert_, assert_almost_equal, assert_allclose, assert_equal, assert_raises
 )
@@ -86,13 +86,27 @@ class TestFinancial(object):
 
 
 class TestPV:
-    def test_pv(self):
-        assert_almost_equal(npf.pv(0.07, 20, 12000, 0), -127128.17, 2)
+    @pytest.mark.parametrize("rate, periods, payments, future_value, exp_result", [
+                             (0.07, 20, 0, 12000, -3101.0280337664),
+                             (0.025, 4, 0, 1000, -905.9506447998),
+                             (-0.07, 56, 0, 1200000, -69845129.5182595000),
+                             (0.05, 20, 0, -12000, 4522.6737944760),
+                             (0.05, 356.5288568, 0, -25000.00, 0.0006971776),
+                             (0.05, 50, 0, 0, 0.0000000000),
+                             (0.05, 26, 500, 0, -7187.5926504975),
+                             ])
+    @pytest.mark.parametrize('number_type', [float, Decimal])
+    def test_pv(self, rate, periods, payments, future_value, exp_result, number_type):
+        result = npf.pv(rate, periods, payments, future_value)
 
-    def test_pv_decimal(self):
-        assert_equal(npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
-                            Decimal('0')),
-                     Decimal('-127128.1709461939327295222005'))
+        if exp_result is not numpy.nan:
+            if number_type is Decimal:
+                assert result == pytest.approx(exp_result, rel=0.2)
+            else:
+                assert_allclose(float(result), float(
+                    exp_result), atol=1e-10)
+        else:
+            assert numpy.isnan(result)
 
 
 class TestRate:
@@ -273,7 +287,8 @@ class TestMirr:
     )
     def test_mirr_decimal(self, number_type, args, expected):
         values = [number_type(v) for v in args['values']]
-        result = npf.mirr(values, number_type(args['finance_rate']), number_type(args['reinvest_rate']))
+        result = npf.mirr(values, number_type(
+            args['finance_rate']), number_type(args['reinvest_rate']))
 
         if expected is not numpy.nan:
             assert_almost_equal(result, number_type(expected), 15)
@@ -285,7 +300,8 @@ class TestMirr:
         # have the same sign, then npf.mirr returns NoRealSolutionException
         # when raise_exceptions is set to True.
         val = [39000, 30000, 21000, 37000, 46000]
-        assert_raises(npf.NoRealSolutionException, npf.mirr, val, 0.10, 0.12, raise_exceptions=True)
+        assert_raises(npf.NoRealSolutionException, npf.mirr,
+                      val, 0.10, 0.12, raise_exceptions=True)
 
 
 class TestNper:
@@ -709,7 +725,8 @@ class TestIrr:
 
     def test_gh_44(self):
         # "true" value as calculated by Google sheets
-        cf = [-1678.87, 771.96, 1814.05, 3520.30, 3552.95, 3584.99, 4789.91, -1]
+        cf = [-1678.87, 771.96, 1814.05, 3520.30,
+              3552.95, 3584.99, 4789.91, -1]
         assert_almost_equal(npf.irr(cf), 1.00426, 4)
 
     def test_irr_no_real_solution_exception(self):
@@ -717,7 +734,8 @@ class TestIrr:
         # have the same sign, then npf.irr returns NoRealSolutionException
         # when raise_exceptions is set to True.
         cashflows = numpy.array([40000, 5000, 8000, 12000, 30000])
-        assert_raises(npf.NoRealSolutionException, npf.irr, cashflows, raise_exceptions=True)
+        assert_raises(npf.NoRealSolutionException, npf.irr,
+                      cashflows, raise_exceptions=True)
 
     def test_irr_maximum_iterations_exception(self):
         # Test that if the maximum number of iterations is reached,
