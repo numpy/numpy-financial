@@ -1,31 +1,39 @@
-# Write the benchmarking functions here.
-# See "Writing benchmarks" in the asv docs for more information.
+import numpy as np
+import numpy_financial as npf
 
 
-class TimeSuite:
-    """
-    An example benchmark that times the performance of various kinds
-    of iterating over dictionaries in Python.
-    """
-    def setup(self):
-        self.d = {}
-        for x in range(500):
-            self.d[x] = None
+class Npv1DCashflow:
 
-    def time_keys(self):
-        for key in self.d.keys():
-            pass
+    param_names = ["cashflow_length"]
+    params = [
+        (10, 100, 1000),
+    ]
 
-    def time_values(self):
-        for value in self.d.values():
-            pass
+    def __init__(self):
+        self.cashflows = None
 
-    def time_range(self):
-        d = self.d
-        for key in range(500):
-            d[key]
+    def setup(self, cashflow_length):
+        rng = np.random.default_rng(0)
+        self.cashflows = rng.standard_normal(cashflow_length)
+
+    def time_1d_cashflow(self, cashflow_length):
+        npf.npv(0.08, self.cashflows)
 
 
-class MemSuite:
-    def mem_list(self):
-        return [0] * 256
+class Npv2DCashflows:
+
+    param_names = ["n_cashflows", "cashflow_lengths"]
+    params = [
+        (10, 100, 1000),
+        (10, 100, 1000),
+    ]
+
+    def __init__(self):
+        self.cashflows = None
+
+    def setup(self, n_cashflows, cashflow_lengths):
+        rng = np.random.default_rng(0)
+        self.cashflows = rng.standard_normal((n_cashflows, cashflow_lengths))
+
+    def time_2d_cashflow(self, n_cashflows, cashflow_lengths):
+        npf.npv(0.08, self.cashflows)
