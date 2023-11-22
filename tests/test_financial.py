@@ -1,13 +1,19 @@
-from decimal import Decimal
 import math
+from decimal import Decimal
 
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
-import numpy as numpy
-from numpy.testing import (
-    assert_, assert_almost_equal, assert_allclose, assert_equal, assert_raises
-)
+
+import numpy
 import pytest
+
+from numpy.testing import (
+    assert_,
+    assert_allclose,
+    assert_almost_equal,
+    assert_equal,
+    assert_raises,
+)
 
 import numpy_financial as npf
 
@@ -154,7 +160,7 @@ class TestRate:
         # Test that if the maximum number of iterations is reached,
         # then npf.rate returns IterationsExceededException
         # when raise_exceptions is set to True.
-        assert_raises(npf.IterationsExceededException, npf.rate, Decimal(12.0),
+        assert_raises(npf.IterationsExceededError, npf.rate, Decimal(12.0),
                       Decimal(400.0), Decimal(10000.0), Decimal(5000.0),
                       raise_exceptions=True)
 
@@ -166,7 +172,7 @@ class TestRate:
         pmt = 0
         pv = [-593.06, -4725.38, -662.05, -428.78, -13.65]
         fv = [214.07, 4509.97, 224.11, 686.29, -329.67]
-        assert_raises(npf.IterationsExceededException, npf.rate, nper,
+        assert_raises(npf.IterationsExceededError, npf.rate, nper,
                       pmt, pv, fv,
                       raise_exceptions=True)
 
@@ -267,7 +273,9 @@ class TestMirr:
     @pytest.mark.parametrize(
         "args, expected",
         [
-            ({'values': ['-4500', '-800', '800', '800', '600', '600', '800', '800', '700', '3000'],
+            ({'values': [
+                '-4500', '-800', '800', '800', '600', '600', '800', '800', '700', '3000'
+            ],
               'finance_rate': '0.08', 'reinvest_rate': '0.055'
               }, '0.066597175031553548874239618'
              ),
@@ -287,8 +295,12 @@ class TestMirr:
     )
     def test_mirr_decimal(self, number_type, args, expected):
         values = [number_type(v) for v in args['values']]
-        result = npf.mirr(values, number_type(
-            args['finance_rate']), number_type(args['reinvest_rate']))
+
+        result = npf.mirr(
+            values,
+            number_type(args['finance_rate']),
+            number_type(args['reinvest_rate'])
+        )
 
         if expected is not numpy.nan:
             assert_almost_equal(result, number_type(expected), 15)
@@ -300,8 +312,9 @@ class TestMirr:
         # have the same sign, then npf.mirr returns NoRealSolutionException
         # when raise_exceptions is set to True.
         val = [39000, 30000, 21000, 37000, 46000]
-        assert_raises(npf.NoRealSolutionException, npf.mirr,
-                      val, 0.10, 0.12, raise_exceptions=True)
+
+        with pytest.raises(npf.NoRealSolutionError):
+            npf.mirr(val, 0.10, 0.12, raise_exceptions=True)
 
 
 class TestNper:
@@ -734,13 +747,15 @@ class TestIrr:
         # have the same sign, then npf.irr returns NoRealSolutionException
         # when raise_exceptions is set to True.
         cashflows = numpy.array([40000, 5000, 8000, 12000, 30000])
-        assert_raises(npf.NoRealSolutionException, npf.irr,
-                      cashflows, raise_exceptions=True)
+
+        with pytest.raises(npf.NoRealSolutionError):
+            npf.irr(cashflows, raise_exceptions=True)
 
     def test_irr_maximum_iterations_exception(self):
         # Test that if the maximum number of iterations is reached,
         # then npf.irr returns IterationsExceededException
         # when raise_exceptions is set to True.
         cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
-        assert_raises(npf.IterationsExceededException, npf.irr, cashflows,
-                      maxiter=1, raise_exceptions=True)
+
+        with pytest.raises(npf.IterationsExceededError):
+            npf.irr(cashflows, maxiter=1, raise_exceptions=True)

@@ -40,12 +40,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip poetry
         poetry env use ${{ matrix.python-version }}
-        poetry install --with=test --with=lint
+        poetry install --with=lint
 
-    - name: Lint with flake8
+    - name: Lint with Ruff
       run: |
         set -euo pipefail
-        # stop the build if there are Python syntax errors or undefined names
-        poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # The GitHub editor is 127 chars wide
-        poetry run flake8 . --ignore=F401,F403,W503,E226 --count --max-complexity=10 --max-line-length=127 --statistics
+        # Tell us what version we are using
+        poetry run ruff version
+        # Check the source file, ignore type annotations (ANN) for now.
+        poetry run ruff check numpy_financial/ --ignore F403 --select E,F,B,I
+        # Check the test and benchmark files
+        poetry run ruff check tests/ benchmarks/ --select E,F,B,I
