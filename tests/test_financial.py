@@ -91,7 +91,7 @@ class TestFinancial(object):
 
 class TestPV:
     def test_pv(self):
-        assert_almost_equal(npf.pv(0.07, 20, 12000, 0), -127128.17, 2)
+        assert_allclose(npf.pv(0.07, 20, 12000, 0), -127128.17, atol=1e-2)
 
     def test_pv_decimal(self):
         assert_equal(npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
@@ -101,7 +101,7 @@ class TestPV:
 
 class TestRate:
     def test_rate(self):
-        assert_almost_equal(npf.rate(10, 0, -3500, 10000), 0.1107, 4)
+        assert_allclose(npf.rate(10, 0, -3500, 10000), 0.1107, atol=1e-4)
 
     @pytest.mark.parametrize('number_type', [Decimal, float])
     @pytest.mark.parametrize('when', [0, 1, 'end', 'begin'])
@@ -163,9 +163,9 @@ class TestRate:
 
 class TestNpv:
     def test_npv(self):
-        assert_almost_equal(
+        assert_allclose(
             npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
-            122.89, 2)
+            122.89, atol=1e-2)
 
     def test_npv_decimal(self):
         assert_equal(
@@ -249,7 +249,8 @@ class TestMirr:
 
         if expected:
             decimal_part_len = len(str(expected).split('.')[1])
-            assert_almost_equal(result, expected, decimal_part_len)
+            atol_value = 10 ** -decimal_part_len
+            assert_allclose(result, expected, atol=atol_value)
         else:
             assert_(numpy.isnan(result))
 
@@ -286,7 +287,7 @@ class TestMirr:
         )
 
         if expected is not numpy.nan:
-            assert_almost_equal(result, number_type(expected), 15)
+            assert_almost_equal(result, number_type(expected), 15) #np.infinite()
         else:
             assert numpy.isnan(result)
 
@@ -324,8 +325,8 @@ class TestNper:
         assert_(npf.nper(0, -100, 1000) == 10)
 
     def test_broadcast(self):
-        assert_almost_equal(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
-                            [21.5449442, 20.76156441], 4)
+        assert_allclose(npf.nper(0.075, -2000, 0, 100000., [0, 1]),
+                            [21.5449442, 20.76156441], atol=1e-4)
 
 
 class TestPpmt:
@@ -649,13 +650,13 @@ class TestIrr:
         ([-5, 10.5, 1, -8, 1], 0.0886),
     ])
     def test_basic_values(self, v, desired):
-        assert_almost_equal(npf.irr(v), desired, decimal=2)
+        assert_allclose(npf.irr(v), desired, atol=1e-2)
 
     def test_trailing_zeros(self):
-        assert_almost_equal(
+        assert_allclose(
             npf.irr([-5, 10.5, 1, -8, 1, 0, 0, 0]),
             0.0886,
-            decimal=2,
+            atol=1e-2,
         )
 
     @pytest.mark.parametrize('v', [
@@ -717,12 +718,12 @@ class TestIrr:
             -16259.479306324123, -23596.31953754941, -30933.159768774713,
             -38270.0, -45606.8402312253, -52943.680462450604,
             -60280.520693675906, -67617.36092490121])
-        assert_almost_equal(npf.irr(cashflows), 0.12)
+        assert_allclose(npf.irr(cashflows), 0.12, atol=1e-7)
 
     def test_gh_44(self):
         # "true" value as calculated by Google sheets
         cf = [-1678.87, 771.96, 1814.05, 3520.30, 3552.95, 3584.99, 4789.91, -1]
-        assert_almost_equal(npf.irr(cf), 1.00426, 4)
+        assert_allclose(npf.irr(cf), 1.00426, atol=1e-4)
 
     def test_irr_no_real_solution_exception(self):
         # Test that if there is no solution because all the cashflows
