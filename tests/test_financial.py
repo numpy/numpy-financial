@@ -4,6 +4,7 @@ from decimal import Decimal
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
+import numpy as np
 import pytest
 from numpy.testing import (
     assert_,
@@ -164,7 +165,7 @@ class TestRate:
 class TestNpv:
     def test_npv(self):
         assert_almost_equal(
-            npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
+            npf.npv(0.05, [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0]),
             122.89, 2)
 
     def test_npv_decimal(self):
@@ -172,18 +173,34 @@ class TestNpv:
             npf.npv(Decimal('0.05'), [-15000, 1500, 2500, 3500, 4500, 6000]),
             Decimal('122.894854950942692161628715'))
 
-    def test_npv_broadcast(self):
-        cashflows = [
+    def test_npv_broadcast_cashflows(self):
+        cashflows = np.array([
             [-15000, 1500, 2500, 3500, 4500, 6000],
             [-15000, 1500, 2500, 3500, 4500, 6000],
             [-15000, 1500, 2500, 3500, 4500, 6000],
             [-15000, 1500, 2500, 3500, 4500, 6000],
-        ]
-        expected_npvs = [
-            122.8948549, 122.8948549, 122.8948549, 122.8948549
-        ]
+        ])
+        expected_npvs = numpy.array([
+            [122.8948549, 122.8948549, 122.8948549, 122.8948549]
+        ])
         actual_npvs = npf.npv(0.05, cashflows)
         assert_allclose(actual_npvs, expected_npvs)
+
+    def test_npv_broadcast_equals_for_loop(self):
+        cashflows = np.array([
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-25000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-35000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-45000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+        ])
+        rates = np.array([-0.05, 0.00, 0.05, 0.10, 0.15])
+
+        res = np.empty((len(rates), len(cashflows)))
+        for i, r in enumerate(rates):
+            for j, cf in enumerate(cashflows):
+                res[i, j] = npf.npv(r, cf).item()
+
+        assert_allclose(npf.npv(rates, cashflows), res)
 
 
 class TestPmt:

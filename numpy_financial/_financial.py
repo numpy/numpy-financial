@@ -13,6 +13,8 @@ otherwise stated.
 
 from decimal import Decimal
 
+import numba as nb
+from numba import prange
 import numpy as np
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
@@ -825,6 +827,14 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     return np.nan
 
 
+@nb.guvectorize("(),(n)->()", nopython=True)
+def _npv_internal(r, values, res):
+    acc = 0.0
+    for t in range(values.shape[0]):
+        acc += values[t] / ((1.0 + r) ** t)
+    res[0] = acc
+
+
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -892,15 +902,14 @@ def npv(rate, values):
     3065.22267
 
     """
-    values = np.atleast_2d(values)
-    timestep_array = np.arange(0, values.shape[1])
-    npv = (values / (1 + rate) ** timestep_array).sum(axis=1)
-    try:
-        # If size of array is one, return scalar
-        return npv.item()
-    except ValueError:
-        # Otherwise, return entire array
-        return npv
+
+    r = np.atleast_1d(rate)
+    v = np.atleast_2d(values)
+    out = np.empty(shape=(r.shape[0], v.shape[0]))
+    r = r[:, np.newaxis]
+    v = v[np.newaxis, :, :]
+    _npv_internal(r, v, out)
+    return out
 
 
 def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
