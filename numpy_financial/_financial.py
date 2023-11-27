@@ -937,8 +937,9 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
 
     .. math::
 
-        MIRR = \\left( \\frac{{FV_{positive}}}{{PV_{negative}}} \\right)^{\\frac{{1}}{{n-1}}}
-          * (1+r) - 1
+        MIRR = 
+        \\left( \\frac{{FV_{positive}}}{{PV_{negative}}} \\right)^{\\frac{{1}}{{n-1}}}
+        * (1+r) - 1
 
     where:
         - \(FV_{positive}\) is the future value of positive cash flows,
