@@ -835,15 +835,32 @@ def _npv(rates, cashflows, result):
     --------
     For internal use only, note that this function performs no error checking.
     """
-    for i in range(rates.shape[0]):
-        for j in range(cashflows.shape[0]):
+
+    # TODO: Is using `prange` actually faster here?
+    for i in prange(rates.shape[0]):
+        for j in prange(cashflows.shape[0]):
             acc = 0.0
             for t in range(cashflows.shape[1]):
                 acc += cashflows[j, t] / ((1.0 + rates[i]) ** t)
             result[i, j] = acc
 
 
-@nb.jit
+@nb.jit(forceobj=True)  # Need ``forceobj`` to support decimal.Decimal
+def _npv_decimal(rates, cashflows, result):
+    r"""Version of the ``npv`` function supporting ``decimal.Decimal`` types
+
+    Warnings
+    --------
+    For internal use only, note that this function performs no error checking.
+    """
+    for i in range(rates.shape[0]):
+        for j in range(cashflows.shape[0]):
+            acc = Decimal("0.0")
+            for t in range(cashflows.shape[1]):
+                acc += cashflows[j, t] / ((Decimal("1.0") + rates[i]) ** t)
+            result[i, j] = acc
+
+
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -914,8 +931,14 @@ def npv(rate, values):
 
     r = np.atleast_1d(rate)
     v = np.atleast_2d(values)
-    out = np.empty(shape=(r.shape[0], v.shape[0]))
-    _npv(r, v, out)
+
+    if r.dtype == np.dtype("O") or v.dtype == np.dtype("O"):
+        out = np.empty(shape=(r.shape[0], v.shape[0]), dtype=Decimal)
+        _npv_decimal(r, v, out)
+    else:
+        out = np.empty(shape=(r.shape[0], v.shape[0]))
+        _npv(r, v, out)
+
     return out
 
 
