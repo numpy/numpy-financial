@@ -827,14 +827,23 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     return np.nan
 
 
-@nb.guvectorize("(),(n)->()", nopython=True)
-def _npv_internal(r, values, res):
-    acc = 0.0
-    for t in range(values.shape[0]):
-        acc += values[t] / ((1.0 + r) ** t)
-    res[0] = acc
+@nb.njit(parallel=True)
+def _npv(rates, cashflows, result):
+    r"""Native version of the ``npv`` function.
+
+    Warnings
+    --------
+    For internal use only, note that this function performs no error checking.
+    """
+    for i in range(rates.shape[0]):
+        for j in range(cashflows.shape[0]):
+            acc = 0.0
+            for t in range(cashflows.shape[1]):
+                acc += cashflows[j, t] / ((1.0 + rates[i]) ** t)
+            result[i, j] = acc
 
 
+@nb.jit
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -906,9 +915,7 @@ def npv(rate, values):
     r = np.atleast_1d(rate)
     v = np.atleast_2d(values)
     out = np.empty(shape=(r.shape[0], v.shape[0]))
-    r = r[:, np.newaxis]
-    v = v[np.newaxis, :, :]
-    _npv_internal(r, v, out)
+    _npv(r, v, out)
     return out
 
 
