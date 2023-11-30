@@ -904,28 +904,71 @@ def npv(rate, values):
 
 
 def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
-    r"""Return the modified internal rate of return.
+    r"""
+    Return the Modified Internal Rate of Return (MIRR).
+
+    MIRR is a financial metric that takes into account both the cost of
+    the investment and the return on reinvested cash flows. It is useful
+    for evaluating the profitability of an investment with multiple cash
+    inflows and outflows.
 
     Parameters
     ----------
     values : array_like
-        Cash flows (must contain at least one positive and one negative
-        value) or nan is returned.  The first value is considered a sunk
-        cost at time zero.
+        Cash flows, where the first value is considered a sunk cost at time zero.
+        It must contain at least one positive and one negative value.
     finance_rate : scalar
-        Interest rate paid on the cash flows
+        Interest rate paid on the cash flows.
     reinvest_rate : scalar
-        Interest rate received on the cash flows upon reinvestment
+        Interest rate received on the cash flows upon reinvestment.
     raise_exceptions: bool, optional
-        Flag to raise an exception when the mirr cannot be computed due to
-        having all cashflows of the same sign (NoRealSolutionException).
-        Set to False as default, thus returning NaNs in the previous
-        case.
+        Flag to raise an exception when the MIRR cannot be computed due to
+        having all cash flows of the same sign (NoRealSolutionException).
+        Set to False as default,thus returning NaNs in the previous case.
 
     Returns
     -------
     out : float
         Modified internal rate of return
+
+    Notes
+    -----
+    The MIRR formula is as follows:
+
+    .. math::
+
+        MIRR = 
+        \\left( \\frac{{FV_{positive}}}{{PV_{negative}}} \\right)^{\\frac{{1}}{{n-1}}}
+        * (1+r) - 1
+
+    where:
+        - \(FV_{positive}\) is the future value of positive cash flows,
+        - \(PV_{negative}\) is the present value of negative cash flows,
+        - \(n\) is the number of periods.
+        - \(r\) is the reinvestment rate.
+
+    Examples
+    --------
+    >>> import numpy_financial as npf
+
+    Consider a project with an initial investment of -$100 
+    and projected cash flows of $50, -$60, and $70 at the end of each period. 
+    The project has a finance rate of 10% and a reinvestment rate of 12%.
+
+    >>> npf.mirr([-100, 50, -60, 70], 0.10, 0.12)
+    -0.03909366594356467
+
+    Now, let's consider the scenario where all cash flows are negative.
+
+    >>> npf.mirr([-100, -50, -60, -70], 0.10, 0.12)
+    nan
+
+    Finally, let's explore the situation where all cash flows are positive, 
+    and the `raise_exceptions` parameter is set to True.
+
+    >>> npf.mirr([100, 50, 60, 70], 0.10, 0.12, raise_exceptions=True)
+    NoRealSolutionError: No real solution exists for MIRR since all 
+                         cashflows are of the same sign.
 
     """
     values = np.asarray(values)
