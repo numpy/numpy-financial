@@ -10,7 +10,7 @@ np.import_array()
 @cython.wraparound(False)
 @cython.cdivision(True)
 @cython.cpow(True)
-def npv(const double[::1] rates not None, const double[:, ::1] cashflows not None):
+cpdef double[:, ::1] npv(const double[::1] rates, const double[:, ::1] cashflows):
     cdef:
         long rate_len = rates.shape[0]
         long no_of_cashflows = cashflows.shape[0]
