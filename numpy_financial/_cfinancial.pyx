@@ -1,7 +1,7 @@
-from libc.math cimport NAN
 import numpy as np
 cimport numpy as np
 cimport cython
+from cython cimport floating
 
 np.import_array()
 
@@ -10,14 +10,14 @@ np.import_array()
 @cython.wraparound(False)
 @cython.cdivision(True)
 @cython.cpow(True)
-cpdef double[:, ::1] npv(const double[::1] rates, const double[:, ::1] cashflows):
+cpdef floating[:, ::1] npv(const floating[::1] rates, const floating[:, ::1] cashflows):
     cdef:
         long rate_len = rates.shape[0]
         long no_of_cashflows = cashflows.shape[0]
         long cashflows_len = cashflows.shape[1]
         long i, j, t
-        double acc
-        double[:, ::1] out
+        floating acc
+        floating[:, ::1] out
 
     out = np.empty(shape=(rate_len, no_of_cashflows))
     for i in range(rate_len):
