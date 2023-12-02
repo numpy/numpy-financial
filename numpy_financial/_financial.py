@@ -848,9 +848,9 @@ def npv(rate, values):
 
     Parameters
     ----------
-    rate : scalar
+    rate : scalar or array_like, shape(K, )
         The discount rate.
-    values : array_like, shape(M, )
+    values : array_like, shape(M, ) or shape(M, N)
         The values of the time series of cash flows.  The (fixed) time
         interval between cash flow "events" must be the same as that for
         which `rate` is given (i.e., if `rate` is per year, then precisely
@@ -861,7 +861,7 @@ def npv(rate, values):
 
     Returns
     -------
-    out : float
+    out : shape(K, M)
         The NPV of the input cash flow series `values` at the discount
         `rate`.
 
@@ -908,6 +908,17 @@ def npv(rate, values):
     >>> cashflows[0] = 0
     >>> np.round(npf.npv(rate, cashflows) + initial_cashflow, 5)
     3065.22267
+
+    The NPV calculation may be applied to several ``rates`` and ``cashflows``
+    simulatneously. This produces an array of shape
+    ``(len(rates), len(cashflows))``.
+
+    >>> rates = np.array([0.00, 0.05, 0.10])
+    >>> cashflows = np.array([[-4_000, 500, 800], [-5_000, 600, 900]])
+    >>> npf.npv(rates, cashflows).round(2)
+    array([[-2700.  , -3500.  ],
+           [-2798.19, -3612.24],
+           [-2884.3 , -3710.74]])
 
     """
     rates = np.atleast_1d(rate)
