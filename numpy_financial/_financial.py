@@ -917,8 +917,8 @@ def npv(rate, values):
         out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=Decimal)
         _npv_decimal(rates, values, out)
     else:
-        out = np.empty(shape=(rates.shape[0], values.shape[0]))
-        cy_npv(rates, values, out)
+        out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=np.float64)
+        cy_npv(rates.astype(np.float64), values.astype(np.float64), out)
     return out
 
 
