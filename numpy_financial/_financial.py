@@ -828,6 +828,21 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     return np.nan
 
 
+def _npv_decimal(rates, cashflows, result):
+    r"""Version of the ``npv`` function supporting ``decimal.Decimal`` types
+
+    Warnings
+    --------
+    For internal use only, note that this function performs no error checking.
+    """
+    for i in range(rates.shape[0]):
+        for j in range(cashflows.shape[0]):
+            acc = Decimal("0.0")
+            for t in range(cashflows.shape[1]):
+                acc += cashflows[j, t] / ((Decimal("1.0") + rates[i]) ** t)
+            result[i, j] = acc
+
+
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -899,9 +914,8 @@ def npv(rate, values):
     values = np.atleast_2d(values)
 
     if rates.dtype == np.dtype("O") or values.dtype == np.dtype("O"):
-        raise NotImplementedError
-        # out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=Decimal)
-        # _npv_decimal(rates, values, out)
+        out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=Decimal)
+        _npv_decimal(rates, values, out)
     else:
         out = np.empty(shape=(rates.shape[0], values.shape[0]))
         cy_npv(rates, values, out)
