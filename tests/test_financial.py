@@ -8,13 +8,20 @@ import pytest
 from numpy.testing import (
     assert_,
     assert_allclose,
-    assert_almost_equal,
     assert_equal,
     assert_raises,
 )
 
 import numpy_financial as npf
 
+def assert_decimal_close(actual, expected, tol=Decimal('1e-7')):
+    # Check if both actual and expected are iterable (like arrays)
+    if hasattr(actual, '__iter__') and hasattr(expected, '__iter__'):
+        for a, e in zip(actual, expected):
+            assert abs(a - e) <= tol
+    else:
+        # For single value comparisons
+        assert abs(actual - expected) <= tol
 
 class TestFinancial(object):
     def test_when(self):
@@ -287,7 +294,7 @@ class TestMirr:
         )
 
         if expected is not numpy.nan:
-            assert_almost_equal(result, number_type(expected), 15) #np.infinite()
+            assert_decimal_close(result, number_type(expected), 1e-15) #np.infinite()
         else:
             assert numpy.isnan(result)
 
@@ -377,10 +384,10 @@ class TestPpmt:
             Decimal('0'),
             when
         )
-        assert_almost_equal(
+        assert_decimal_close(
             result,
             Decimal('-302.131703'),  # Computed using Google Sheet's PPMT
-            decimal=5,
+            tol=1e-5,
         )
 
     @pytest.mark.parametrize('when', [None, Decimal('0'), 'end'])
@@ -393,10 +400,10 @@ class TestPpmt:
             Decimal('0')
         )
         result = npf.ppmt(*args) if when is None else npf.ppmt(*args, when)
-        assert_almost_equal(
+        assert_decimal_close(
             result,
             Decimal('-204.145914'),  # Computed using Google Sheet's PPMT
-            decimal=5,
+            tol=1e-5,
         )
 
     @pytest.mark.parametrize('args', [
@@ -449,7 +456,7 @@ class TestPpmt:
             Decimal('0')
         )
         result = npf.ppmt(*args) if when is None else npf.ppmt(*args, when)
-        assert_almost_equal(result, desired, decimal=8)
+        assert_decimal_close(result, desired, tol=1e-8)
 
 
 class TestIpmt:
@@ -500,7 +507,7 @@ class TestIpmt:
             Decimal('0')
         )
         result = npf.ipmt(*args) if when is None else npf.ipmt(*args, when)
-        assert_almost_equal(result, desired, decimal=5)
+        assert_decimal_close(result, desired, tol=1e-5)
 
     @pytest.mark.parametrize('per, desired', [
         (0, numpy.nan),
@@ -544,7 +551,7 @@ class TestIpmt:
             Decimal('24'),
             Decimal('2000')
         )
-        assert_almost_equal(result, desired, decimal=4)
+        assert_decimal_close(result, desired, tol=1e-4)
 
     def test_0d_inputs(self):
         args = (0.1 / 12, 1, 24, 2000)
@@ -564,10 +571,10 @@ class TestFv:
         )
 
     def test_decimal(self):
-        assert_almost_equal(
+        assert_decimal_close(
             npf.fv(Decimal('0.075'), Decimal('20'), Decimal('-2000'), 0, 0),
             Decimal('86609.36267304300040536731624'),
-            decimal=10,
+            tol=1e-10,
         )
 
     @pytest.mark.parametrize('when', [1, 'begin'])
@@ -587,7 +594,7 @@ class TestFv:
             Decimal('0'),
             when,
         )
-        assert_almost_equal(result, Decimal('93105.064874'), decimal=5)
+        assert_decimal_close(result, Decimal('93105.064874'), tol=1e-5)
 
     @pytest.mark.parametrize('when', [None, 0, 'end'])
     def test_when_is_end_float(self, when):
@@ -608,7 +615,7 @@ class TestFv:
             Decimal('0'),
         )
         result = npf.fv(*args) if when is None else npf.fv(*args, when)
-        assert_almost_equal(result, Decimal('86609.362673'), decimal=5)
+        assert_decimal_close(result, Decimal('86609.362673'), tol=1e-5)
 
     def test_broadcast(self):
         result = npf.fv([[0.1], [0.2]], 5, 100, 0, [0, 1])
