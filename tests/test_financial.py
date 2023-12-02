@@ -164,7 +164,7 @@ class TestRate:
 class TestNpv:
     def test_npv(self):
         assert_almost_equal(
-            npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
+            npf.npv(0.05, [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0]),
             122.89, 2)
 
     def test_npv_decimal(self):
@@ -174,13 +174,13 @@ class TestNpv:
 
     def test_npv_broadcast(self):
         cashflows = [
-            [-15000, 1500, 2500, 3500, 4500, 6000],
-            [-15000, 1500, 2500, 3500, 4500, 6000],
-            [-15000, 1500, 2500, 3500, 4500, 6000],
-            [-15000, 1500, 2500, 3500, 4500, 6000],
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
         ]
         expected_npvs = [
-            122.8948549, 122.8948549, 122.8948549, 122.8948549
+            [122.8948549, 122.8948549, 122.8948549, 122.8948549]
         ]
         actual_npvs = npf.npv(0.05, cashflows)
         assert_allclose(actual_npvs, expected_npvs)
@@ -632,7 +632,7 @@ class TestIrr:
         # a series of cashflows to be zero, so we should have
         #
         # NPV(IRR(x), x) = 0.
-        cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
+        cashflows = numpy.array([-40000.0, 5000.0, 8000.0, 12000.0, 30000.0])
         assert_allclose(
             npf.npv(npf.irr(cashflows), cashflows),
             0,

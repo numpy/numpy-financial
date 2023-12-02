@@ -15,6 +15,9 @@ from decimal import Decimal
 
 import numpy as np
 
+from numpy_financial._cy_financial import cy_npv
+
+
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
            'NoRealSolutionError', 'IterationsExceededError']
@@ -892,15 +895,17 @@ def npv(rate, values):
     3065.22267
 
     """
+    rates = np.atleast_1d(rate)
     values = np.atleast_2d(values)
-    timestep_array = np.arange(0, values.shape[1])
-    npv = (values / (1 + rate) ** timestep_array).sum(axis=1)
-    try:
-        # If size of array is one, return scalar
-        return npv.item()
-    except ValueError:
-        # Otherwise, return entire array
-        return npv
+
+    if rates.dtype == np.dtype("O") or values.dtype == np.dtype("O"):
+        raise NotImplementedError
+        # out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=Decimal)
+        # _npv_decimal(rates, values, out)
+    else:
+        out = np.empty(shape=(rates.shape[0], values.shape[0]))
+        cy_npv(rates, values, out)
+    return out
 
 
 def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
