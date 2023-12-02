@@ -185,6 +185,27 @@ class TestNpv:
         actual_npvs = npf.npv(0.05, cashflows)
         assert_allclose(actual_npvs, expected_npvs)
 
+    @pytest.mark.parametrize("dtype", [Decimal, float])
+    def test_npv_broadcast_equals_for_loop(self, dtype):
+        cashflows_str = [
+            ["-15000.0", "1500.0", "2500.0", "3500.0", "4500.0", "6000.0"],
+            ["-25000.0", "1500.0", "2500.0", "3500.0", "4500.0", "6000.0"],
+            ["-35000.0", "1500.0", "2500.0", "3500.0", "4500.0", "6000.0"],
+            ["-45000.0", "1500.0", "2500.0", "3500.0", "4500.0", "6000.0"],
+        ]
+        rates_str = ["-0.05", "0.00", "0.05", "0.10", "0.15"]
+
+        cashflows = numpy.array([[dtype(x) for x in cf] for cf in cashflows_str])
+        rates = numpy.array([dtype(x) for x in rates_str])
+
+        expected = numpy.empty((len(rates), len(cashflows)), dtype=dtype)
+        for i, r in enumerate(rates):
+            for j, cf in enumerate(cashflows):
+                expected[i, j] = npf.npv(r, cf).item()
+
+        actual = npf.npv(rates, cashflows)
+        assert_equal(actual, expected)
+
 
 class TestPmt:
     def test_pmt_simple(self):
