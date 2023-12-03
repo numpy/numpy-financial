@@ -4,7 +4,6 @@ from decimal import Decimal
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
-import numpy as np
 import pytest
 from numpy.testing import (
     assert_,
@@ -207,17 +206,17 @@ class TestNpv:
         actual = npf.npv(rates, cashflows)
         assert_equal(actual, expected)
 
-    @pytest.mark.parametrize("rates", ([[1, 2, 3]], np.empty(shape=(1,1,1))))
+    @pytest.mark.parametrize("rates", ([[1, 2, 3]], numpy.empty(shape=(1,1,1))))
     def test_invalid_rates_shape(self, rates):
         cashflows = [1, 2, 3]
         with pytest.raises(ValueError):
             npf.npv(rates, cashflows)
 
-    @pytest.mark.parametrize("cashflows", ([[[1, 2, 3]]], np.empty(shape=(1, 1, 1))))
-    def test_invalid_cashflows_shape(self, cashflows):
+    @pytest.mark.parametrize("cf", ([[[1, 2, 3]]], numpy.empty(shape=(1, 1, 1))))
+    def test_invalid_cashflows_shape(self, cf):
         rates = [1, 2, 3]
         with pytest.raises(ValueError):
-            npf.npv(rates, cashflows)
+            npf.npv(rates, cf)
 
 
 class TestPmt:
