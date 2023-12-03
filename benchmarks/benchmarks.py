@@ -4,7 +4,7 @@ import numpy as np
 import numpy_financial as npf
 
 
-class Npv2DCashflows:
+class Npv2D:
 
     param_names = ["n_cashflows", "cashflow_lengths", "rates_lengths"]
     params = [
@@ -30,5 +30,17 @@ class Npv2DCashflows:
     def time_broadcast(self, n_cashflows, cashflow_lengths, rates_lengths):
         npf.npv(self.rates, self.cashflows)
 
+    def time_for_loop(self, n_cashflows, cashflow_lengths, rates_lengths):
+        for i, rate in enumerate(self.rates):
+            for j, cashflow in enumerate(self.cashflows):
+                npf.npv(rate, cashflow)
+
     def time_broadcast_decimal(self, n_cashflows, cashflow_lengths, rates_lengths):
         npf.npv(self.rates_decimal, self.cashflows_decimal)
+
+    def time_for_loop_decimal(self, n_cashflows, cashflow_lengths, rates_lengths):
+        for i, rate in enumerate(self.rates_decimal):
+            for j, cashflow in enumerate(self.cashflows_decimal):
+                npf.npv(rate, cashflow)
+
+
