@@ -56,6 +56,23 @@ def _return_ufunc_like(array):
     return array
 
 
+def _make_out_array(*arrays):
+    """Make an ``out`` array
+
+    Output arrays have the following properties:
+
+    * Are of type decimal if any of the input arrays are object arrays
+    * Have shape of the first dimension of each input array
+    """
+    def _is_object_dtype(array):
+        return array.dtype == np.dtype("O")
+
+    shape = tuple(array.shape[0] for array in arrays)
+    if any(_is_object_dtype(array) for array in arrays):
+        return np.empty(shape, dtype=Decimal)
+    return np.empty(shape)
+
+
 def fv(rate, nper, pmt, pv, when='end'):
     """Compute the future value.
 
@@ -937,11 +954,10 @@ def npv(rate, values):
     if values.ndim != 2:
         raise ValueError("invalid shape for values. Values must be either a 1d or 2d array")
 
-    if rates.dtype == np.dtype("O") or values.dtype == np.dtype("O"):
-        out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=Decimal)
+    out = _make_out_array(rates, values)
+    if out.dtype == np.dtype("O"):
         _npv_decimal(rates, values, out)
     else:
-        out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=np.float64)
         cy_npv(rates.astype(np.float64), values.astype(np.float64), out)
 
     return _return_ufunc_like(out)
