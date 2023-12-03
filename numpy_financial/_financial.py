@@ -924,6 +924,12 @@ def npv(rate, values):
     rates = np.atleast_1d(rate)
     values = np.atleast_2d(values)
 
+    if rates.ndim != 1:
+        raise ValueError("invalid shape for rates. Rate must be either a scalar or 1d array")
+
+    if values.ndim != 2:
+        raise ValueError("invalid shape for values. Values must be either a 1d or 2d array")
+
     if rates.dtype == np.dtype("O") or values.dtype == np.dtype("O"):
         out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=Decimal)
         _npv_decimal(rates, values, out)
