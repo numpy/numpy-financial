@@ -202,7 +202,7 @@ class TestNpv:
         expected = numpy.empty((len(rates), len(cashflows)), dtype=dtype)
         for i, r in enumerate(rates):
             for j, cf in enumerate(cashflows):
-                expected[i, j] = npf.npv(r, cf).item()
+                expected[i, j] = npf.npv(r, cf)
 
         actual = npf.npv(rates, cashflows)
         assert_equal(actual, expected)

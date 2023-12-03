@@ -49,6 +49,13 @@ def _convert_when(when):
         return [_when_to_num[x] for x in when]
 
 
+def _return_ufunc_like(array):
+    """Follow the ufunc convention of returning scalars for size 1 arrays"""
+    if array.size == 1:
+        return array.item()
+    return array
+
+
 def fv(rate, nper, pmt, pv, when='end'):
     """Compute the future value.
 
@@ -861,7 +868,7 @@ def npv(rate, values):
 
     Returns
     -------
-    out : shape(K, M)
+    out : scalar or array_like, shape(K, M)
         The NPV of the input cash flow series `values` at the discount
         `rate`.
 
@@ -936,7 +943,8 @@ def npv(rate, values):
     else:
         out = np.empty(shape=(rates.shape[0], values.shape[0]), dtype=np.float64)
         cy_npv(rates.astype(np.float64), values.astype(np.float64), out)
-    return out
+
+    return _return_ufunc_like(out)
 
 
 def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
