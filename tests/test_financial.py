@@ -6,10 +6,10 @@ from decimal import Decimal
 import numpy
 import pytest
 from numpy.testing import (
-    assert_,
     assert_allclose,
     assert_equal,
     assert_raises,
+    assert_,
 )
 
 import numpy_financial as npf
@@ -749,3 +749,4 @@ class TestIrr:
 
         with pytest.raises(npf.IterationsExceededError):
             npf.irr(cashflows, maxiter=1, raise_exceptions=True)
+            
