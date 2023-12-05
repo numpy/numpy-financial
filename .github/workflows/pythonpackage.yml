@@ -22,4 +22,4 @@ jobs:
         poetry install --with=test
     - name: Test with pytest
       run: |
-        poetry run pytest
+        poetry run pytest --doctest-modules
