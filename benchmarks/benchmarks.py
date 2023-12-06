@@ -24,8 +24,8 @@ class Npv2D:
         cf_shape = (n_cashflows, cashflow_lengths)
         self.cashflows = rng.standard_normal(cf_shape)
         self.rates = rng.standard_normal(rates_lengths)
-        self.cashflows_decimal = rng.standard_normal(cf_shape).asdtype(Decimal)
-        self.rates_decimal = rng.standard_normal(rates_lengths).asdtype(Decimal)
+        self.cashflows_decimal = rng.standard_normal(cf_shape).astype(Decimal)
+        self.rates_decimal = rng.standard_normal(rates_lengths).astype(Decimal)
 
     def time_broadcast(self, n_cashflows, cashflow_lengths, rates_lengths):
         npf.npv(self.rates, self.cashflows)
