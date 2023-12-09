@@ -882,9 +882,9 @@ def npv(rate, values):
 
     Parameters
     ----------
-    rate : scalar
+    rate : scalar or array_like shape(K, )
         The discount rate.
-    values : array_like, shape(M, )
+    values : array_like, shape(M, ) or shape(M, N)
         The values of the time series of cash flows.  The (fixed) time
         interval between cash flow "events" must be the same as that for
         which `rate` is given (i.e., if `rate` is per year, then precisely
@@ -895,9 +895,10 @@ def npv(rate, values):
 
     Returns
     -------
-    out : float
+    out : float or array shape(K, M)
         The NPV of the input cash flow series `values` at the discount
-        `rate`.
+        `rate`. `out` follows the ufunc convention of returning scalars
+        instead of single element arrays.
 
     Warnings
     --------
