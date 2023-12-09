@@ -857,23 +857,23 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
 
 
 @nb.njit(parallel=True)
-def _npv_native(rates, values, out, zero, one):
+def _npv_native(rates, values, out):
     for i in nb.prange(rates.shape[0]):
         for j in nb.prange(values.shape[0]):
-            acc = zero
+            acc = 0.0
             for t in range(values.shape[1]):
-                acc += values[j, t] / ((one + rates[i]) ** t)
+                acc += values[j, t] / ((1.0 + rates[i]) ** t)
             out[i, j] = acc
 
 
 # We require ``forceobj=True`` here to support decimal.Decimal types
 @nb.jit(forceobj=True)
-def _npv_decimal(rates, values, out, zero, one):
+def _npv_decimal(rates, values, out):
     for i in range(rates.shape[0]):
         for j in range(values.shape[0]):
-            acc = zero
+            acc = Decimal("0.0")
             for t in range(values.shape[1]):
-                acc += values[j, t] / ((one + rates[i]) ** t)
+                acc += values[j, t] / ((Decimal("1.0") + rates[i]) ** t)
             out[i, j] = acc
 
 
@@ -972,16 +972,14 @@ def npv(rate, values):
     if dtype == Decimal:
         rates = _to_decimal_array_1d(rates)
         values = _to_decimal_array_2d(values)
-    zero = dtype("0.0")
-    one = dtype("1.0")
 
     shape = _get_output_array_shape(rates, values)
     out = np.empty(shape=shape, dtype=dtype)
 
     if dtype == Decimal:
-        _npv_decimal(rates, values, out, zero, one)
+        _npv_decimal(rates, values, out)
     else:
-        _npv_native(rates, values, out, zero, one)
+        _npv_native(rates, values, out)
 
     return _return_ufunc_like(out)
 
