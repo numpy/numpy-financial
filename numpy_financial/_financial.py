@@ -63,6 +63,15 @@ def _use_decimal_dtype(*arrays):
     return any(_is_object_array(array) for array in arrays)
 
 
+def _to_decimal_array_1d(array):
+    return np.array([Decimal(x) for x in array.tolist()])
+
+
+def _to_decimal_array_2d(array):
+    decimals = [Decimal(x) for row in array.tolist() for x in row]
+    return np.array(decimals).reshape(array.shape)
+
+
 def fv(rate, nper, pmt, pv, when='end'):
     """Compute the future value.
 
@@ -840,15 +849,6 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
         raise IterationsExceededError('Maximum number of iterations exceeded.')
 
     return np.nan
-
-
-def _to_decimal_array_1d(array):
-    return np.array([Decimal(x) for x in array.tolist()])
-
-
-def _to_decimal_array_2d(array):
-    l = [Decimal(x) for row in array.tolist() for x in row]
-    return np.array(l).reshape(array.shape)
 
 
 def npv(rate, values):
