@@ -164,7 +164,7 @@ class TestRate:
 class TestNpv:
     def test_npv(self):
         assert_almost_equal(
-            npf.npv(0.05, [-15000, 1500, 2500, 3500, 4500, 6000]),
+            npf.npv(0.05, [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0]),
             122.89, 2)
 
     def test_npv_decimal(self):
@@ -174,16 +174,49 @@ class TestNpv:
 
     def test_npv_broadcast(self):
         cashflows = [
-            [-15000, 1500, 2500, 3500, 4500, 6000],
-            [-15000, 1500, 2500, 3500, 4500, 6000],
-            [-15000, 1500, 2500, 3500, 4500, 6000],
-            [-15000, 1500, 2500, 3500, 4500, 6000],
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
+            [-15000.0, 1500.0, 2500.0, 3500.0, 4500.0, 6000.0],
         ]
         expected_npvs = [
-            122.8948549, 122.8948549, 122.8948549, 122.8948549
+            [122.8948549, 122.8948549, 122.8948549, 122.8948549]
         ]
         actual_npvs = npf.npv(0.05, cashflows)
         assert_allclose(actual_npvs, expected_npvs)
+
+    @pytest.mark.parametrize("dtype", [Decimal, float])
+    def test_npv_broadcast_equals_for_loop(self, dtype):
+        cashflows_str = [
+            ["-15000.0", "1500.0", "2500.0", "3500.0", "4500.0", "6000.0"],
+            ["-25000.0", "1500.0", "2500.0", "3500.0", "4500.0", "6000.0"],
+            ["-35000.0", "1500.0", "2500.0", "3500.0", "4500.0", "6000.0"],
+            ["-45000.0", "1500.0", "2500.0", "3500.0", "4500.0", "6000.0"],
+        ]
+        rates_str = ["-0.05", "0.00", "0.05", "0.10", "0.15"]
+
+        cashflows = numpy.array([[dtype(x) for x in cf] for cf in cashflows_str])
+        rates = numpy.array([dtype(x) for x in rates_str])
+
+        expected = numpy.empty((len(rates), len(cashflows)), dtype=dtype)
+        for i, r in enumerate(rates):
+            for j, cf in enumerate(cashflows):
+                expected[i, j] = npf.npv(r, cf)
+
+        actual = npf.npv(rates, cashflows)
+        assert_equal(actual, expected)
+
+    @pytest.mark.parametrize("rates", ([[1, 2, 3]], numpy.empty(shape=(1,1,1))))
+    def test_invalid_rates_shape(self, rates):
+        cashflows = [1, 2, 3]
+        with pytest.raises(ValueError):
+            npf.npv(rates, cashflows)
+
+    @pytest.mark.parametrize("cf", ([[[1, 2, 3]]], numpy.empty(shape=(1, 1, 1))))
+    def test_invalid_cashflows_shape(self, cf):
+        rates = [1, 2, 3]
+        with pytest.raises(ValueError):
+            npf.npv(rates, cf)
 
 
 class TestPmt:
