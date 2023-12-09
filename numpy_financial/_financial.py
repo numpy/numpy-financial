@@ -955,6 +955,20 @@ def npv(rate, values):
            [-2798.19, -3612.24],
            [-2884.3 , -3710.74]])
 
+    The NPV calculation also supports `decimal.Decimal` types, for example
+    if using Decimal ``rates``:
+
+    >>> rates = [Decimal("0.00"), Decimal("0.05"), Decimal("0.10")]
+    >>> cashflows = [[-4_000, 500, 800], [-5_000, 600, 900]]
+    >>> npf.npv(rates, cashflows)
+    array([[Decimal('-2700.0'), Decimal('-3500.0')],
+           [Decimal('-2798.185941043083900226757370'),
+            Decimal('-3612.244897959183673469387756')],
+           [Decimal('-2884.297520661157024793388430'),
+            Decimal('-3710.743801652892561983471074')]], dtype=object)
+
+    This also works for Decimal cashflows.
+
     """
     rates = np.atleast_1d(rate)
     values = np.atleast_2d(values)
