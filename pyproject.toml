@@ -39,6 +39,7 @@ packages = [{include = "numpy_financial"}]
 [tool.poetry.dependencies]
 python = "^3.9,<3.12"
 numpy = "^1.23"
+numba = "^0.58.1"
 
 
 [tool.poetry.group.test.dependencies]
