@@ -852,10 +852,10 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     return np.nan
 
 
-@nb.njit
+@nb.njit(parallel=True)
 def _npv_native(rates, values, out, zero, one):
-    for i in range(rates.shape[0]):
-        for j in range(values.shape[0]):
+    for i in nb.prange(rates.shape[0]):
+        for j in nb.prange(values.shape[0]):
             acc = zero
             for t in range(values.shape[1]):
                 acc += values[j, t] / ((one + rates[i]) ** t)
