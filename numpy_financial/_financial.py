@@ -878,7 +878,7 @@ def npv(rate, values):
     net present value:
 
     >>> rate, cashflows = 0.08, [-40_000, 5_000, 8_000, 12_000, 30_000]
-    >>> round(npf.npv(rate, cashflows), 5)
+    >>> np.round(npf.npv(rate, cashflows), 5)
     3065.22267
 
     It may be preferable to split the projected cashflow into an initial
