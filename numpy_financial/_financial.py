@@ -73,6 +73,10 @@ def _to_decimal_array_2d(array):
     return np.array(decimals).reshape(array.shape)
 
 
+def _get_output_array_shape(*arrays):
+    return tuple(array.shape[0] for array in arrays)
+
+
 def fv(rate, nper, pmt, pv, when='end'):
     """Compute the future value.
 
@@ -970,7 +974,7 @@ def npv(rate, values):
     zero = dtype("0.0")
     one = dtype("1.0")
 
-    shape = tuple(array.shape[0] for array in (rates, values))
+    shape = _get_output_array_shape(rates, values)
     out = np.empty(shape=shape, dtype=dtype)
 
     if dtype == Decimal:
