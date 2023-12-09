@@ -8,9 +8,9 @@ class Npv2D:
 
     param_names = ["n_cashflows", "cashflow_lengths", "rates_lengths"]
     params = [
-        (1, 10, 100, 1000),
-        (1, 10, 100, 1000),
-        (1, 10, 100, 1000),
+        (1, 10, 100),
+        (1, 10, 100),
+        (1, 10, 100),
     ]
 
     def __init__(self):
