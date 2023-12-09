@@ -13,6 +13,7 @@ otherwise stated.
 
 from decimal import Decimal
 
+import numba as nb
 import numpy as np
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
@@ -851,6 +852,26 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     return np.nan
 
 
+@nb.njit
+def _npv_native(rates, values, out, zero, one):
+    for i in range(rates.shape[0]):
+        for j in range(values.shape[0]):
+            acc = zero
+            for t in range(values.shape[1]):
+                acc += values[j, t] / ((one + rates[i]) ** t)
+            out[i, j] = acc
+
+
+@nb.jit(forceobj=True)
+def _npv_decimal(rates, values, out, zero, one):
+    for i in range(rates.shape[0]):
+        for j in range(values.shape[0]):
+            acc = zero
+            for t in range(values.shape[1]):
+                acc += values[j, t] / ((one + rates[i]) ** t)
+            out[i, j] = acc
+
+
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -940,12 +961,10 @@ def npv(rate, values):
     shape = tuple(array.shape[0] for array in (rates, values))
     out = np.empty(shape=shape, dtype=dtype)
 
-    for i in range(rates.shape[0]):
-        for j in range(values.shape[0]):
-            acc = zero
-            for t in range(values.shape[1]):
-                acc += values[j, t] / ((one + rates[i]) ** t)
-            out[i, j] = acc
+    if dtype == Decimal:
+        _npv_decimal(rates, values, out, zero, one)
+    else:
+        _npv_native(rates, values, out, zero, one)
 
     return _return_ufunc_like(out)
 
