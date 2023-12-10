@@ -931,11 +931,7 @@ def npv(rate, values):
     net present value:
 
     >>> rate, cashflows = 0.08, [-40_000, 5_000, 8_000, 12_000, 30_000]
-<<<<<<< HEAD
-    >>> round(npf.npv(rate, cashflows), 5)
-=======
     >>> np.round(npf.npv(rate, cashflows), 5)
->>>>>>> 3311612dc27bf4d7df10e7cc5b7222bf51113728
     3065.22267
 
     It may be preferable to split the projected cashflow into an initial
@@ -1065,7 +1061,6 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     Finally, let's explore the situation where all cash flows are positive, 
     and the `raise_exceptions` parameter is set to True.
 
-<<<<<<< HEAD
     >>> npf.mirr([
     ...    100, 50, 60, 70], 
     ...    0.10, 0.12, 
@@ -1075,12 +1070,6 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
         ...
     numpy_financial._financial.NoRealSolutionError: No real solution exists for MIRR since 
                                                      all cashflows are of the same sign.
-=======
-    >>> npf.mirr([100, 50, 60, 70], 0.10, 0.12, raise_exceptions=True)
-    Traceback (most recent call last):
-        ...
-    numpy_financial._financial.NoRealSolutionError: No real solution exists for MIRR since all cashflows are of the same sign.
->>>>>>> 3311612dc27bf4d7df10e7cc5b7222bf51113728
     """
     values = np.asarray(values)
     n = values.size
