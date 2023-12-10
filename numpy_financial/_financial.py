@@ -1068,8 +1068,8 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     ... ) #doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
         ...
-    numpy_financial._financial.NoRealSolutionError: No real solution exists for MIRR since 
-                                                     all cashflows are of the same sign.
+    numpy_financial._financial.NoRealSolutionError: 
+    No real solution exists for MIRR since  all cashflows are of the same sign.
     """
     values = np.asarray(values)
     n = values.size
