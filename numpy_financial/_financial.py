@@ -146,7 +146,7 @@ def fv(rate, nper, pmt, pv, when='end'):
     5% (annually) compounded monthly?
 
     >>> npf.fv(0.05/12, 10*12, -100, -100)
-    15692.928894335748
+    15692.92889433575
 
     By convention, the negative sign represents cash flow out (i.e. money not
     available today).  Thus, saving $100 a month at 5% annual interest leads
@@ -157,7 +157,7 @@ def fv(rate, nper, pmt, pv, when='end'):
 
     >>> a = np.array((0.05, 0.06, 0.07))/12
     >>> npf.fv(a, 10*12, -100, -100)
-    array([ 15692.92889434,  16569.87435405,  17509.44688102]) # may vary
+    array([15692.92889434, 16569.87435405, 17509.44688102])
 
     """
     when = _convert_when(when)
@@ -327,9 +327,9 @@ def nper(rate, pmt, pv, fv=0, when='end'):
     ...                     8000   : 9001   : 1000]))
     array([[[ 64.07334877,  74.06368256],
             [108.07548412, 127.99022654]],
+    <BLANKLINE>
            [[ 66.12443902,  76.87897353],
             [114.70165583, 137.90124779]]])
-
     """
     when = _convert_when(when)
     rate, pmt, pv, fv, when = np.broadcast_arrays(rate, pmt, pv, fv, when)
@@ -592,7 +592,7 @@ def pv(rate, nper, pmt, fv=0, when='end'):
 
     >>> a = np.array((0.05, 0.04, 0.03))/12
     >>> npf.pv(a, 10*12, -100, 15692.93)
-    array([ -100.00067132,  -649.26771385, -1273.78633713]) # may vary
+    array([ -100.00067132,  -649.26771385, -1273.78633713])
 
     So, to end up with the same $15692.93 under the same $100 per month
     "savings plan," for annual interest rates of 4% and 3%, one would
@@ -931,7 +931,7 @@ def npv(rate, values):
     net present value:
 
     >>> rate, cashflows = 0.08, [-40_000, 5_000, 8_000, 12_000, 30_000]
-    >>> npf.npv(rate, cashflows).round(5)
+    >>> np.round(npf.npv(rate, cashflows), 5)
     3065.22267
 
     It may be preferable to split the projected cashflow into an initial
@@ -1061,10 +1061,15 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     Finally, let's explore the situation where all cash flows are positive, 
     and the `raise_exceptions` parameter is set to True.
 
-    >>> npf.mirr([100, 50, 60, 70], 0.10, 0.12, raise_exceptions=True)
-    NoRealSolutionError: No real solution exists for MIRR since all 
-                         cashflows are of the same sign.
-
+    >>> npf.mirr([
+    ...    100, 50, 60, 70], 
+    ...    0.10, 0.12, 
+    ...    raise_exceptions=True
+    ... ) #doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+        ...
+    numpy_financial._financial.NoRealSolutionError: 
+    No real solution exists for MIRR since  all cashflows are of the same sign.
     """
     values = np.asarray(values)
     n = values.size
