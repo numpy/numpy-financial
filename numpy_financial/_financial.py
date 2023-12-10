@@ -1061,10 +1061,15 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     Finally, let's explore the situation where all cash flows are positive, 
     and the `raise_exceptions` parameter is set to True.
 
-    >>> npf.mirr([100, 50, 60, 70], 0.10, 0.12, raise_exceptions=True)
+    >>> npf.mirr([
+    ...    100, 50, 60, 70], 
+    ...    0.10, 0.12, 
+    ...    raise_exceptions=True
+    ... ) #doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
         ...
-    numpy_financial._financial.NoRealSolutionError: No real solution exists for MIRR since all cashflows are of the same sign.
+    numpy_financial._financial.NoRealSolutionError: No real solution exists for MIRR since 
+                                                     all cashflows are of the same sign.
     """
     values = np.asarray(values)
     n = values.size
