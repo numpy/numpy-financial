@@ -13,6 +13,7 @@ otherwise stated.
 
 from decimal import Decimal
 
+import numba as nb
 import numpy as np
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
@@ -44,6 +45,36 @@ def _convert_when(when):
         return _when_to_num[when]
     except (KeyError, TypeError):
         return [_when_to_num[x] for x in when]
+
+
+def _return_ufunc_like(array):
+    try:
+        # If size of array is one, return scalar
+        return array.item()
+    except ValueError:
+        # Otherwise, return entire array
+        return array
+
+
+def _is_object_array(array):
+    return array.dtype == np.dtype("O")
+
+
+def _use_decimal_dtype(*arrays):
+    return any(_is_object_array(array) for array in arrays)
+
+
+def _to_decimal_array_1d(array):
+    return np.array([Decimal(x) for x in array.tolist()])
+
+
+def _to_decimal_array_2d(array):
+    decimals = [Decimal(x) for row in array.tolist() for x in row]
+    return np.array(decimals).reshape(array.shape)
+
+
+def _get_output_array_shape(*arrays):
+    return tuple(array.shape[0] for array in arrays)
 
 
 def fv(rate, nper, pmt, pv, when='end'):
@@ -115,7 +146,7 @@ def fv(rate, nper, pmt, pv, when='end'):
     5% (annually) compounded monthly?
 
     >>> npf.fv(0.05/12, 10*12, -100, -100)
-    15692.928894335748
+    15692.92889433575
 
     By convention, the negative sign represents cash flow out (i.e. money not
     available today).  Thus, saving $100 a month at 5% annual interest leads
@@ -126,7 +157,7 @@ def fv(rate, nper, pmt, pv, when='end'):
 
     >>> a = np.array((0.05, 0.06, 0.07))/12
     >>> npf.fv(a, 10*12, -100, -100)
-    array([ 15692.92889434,  16569.87435405,  17509.44688102]) # may vary
+    array([15692.92889434, 16569.87435405, 17509.44688102])
 
     """
     when = _convert_when(when)
@@ -296,9 +327,9 @@ def nper(rate, pmt, pv, fv=0, when='end'):
     ...                     8000   : 9001   : 1000]))
     array([[[ 64.07334877,  74.06368256],
             [108.07548412, 127.99022654]],
+    <BLANKLINE>
            [[ 66.12443902,  76.87897353],
             [114.70165583, 137.90124779]]])
-
     """
     when = _convert_when(when)
     rate, pmt, pv, fv, when = np.broadcast_arrays(rate, pmt, pv, fv, when)
@@ -561,7 +592,7 @@ def pv(rate, nper, pmt, fv=0, when='end'):
 
     >>> a = np.array((0.05, 0.04, 0.03))/12
     >>> npf.pv(a, 10*12, -100, 15692.93)
-    array([ -100.00067132,  -649.26771385, -1273.78633713]) # may vary
+    array([ -100.00067132,  -649.26771385, -1273.78633713])
 
     So, to end up with the same $15692.93 under the same $100 per month
     "savings plan," for annual interest rates of 4% and 3%, one would
@@ -825,14 +856,35 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     return np.nan
 
 
+@nb.njit(parallel=True)
+def _npv_native(rates, values, out):
+    for i in nb.prange(rates.shape[0]):
+        for j in nb.prange(values.shape[0]):
+            acc = 0.0
+            for t in range(values.shape[1]):
+                acc += values[j, t] / ((1.0 + rates[i]) ** t)
+            out[i, j] = acc
+
+
+# We require ``forceobj=True`` here to support decimal.Decimal types
+@nb.jit(forceobj=True)
+def _npv_decimal(rates, values, out):
+    for i in range(rates.shape[0]):
+        for j in range(values.shape[0]):
+            acc = Decimal("0.0")
+            for t in range(values.shape[1]):
+                acc += values[j, t] / ((Decimal("1.0") + rates[i]) ** t)
+            out[i, j] = acc
+
+
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
     Parameters
     ----------
-    rate : scalar
+    rate : scalar or array_like shape(K, )
         The discount rate.
-    values : array_like, shape(M, )
+    values : array_like, shape(M, ) or shape(M, N)
         The values of the time series of cash flows.  The (fixed) time
         interval between cash flow "events" must be the same as that for
         which `rate` is given (i.e., if `rate` is per year, then precisely
@@ -843,9 +895,10 @@ def npv(rate, values):
 
     Returns
     -------
-    out : float
+    out : float or array shape(K, M)
         The NPV of the input cash flow series `values` at the discount
-        `rate`.
+        `rate`. `out` follows the ufunc convention of returning scalars
+        instead of single element arrays.
 
     Warnings
     --------
@@ -878,7 +931,7 @@ def npv(rate, values):
     net present value:
 
     >>> rate, cashflows = 0.08, [-40_000, 5_000, 8_000, 12_000, 30_000]
-    >>> npf.npv(rate, cashflows).round(5)
+    >>> np.round(npf.npv(rate, cashflows), 5)
     3065.22267
 
     It may be preferable to split the projected cashflow into an initial
@@ -891,42 +944,132 @@ def npv(rate, values):
     >>> np.round(npf.npv(rate, cashflows) + initial_cashflow, 5)
     3065.22267
 
+    The NPV calculation may be applied to several ``rates`` and ``cashflows``
+    simulatneously. This produces an array of shape
+    ``(len(rates), len(cashflows))``.
+
+    >>> rates = [0.00, 0.05, 0.10]
+    >>> cashflows = [[-4_000, 500, 800], [-5_000, 600, 900]]
+    >>> npf.npv(rates, cashflows).round(2)
+    array([[-2700.  , -3500.  ],
+           [-2798.19, -3612.24],
+           [-2884.3 , -3710.74]])
+
+    The NPV calculation also supports `decimal.Decimal` types, for example
+    if using Decimal ``rates``:
+
+    >>> rates = [Decimal("0.00"), Decimal("0.05"), Decimal("0.10")]
+    >>> cashflows = [[-4_000, 500, 800], [-5_000, 600, 900]]
+    >>> npf.npv(rates, cashflows)
+    array([[Decimal('-2700.0'), Decimal('-3500.0')],
+           [Decimal('-2798.185941043083900226757370'),
+            Decimal('-3612.244897959183673469387756')],
+           [Decimal('-2884.297520661157024793388430'),
+            Decimal('-3710.743801652892561983471074')]], dtype=object)
+
+    This also works for Decimal cashflows.
+
     """
+    rates = np.atleast_1d(rate)
     values = np.atleast_2d(values)
-    timestep_array = np.arange(0, values.shape[1])
-    npv = (values / (1 + rate) ** timestep_array).sum(axis=1)
-    try:
-        # If size of array is one, return scalar
-        return npv.item()
-    except ValueError:
-        # Otherwise, return entire array
-        return npv
+
+    if rates.ndim != 1:
+        msg = "invalid shape for rates. Rate must be either a scalar or 1d array"
+        raise ValueError(msg)
+
+    if values.ndim != 2:
+        msg = "invalid shape for values. Values must be either a 1d or 2d array"
+        raise ValueError(msg)
+
+    dtype = Decimal if _use_decimal_dtype(rates, values) else np.float64
+
+    if dtype == Decimal:
+        rates = _to_decimal_array_1d(rates)
+        values = _to_decimal_array_2d(values)
+
+    shape = _get_output_array_shape(rates, values)
+    out = np.empty(shape=shape, dtype=dtype)
+
+    if dtype == Decimal:
+        _npv_decimal(rates, values, out)
+    else:
+        _npv_native(rates, values, out)
+
+    return _return_ufunc_like(out)
 
 
 def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
-    r"""Return the modified internal rate of return.
+    r"""
+    Return the Modified Internal Rate of Return (MIRR).
+
+    MIRR is a financial metric that takes into account both the cost of
+    the investment and the return on reinvested cash flows. It is useful
+    for evaluating the profitability of an investment with multiple cash
+    inflows and outflows.
 
     Parameters
     ----------
     values : array_like
-        Cash flows (must contain at least one positive and one negative
-        value) or nan is returned.  The first value is considered a sunk
-        cost at time zero.
+        Cash flows, where the first value is considered a sunk cost at time zero.
+        It must contain at least one positive and one negative value.
     finance_rate : scalar
-        Interest rate paid on the cash flows
+        Interest rate paid on the cash flows.
     reinvest_rate : scalar
-        Interest rate received on the cash flows upon reinvestment
+        Interest rate received on the cash flows upon reinvestment.
     raise_exceptions: bool, optional
-        Flag to raise an exception when the mirr cannot be computed due to
-        having all cashflows of the same sign (NoRealSolutionException).
-        Set to False as default, thus returning NaNs in the previous
-        case.
+        Flag to raise an exception when the MIRR cannot be computed due to
+        having all cash flows of the same sign (NoRealSolutionException).
+        Set to False as default,thus returning NaNs in the previous case.
 
     Returns
     -------
     out : float
         Modified internal rate of return
 
+    Notes
+    -----
+    The MIRR formula is as follows:
+
+    .. math::
+
+        MIRR = 
+        \\left( \\frac{{FV_{positive}}}{{PV_{negative}}} \\right)^{\\frac{{1}}{{n-1}}}
+        * (1+r) - 1
+
+    where:
+        - \(FV_{positive}\) is the future value of positive cash flows,
+        - \(PV_{negative}\) is the present value of negative cash flows,
+        - \(n\) is the number of periods.
+        - \(r\) is the reinvestment rate.
+
+    Examples
+    --------
+    >>> import numpy_financial as npf
+
+    Consider a project with an initial investment of -$100 
+    and projected cash flows of $50, -$60, and $70 at the end of each period. 
+    The project has a finance rate of 10% and a reinvestment rate of 12%.
+
+    >>> npf.mirr([-100, 50, -60, 70], 0.10, 0.12)
+    -0.03909366594356467
+
+    Now, let's consider the scenario where all cash flows are negative.
+
+    >>> npf.mirr([-100, -50, -60, -70], 0.10, 0.12)
+    nan
+
+    Finally, let's explore the situation where all cash flows are positive, 
+    and the `raise_exceptions` parameter is set to True.
+
+    >>> npf.mirr([
+    ...    100, 50, 60, 70], 
+    ...    0.10, 0.12, 
+    ...    raise_exceptions=True
+    ... ) #doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+        ...
+    numpy_financial._financial.NoRealSolutionError: 
+    No real solution exists for MIRR since  all cashflows are of the same sign.
     """
     values = np.asarray(values)
     n = values.size
