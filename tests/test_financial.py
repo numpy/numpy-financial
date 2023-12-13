@@ -890,3 +890,4 @@ class TestIrr:
 
         with pytest.raises(npf.IterationsExceededError):
             npf.irr(cashflows, maxiter=1, raise_exceptions=True)
+            
