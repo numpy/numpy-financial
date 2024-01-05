@@ -727,7 +727,7 @@ def rate(
     return rn
 
 
-def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
+def irr(values):
     r"""Return the Internal Rate of Return (IRR).
 
     This is the "average" periodically compounded rate of return
@@ -743,20 +743,6 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
         are negative and net "withdrawals" are positive.  Thus, for
         example, at least the first element of `values`, which represents
         the initial investment, will typically be negative.
-    guess : float, optional
-        Initial guess of the IRR for the iterative solver. If no guess is
-        given an heuristic is used to estimate the guess through the ratio of
-        positive to negative cash lows
-    tol : float, optional
-        Required tolerance to accept solution. Default is 1e-12.
-    maxiter : int, optional
-        Maximum iterations to perform in finding a solution. Default is 100.
-    raise_exceptions: bool, optional
-        Flag to raise an exception when the irr cannot be computed due to
-        either having all cashflows of the same sign (NoRealSolutionException) or
-        having reached the maximum number of iterations (IterationsExceededException).
-        Set to False as default, thus returning NaNs in the two previous
-        cases.
 
     Returns
     -------
@@ -816,13 +802,6 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
                                       'cashflows are of the same sign.')
         return np.nan
 
-    # If no value is passed for `guess`, then make a heuristic estimate
-    if guess is None:
-        positive_cashflow = values > 0
-        inflow = values.sum(where=positive_cashflow)
-        outflow = -values.sum(where=~positive_cashflow)
-        guess = inflow / outflow - 1
-
     # We aim to solve eirr such that NPV is exactly zero. This can be framed as
     # simply finding the closest root of a polynomial to a given initial guess
     # as follows:
@@ -840,20 +819,38 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     #
     # which we solve using Newton-Raphson and then reverse out the solution
     # as eirr = g - 1 (if we are close enough to a solution)
-    npv_ = np.polynomial.Polynomial(values[::-1])
-    d_npv = npv_.deriv()
-    g = 1 + guess
+    
+    g = np.roots(values)
+    IRR = np.real(g[np.isreal(g)]) - 1
 
-    for _ in range(maxiter):
-        delta = npv_(g) / d_npv(g)
-        if abs(delta) < tol:
-            return g - 1
-        g -= delta
+    # realistic IRR
+    IRR = IRR[IRR >= -1]
 
-    if raise_exceptions:
-        raise IterationsExceededError('Maximum number of iterations exceeded.')
+    # if no real solution
+    if len(IRR) == 0:
+        raise NoRealSolutionError("No real solution is found for IRR.")
 
-    return np.nan
+    # if only one real solution
+    if len(IRR) == 1:
+        return IRR[0]
+    
+    # below is for the situation when there are more than 2 real solutions.
+    # check sign of all IRR solutions
+    same_sign = np.all(IRR > 0) if IRR[0] > 0 else np.all(IRR < 0)
+    
+    # if the signs of IRR solutions are not the same, first filter potential IRR
+    # by comparing the total positive and negative cash flows.
+    if not same_sign:
+        pos = sum(cash_flow[cash_flow>0])
+        neg = sum(cash_flow[cash_flow<0])
+        if pos > neg:
+            IRR = IRR[IRR > 0]
+    else:
+        IRR = IRR[IRR < 0]
+    
+    # pick the smallest one in magnitude and return
+    abs_IRR = np.abs(IRR)
+    return IRR[np.argmin(abs_IRR)]
 
 
 @nb.njit(parallel=True)
