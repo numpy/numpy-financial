@@ -841,8 +841,8 @@ def irr(values):
     # if the signs of IRR solutions are not the same, first filter potential IRR
     # by comparing the total positive and negative cash flows.
     if not same_sign:
-        pos = sum(cash_flow[cash_flow>0])
-        neg = sum(cash_flow[cash_flow<0])
+        pos = sum(values[values>0])
+        neg = sum(values[values<0])
         if pos > neg:
             IRR = IRR[IRR > 0]
     else:
