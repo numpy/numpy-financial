@@ -727,7 +727,7 @@ def rate(
     return rn
 
 
-def irr(values):
+def irr(values, raise_exceptions=False):
     r"""Return the Internal Rate of Return (IRR).
 
     This is the "average" periodically compounded rate of return
@@ -743,6 +743,12 @@ def irr(values):
         are negative and net "withdrawals" are positive.  Thus, for
         example, at least the first element of `values`, which represents
         the initial investment, will typically be negative.
+    raise_exceptions: bool, optional
+        Flag to raise an exception when the irr cannot be computed due to
+        either having all cashflows of the same sign (NoRealSolutionException) or
+        having reached the maximum number of iterations (IterationsExceededException).
+        Set to False as default, thus returning NaNs in the two previous
+        cases.
 
     Returns
     -------
@@ -828,7 +834,9 @@ def irr(values):
 
     # if no real solution
     if len(IRR) == 0:
-        raise NoRealSolutionError("No real solution is found for IRR.")
+        if raise_exceptions:
+            raise NoRealSolutionError("No real solution is found for IRR.")
+        return np.nan
 
     # if only one real solution
     if len(IRR) == 1:
