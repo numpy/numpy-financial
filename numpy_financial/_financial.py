@@ -827,24 +827,24 @@ def irr(values, raise_exceptions=False):
     # as eirr = g - 1 (if we are close enough to a solution)
     
     g = np.roots(values)
-    internal_rate_of_return = np.real(g[np.isreal(g)]) - 1
+    eirr = np.real(g[np.isreal(g)]) - 1
 
     # realistic IRR
-    internal_rate_of_return = internal_rate_of_return[internal_rate_of_return >= -1]
+    eirr = eirr[eirr>=-1]
 
     # if no real solution
-    if len(internal_rate_of_return) == 0:
+    if len(eirr) == 0:
         if raise_exceptions:
             raise NoRealSolutionError("No real solution is found for IRR.")
         return np.nan
 
     # if only one real solution
-    if len(internal_rate_of_return) == 1:
-        return internal_rate_of_return[0]
+    if len(eirr) == 1:
+        return eirr[0]
     
     # below is for the situation when there are more than 2 real solutions.
     # check sign of all IRR solutions
-    same_sign = np.all(internal_rate_of_return > 0) if internal_rate_of_return[0] > 0 else np.all(internal_rate_of_return < 0)
+    same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
     
     # if the signs of IRR solutions are not the same, first filter potential IRR
     # by comparing the total positive and negative cash flows.
@@ -852,13 +852,13 @@ def irr(values, raise_exceptions=False):
         pos = sum(values[values>0])
         neg = sum(values[values<0])
         if pos >= neg:
-            internal_rate_of_return = internal_rate_of_return[internal_rate_of_return >= 0]
+            eirr = eirr[eirr>=0]
         else:
-            internal_rate_of_return = internal_rate_of_return[internal_rate_of_return < 0]
+            eirr = eirr[eirr<0]
     
     # pick the smallest one in magnitude and return
-    abs_internal_rate_of_return = np.abs(internal_rate_of_return)
-    return internal_rate_of_return[np.argmin(abs_internal_rate_of_return)]
+    abs_eirr = np.abs(eirr)
+    return eirr[np.argmin(abs_eirr)]
 
 
 @nb.njit(parallel=True)
