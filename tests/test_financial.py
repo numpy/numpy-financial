@@ -767,4 +767,3 @@ class TestIrr:
 
         with pytest.raises(npf.NoRealSolutionError):
             npf.irr(cashflows, raise_exceptions=True)
-            
