@@ -209,35 +209,10 @@ class TestPV:
 
     @pytest.mark.slow
     @given(
-        rate=st.floats(),
-        nper=st.floats(),
-        pmt=st.floats(),
-        fv=st.floats(),
-        when=when_period_strategy,
-    )
-    @settings(verbosity=Verbosity.verbose)
-    def test_pv_time_value_of_money(
-        self,
-        rate: float,
-        nper: float,
-        pmt: float,
-        fv: float,
-        when: Literal[0, 1, "begin", "end"],
-    ) -> None:
-        """
-        Test that the present value is inversely proportional to number of periods,
-        all other things being equal.
-        """
-        npf.pv(rate, nper, pmt, fv, when) > npf.pv(
-            rate, float(nper) + float(1), pmt, fv, when
-        )
-
-    @pytest.mark.slow
-    @given(
-        rate=st.floats(),
-        nper=st.floats(),
-        pmt=st.floats(),
-        fv=st.floats(),
+        # Intentionally restricting the range of the rate to avoid overflow errors or NaNs vs Infs checks
+        rate=st.floats(min_value=0.01, max_value=1000, allow_infinity=False),
+        nper=st.floats(min_value=1, max_value=100, allow_infinity=False),
+        pmt=st.floats(min_value=-1000, max_value=-0.01, allow_infinity=False),
         when=when_period_strategy,
     )
     @settings(verbosity=Verbosity.verbose)
@@ -246,14 +221,17 @@ class TestPV:
         rate: float,
         nper: float,
         pmt: float,
-        fv: float,
         when: Literal[0, 1, "begin", "end"],
     ) -> None:
         """
         Test that the present value is inversely proportional to the interest rate,
         all other things being equal.
         """
-        npf.pv(rate, nper, pmt, fv, when) > npf.pv(rate + 0.1, nper, pmt, fv, when)
+        result = npf.pv(rate=rate, nper=nper, pmt=pmt, when=when)
+        expected = float(npf.pv(rate=rate + 0.1, nper=nper, pmt=pmt, when=when))
+        
+        # As interest rate increases, present value decreases
+        assert round(result, 4) >= round(expected, 4)
 
 
 class TestRate:

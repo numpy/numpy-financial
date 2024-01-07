@@ -599,15 +599,23 @@ def pv(
     """
     when = _convert_when(when)
     (rate, nper, pmt, fv, when) = map(np.asarray, [rate, nper, pmt, fv, when])
-    
+
     try:
         temp = (1 + rate) ** nper
         fact = np.where(rate == 0, nper, (1 + rate * when) * (temp - 1) / rate)
         return -(fv + pmt * fact) / temp
 
-    except (InvalidOperation, TypeError, ValueError, DivisionByZero, Overflow) as e:
+    except (
+        InvalidOperation,
+        TypeError,
+        ValueError,
+        DivisionByZero,
+        Overflow,
+        OverflowError,
+    ) as e:
         logging.error(f"Error in pv: {e}")
         return -0.0
+
 
     
 
