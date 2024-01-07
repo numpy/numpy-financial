@@ -11,7 +11,6 @@ Functions support the :class:`decimal.Decimal` type unless
 otherwise stated.
 """
 
-import logging
 from decimal import Decimal, DivisionByZero, InvalidOperation, Overflow
 from typing import Literal, Union
 
@@ -613,8 +612,7 @@ def pv(
         Overflow,
         OverflowError,
     ) as e:
-        logging.error(f"Error in pv: {e}")
-        return -0.0
+        return np.NaN
 
 
     
