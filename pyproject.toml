@@ -43,6 +43,7 @@ numba = "^0.58.1"
 
 
 [tool.poetry.group.test.dependencies]
+hypothesis = "^6.92.2"
 pytest = "^7.4"
 
 
@@ -60,3 +61,12 @@ ruff = "^0.1.6"
 [tool.poetry.group.bench.dependencies]
 asv = "^0.6.1"
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    'ignore:.*invalid value encountered.*:RuntimeWarning',
+    'ignore:.*divide by zero encountered.*:RuntimeWarning',
+    'ignore:.*overflow encountered.*:RuntimeWarning'
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]

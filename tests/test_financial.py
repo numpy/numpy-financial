@@ -1,10 +1,14 @@
 import math
 from decimal import Decimal
+from typing import Literal, Union
+
+import hypothesis.strategies as st
 
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
 import pytest
+from hypothesis import Verbosity, given, settings
 from numpy.testing import (
     assert_,
     assert_allclose,
@@ -14,7 +18,6 @@ from numpy.testing import (
 )
 
 import numpy_financial as npf
-
 
 class TestFinancial(object):
     def test_when(self):
@@ -90,13 +93,167 @@ class TestFinancial(object):
 
 
 class TestPV:
+    # Test cases for pytest parametrized example-based tests
+    test_cases = {
+        "default_fv_and_when": {
+            "inputs": {
+                "rate": 0.05,
+                "nper": 10,
+                "pmt": 1000,
+            },
+            "expected_result": -7721.73,
+        },
+        "specify_fv_and_when": {
+            "inputs": {
+                "rate": 0.05,
+                "nper": 10,
+                "pmt": 1000,
+                "fv": 0,
+                "when": 0,
+            },
+            "expected_result": -7721.73,
+        },
+        "when_1": {
+            "inputs": {
+                "rate": 0.05,
+                "nper": 10,
+                "pmt": 1000,
+                "fv": 0,
+                "when": 1,
+            },
+            "expected_result": -8107.82,
+        },
+        "when_1_and_fv_1000": {
+            "inputs": {
+                "rate": 0.05,
+                "nper": 10,
+                "pmt": 1000,
+                "fv": 1000,
+                "when": 1,
+            },
+            "expected_result": -8721.73,
+        },
+        "fv>0": {
+            "inputs": {
+                "rate": 0.05,
+                "nper": 10,
+                "pmt": 1000,
+                "fv": 1000,
+            },
+            "expected_result": -8335.65,
+        },
+        "negative_rate": {
+            "inputs": {
+                "rate": -0.05,
+                "nper": 10,
+                "pmt": 1000,
+                "fv": 0,
+            },
+            "expected_result": -13403.65,
+        },
+        "rates_as_array": {
+            "inputs": {
+                "rate": numpy.array([0.010, 0.015, 0.020, 0.025, 0.030, 0.035]),
+                "nper": 10,
+                "pmt": 1000,
+                "fv": 0,
+            },
+            "expected_result": numpy.array(
+                [-9471.30, -9222.18, -8982.59, -8752.06, -8530.20, -8316.61]
+            ),
+        },
+    }
+
+    # Randomized input strategies for fuzz tests & property-based tests
+    numeric_strategy = st.one_of(
+        st.decimals(),
+        st.floats(),
+        st.integers(),
+    )
+
+    when_period_strategy = st.sampled_from(["end", "begin", 1, 0])
+
     def test_pv(self):
         assert_almost_equal(npf.pv(0.07, 20, 12000, 0), -127128.17, 2)
 
     def test_pv_decimal(self):
-        assert_equal(npf.pv(Decimal('0.07'), Decimal('20'), Decimal('12000'),
-                            Decimal('0')),
-                     Decimal('-127128.1709461939327295222005'))
+        assert_equal(
+            npf.pv(Decimal("0.07"), Decimal("20"), Decimal("12000"), Decimal("0")),
+            Decimal("-127128.1709461939327295222005"),
+        )
+
+    @pytest.mark.parametrize("test_case", test_cases.values(), ids=test_cases.keys())
+    def test_pv_examples(self, test_case):
+        inputs, expected_result = test_case["inputs"], test_case["expected_result"]
+        result = npf.pv(**inputs)
+        assert result == pytest.approx(expected_result)
+
+    @pytest.mark.slow
+    @given(
+        rate=numeric_strategy,
+        nper=numeric_strategy,
+        pmt=numeric_strategy,
+        fv=numeric_strategy,
+        when=when_period_strategy,
+    )
+    @settings(verbosity=Verbosity.verbose)
+    def test_pv_fuzz(
+        self,
+        rate: Union[int, float, Decimal, numpy.ndarray],
+        nper: Union[int, float, Decimal, numpy.ndarray],
+        pmt: Union[int, float, Decimal, numpy.ndarray],
+        fv: Union[int, float, Decimal, numpy.ndarray],
+        when: Literal[0, 1, "begin", "end"],
+    ) -> None:
+        npf.pv(rate, nper, pmt, fv, when)
+
+    @pytest.mark.slow
+    @given(
+        rate=st.floats(),
+        nper=st.floats(),
+        pmt=st.floats(),
+        fv=st.floats(),
+        when=when_period_strategy,
+    )
+    @settings(verbosity=Verbosity.verbose)
+    def test_pv_time_value_of_money(
+        self,
+        rate: float,
+        nper: float,
+        pmt: float,
+        fv: float,
+        when: Literal[0, 1, "begin", "end"],
+    ) -> None:
+        """
+        Test that the present value is inversely proportional to number of periods,
+        all other things being equal.
+        """
+        npf.pv(rate, nper, pmt, fv, when) > npf.pv(
+            rate, float(nper) + float(1), pmt, fv, when
+        )
+
+    @pytest.mark.slow
+    @given(
+        rate=st.floats(),
+        nper=st.floats(),
+        pmt=st.floats(),
+        fv=st.floats(),
+        when=when_period_strategy,
+    )
+    @settings(verbosity=Verbosity.verbose)
+    def test_pv_interest_rate_sensitivity(
+        self,
+        rate: float,
+        nper: float,
+        pmt: float,
+        fv: float,
+        when: Literal[0, 1, "begin", "end"],
+    ) -> None:
+        """
+        Test that the present value is inversely proportional to the interest rate,
+        all other things being equal.
+        """
+        npf.pv(rate, nper, pmt, fv, when) > npf.pv(rate + 0.1, nper, pmt, fv, when)
 
 
 class TestRate:

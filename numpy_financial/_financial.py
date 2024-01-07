@@ -11,7 +11,9 @@ Functions support the :class:`decimal.Decimal` type unless
 otherwise stated.
 """
 
-from decimal import Decimal
+import logging
+from decimal import Decimal, DivisionByZero, InvalidOperation, Overflow
+from typing import Literal, Union
 
 import numba as nb
 import numpy as np
@@ -511,33 +513,29 @@ def ppmt(rate, per, nper, pv, fv=0, when='end'):
     return total - ipmt(rate, per, nper, pv, fv, when)
 
 
-def pv(rate, nper, pmt, fv=0, when='end'):
+def pv(
+    rate: Union[int, float, Decimal, np.ndarray],
+    nper: Union[int, float, Decimal, np.ndarray],
+    pmt: Union[int, float, Decimal, np.ndarray],
+    fv: Union[int, float, Decimal, np.ndarray] = 0,
+    when: Literal[0, 1, "begin", "end"] = "end",
+):
     """Compute the present value.
-
-    Given:
-     * a future value, `fv`
-     * an interest `rate` compounded once per period, of which
-       there are
-     * `nper` total
-     * a (fixed) payment, `pmt`, paid either
-     * at the beginning (`when` = {'begin', 1}) or the end
-       (`when` = {'end', 0}) of each period
-
-    Return:
-       the value now
 
     Parameters
     ----------
     rate : array_like
-        Rate of interest (per period)
+        Required. The interest rate per period. 
+        For example, use 6%/12 for monthly payments at 6% Annual Percentage Rate (APR).
     nper : array_like
-        Number of compounding periods
+        Required. The total number of payment periods in an investment.
     pmt : array_like
-        Payment
+        Required. The payment made each period. This does not change throughout the investment.
     fv : array_like, optional
-        Future value
+        Optional. The future value or cash value attained after the last payment.
     when : {{'begin', 1}, {'end', 0}}, {string, int}, optional
-        When payments are due ('begin' (1) or 'end' (0))
+        Optional. Indicates if payments are due at the beginning or end of the period 
+        ('begin' (1) or 'end' (0)). The default is 'end' (0).
 
     Returns
     -------
@@ -601,10 +599,17 @@ def pv(rate, nper, pmt, fv=0, when='end'):
     """
     when = _convert_when(when)
     (rate, nper, pmt, fv, when) = map(np.asarray, [rate, nper, pmt, fv, when])
-    temp = (1 + rate) ** nper
-    fact = np.where(rate == 0, nper, (1 + rate * when) * (temp - 1) / rate)
-    return -(fv + pmt * fact) / temp
+    
+    try:
+        temp = (1 + rate) ** nper
+        fact = np.where(rate == 0, nper, (1 + rate * when) * (temp - 1) / rate)
+        return -(fv + pmt * fact) / temp
 
+    except (InvalidOperation, TypeError, ValueError, DivisionByZero, Overflow) as e:
+        logging.error(f"Error in pv: {e}")
+        return -0.0
+
+    
 
 # Computed with Sage
 #  (y + (r + 1)^n*x + p*((r + 1)^n - 1)*(r*w + 1)/r)/(n*(r + 1)^(n - 1)*x -
