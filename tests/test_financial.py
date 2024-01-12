@@ -205,6 +205,10 @@ class TestPV:
         fv: Union[int, float, Decimal, numpy.ndarray],
         when: Literal[0, 1, "begin", "end"],
     ) -> None:
+        """
+        This fuzz test intentionally does not have any assertions. 
+        We're deliberately feeding the function with extreme values to identify potential failures.
+        """
         npf.pv(rate, nper, pmt, fv, when)
 
     @pytest.mark.slow
