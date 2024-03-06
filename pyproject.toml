@@ -37,10 +37,8 @@ classifiers = [
 packages = [{include = "numpy_financial"}]
 
 [tool.poetry.dependencies]
-python = "^3.9,<3.12"
+python = "^3.9"
 numpy = "^1.23"
-numba = "^0.58.1"
-
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4"
