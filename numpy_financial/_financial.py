@@ -727,7 +727,7 @@ def rate(
     return rn
 
 
-def irr(values, raise_exceptions=False):
+def irr(values, *, raise_exceptions=False):
     r"""Return the Internal Rate of Return (IRR).
 
     This is the "average" periodically compounded rate of return
