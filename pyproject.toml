@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development",
     "Topic :: Office/Business :: Financial :: Accounting",
@@ -37,10 +38,8 @@ classifiers = [
 packages = [{include = "numpy_financial"}]
 
 [tool.poetry.dependencies]
-python = "^3.9,<3.12"
+python = "^3.9"
 numpy = "^1.23"
-numba = "^0.58.1"
-
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4"

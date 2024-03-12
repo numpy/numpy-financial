@@ -13,7 +13,6 @@ otherwise stated.
 
 from decimal import Decimal
 
-import numba as nb
 import numpy as np
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
@@ -45,36 +44,6 @@ def _convert_when(when):
         return _when_to_num[when]
     except (KeyError, TypeError):
         return [_when_to_num[x] for x in when]
-
-
-def _return_ufunc_like(array):
-    try:
-        # If size of array is one, return scalar
-        return array.item()
-    except ValueError:
-        # Otherwise, return entire array
-        return array
-
-
-def _is_object_array(array):
-    return array.dtype == np.dtype("O")
-
-
-def _use_decimal_dtype(*arrays):
-    return any(_is_object_array(array) for array in arrays)
-
-
-def _to_decimal_array_1d(array):
-    return np.array([Decimal(x) for x in array.tolist()])
-
-
-def _to_decimal_array_2d(array):
-    decimals = [Decimal(x) for row in array.tolist() for x in row]
-    return np.array(decimals).reshape(array.shape)
-
-
-def _get_output_array_shape(*arrays):
-    return tuple(array.shape[0] for array in arrays)
 
 
 def fv(rate, nper, pmt, pv, when='end'):
@@ -856,27 +825,6 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     return np.nan
 
 
-@nb.njit(parallel=True)
-def _npv_native(rates, values, out):
-    for i in nb.prange(rates.shape[0]):
-        for j in nb.prange(values.shape[0]):
-            acc = 0.0
-            for t in range(values.shape[1]):
-                acc += values[j, t] / ((1.0 + rates[i]) ** t)
-            out[i, j] = acc
-
-
-# We require ``forceobj=True`` here to support decimal.Decimal types
-@nb.jit(forceobj=True)
-def _npv_decimal(rates, values, out):
-    for i in range(rates.shape[0]):
-        for j in range(values.shape[0]):
-            acc = Decimal("0.0")
-            for t in range(values.shape[1]):
-                acc += values[j, t] / ((Decimal("1.0") + rates[i]) ** t)
-            out[i, j] = acc
-
-
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -944,58 +892,16 @@ def npv(rate, values):
     >>> np.round(npf.npv(rate, cashflows) + initial_cashflow, 5)
     3065.22267
 
-    The NPV calculation may be applied to several ``rates`` and ``cashflows``
-    simulatneously. This produces an array of shape
-    ``(len(rates), len(cashflows))``.
-
-    >>> rates = [0.00, 0.05, 0.10]
-    >>> cashflows = [[-4_000, 500, 800], [-5_000, 600, 900]]
-    >>> npf.npv(rates, cashflows).round(2)
-    array([[-2700.  , -3500.  ],
-           [-2798.19, -3612.24],
-           [-2884.3 , -3710.74]])
-
-    The NPV calculation also supports `decimal.Decimal` types, for example
-    if using Decimal ``rates``:
-
-    >>> rates = [Decimal("0.00"), Decimal("0.05"), Decimal("0.10")]
-    >>> cashflows = [[-4_000, 500, 800], [-5_000, 600, 900]]
-    >>> npf.npv(rates, cashflows)
-    array([[Decimal('-2700.0'), Decimal('-3500.0')],
-           [Decimal('-2798.185941043083900226757370'),
-            Decimal('-3612.244897959183673469387756')],
-           [Decimal('-2884.297520661157024793388430'),
-            Decimal('-3710.743801652892561983471074')]], dtype=object)
-
-    This also works for Decimal cashflows.
-
     """
-    rates = np.atleast_1d(rate)
     values = np.atleast_2d(values)
-
-    if rates.ndim != 1:
-        msg = "invalid shape for rates. Rate must be either a scalar or 1d array"
-        raise ValueError(msg)
-
-    if values.ndim != 2:
-        msg = "invalid shape for values. Values must be either a 1d or 2d array"
-        raise ValueError(msg)
-
-    dtype = Decimal if _use_decimal_dtype(rates, values) else np.float64
-
-    if dtype == Decimal:
-        rates = _to_decimal_array_1d(rates)
-        values = _to_decimal_array_2d(values)
-
-    shape = _get_output_array_shape(rates, values)
-    out = np.empty(shape=shape, dtype=dtype)
-
-    if dtype == Decimal:
-        _npv_decimal(rates, values, out)
-    else:
-        _npv_native(rates, values, out)
-
-    return _return_ufunc_like(out)
+    timestep_array = np.arange(0, values.shape[1])
+    npv = (values / (1 + rate) ** timestep_array).sum(axis=1)
+    try:
+        # If size of array is one, return scalar
+        return npv.item()
+    except ValueError:
+        # Otherwise, return entire array
+        return npv
 
 
 def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):

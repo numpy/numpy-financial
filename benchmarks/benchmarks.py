@@ -37,16 +37,10 @@ class Npv2D:
         self.cashflows_decimal = _to_decimal_array_2d(self.cashflows)
         self.rates_decimal = _to_decimal_array_1d(self.rates)
 
-    def time_broadcast(self, n_cashflows, cashflow_lengths, rates_lengths):
-        npf.npv(self.rates, self.cashflows)
-
     def time_for_loop(self, n_cashflows, cashflow_lengths, rates_lengths):
         for rate in self.rates:
             for cashflow in self.cashflows:
                 npf.npv(rate, cashflow)
-
-    def time_broadcast_decimal(self, n_cashflows, cashflow_lengths, rates_lengths):
-        npf.npv(self.rates_decimal, self.cashflows_decimal)
 
     def time_for_loop_decimal(self, n_cashflows, cashflow_lengths, rates_lengths):
         for rate in self.rates_decimal:
