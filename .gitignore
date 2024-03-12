@@ -109,5 +109,9 @@ Thumbs.db
 ####################
 poetry.lock
 
+# hypothesis generated files #
+##########################
+/.hypothesis
+
 # Things specific to this project #
 ###################################
