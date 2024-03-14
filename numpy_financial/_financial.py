@@ -695,6 +695,25 @@ def rate(
             rn[~close] = np.nan
     return rn
 
+def irr_guess(values, axis=-1):
+    """
+    Return a guess for an Internal Rate of Return (IRR).
+
+    A continuously compounded IRR r is defined as a solution to the equation:
+    log(sum_{k=0}^{n-1} values[k]^+ exp(-r k)) - log(sum_{k=0}^{n-1} values[k]^- exp(-r k)) = 0
+    Newton's method can be used to find and r to solve this equation.
+
+    This function implements the first step of Newton's method, starting from r_0 = 0.
+    """
+    negative_part = -np.minimum(values, 0.)
+    positive_part = np.maximum(values, 0.)
+    negative_npv = np.sum(negative_part, axis=axis)
+    positive_npv = np.sum(positive_part, axis=axis)
+    times = np.arange(values.shape[axis])
+    negative_duration = np.sum(negative_part * times, axis=axis)/negative_npv
+    positive_duration = np.sum(positive_part * times, axis=axis)/positive_npv
+    delta_t = positive_duration - negative_duration
+    return (positive_npv/negative_npv)**(1/delta_t) - 1
 
 def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     r"""Return the Internal Rate of Return (IRR).
@@ -787,10 +806,7 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
 
     # If no value is passed for `guess`, then make a heuristic estimate
     if guess is None:
-        positive_cashflow = values > 0
-        inflow = values.sum(where=positive_cashflow)
-        outflow = -values.sum(where=~positive_cashflow)
-        guess = inflow / outflow - 1
+        guess = irr_guess(values)
 
     # We aim to solve eirr such that NPV is exactly zero. This can be framed as
     # simply finding the closest root of a polynomial to a given initial guess
