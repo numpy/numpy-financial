@@ -111,3 +111,4 @@ poetry.lock
 
 # Things specific to this project #
 ###################################
+doc/source/_api_stubs
