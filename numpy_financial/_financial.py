@@ -13,6 +13,7 @@ otherwise stated.
 
 from decimal import Decimal
 
+import numba as nb
 import numpy as np
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
@@ -33,6 +34,19 @@ class NoRealSolutionError(Exception):
 
 class IterationsExceededError(Exception):
     """Maximum number of iterations reached."""
+
+
+def _get_output_array_shape(*arrays):
+    return tuple(array.shape[0] for array in arrays)
+
+
+def _ufunc_like(array):
+    try:
+        # If size of array is one, return scalar
+        return array.item()
+    except ValueError:
+        # Otherwise, return entire array
+        return array.squeeze()
 
 
 def _convert_when(when):
@@ -825,6 +839,20 @@ def irr(values, *, guess=None, tol=1e-12, maxiter=100, raise_exceptions=False):
     return np.nan
 
 
+@nb.njit
+def _npv_native(rates, values, out):
+    for i in range(rates.shape[0]):
+        for j in range(values.shape[0]):
+            acc = 0.0
+            for t in range(values.shape[1]):
+                if rates[i] == -1.0:
+                    acc = np.nan
+                    break
+                else:
+                    acc += values[j, t] / ((1.0 + rates[i]) ** t)
+            out[i, j] = acc
+
+
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -892,16 +920,31 @@ def npv(rate, values):
     >>> np.round(npf.npv(rate, cashflows) + initial_cashflow, 5)
     3065.22267
 
+    The NPV calculation may be applied to several ``rates`` and ``cashflows``
+    simulatneously. This produces an array of shape ``(len(rates), len(cashflows))``.
+    >>> rates = [0.00, 0.05, 0.10]
+    >>> cashflows = [[-4_000, 500, 800], [-5_000, 600, 900]]
+    >>> npf.npv(rates, cashflows).round(2)
+    array([[-2700.  , -3500.  ],
+           [-2798.19, -3612.24],
+           [-2884.3 , -3710.74]])
+
     """
-    values = np.atleast_2d(values)
-    timestep_array = np.arange(0, values.shape[1])
-    npv = (values / (1 + rate) ** timestep_array).sum(axis=1)
-    try:
-        # If size of array is one, return scalar
-        return npv.item()
-    except ValueError:
-        # Otherwise, return entire array
-        return npv
+    values_inner = np.atleast_2d(values)
+    rate_inner = np.atleast_1d(rate)
+
+    if rate_inner.ndim != 1:
+        msg = "invalid shape for rates. Rate must be either a scalar or 1d array"
+        raise ValueError(msg)
+
+    if values_inner.ndim != 2:
+        msg = "invalid shape for values. Values must be either a 1d or 2d array"
+        raise ValueError(msg)
+
+    output_shape = _get_output_array_shape(rate_inner, values_inner)
+    out = np.empty(output_shape)
+    _npv_native(rate_inner, values_inner, out)
+    return _ufunc_like(out)
 
 
 def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):

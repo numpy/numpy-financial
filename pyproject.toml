@@ -39,9 +39,12 @@ packages = [{include = "numpy_financial"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 numpy = "^1.23"
+numba = "^0.59.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0"
+hypothesis = {extras = ["numpy"], version = "^6.99.11"}
+pytest-xdist = {extras = ["psutil"], version = "^3.5.0"}
 
 
 [tool.poetry.group.docs.dependencies]

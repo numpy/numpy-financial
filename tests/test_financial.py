@@ -1,10 +1,14 @@
 import math
 from decimal import Decimal
 
+import hypothesis.extra.numpy as npst
+import hypothesis.strategies as st
+
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
 import pytest
+from hypothesis import given, settings
 from numpy.testing import (
     assert_,
     assert_allclose,
@@ -13,6 +17,38 @@ from numpy.testing import (
 )
 
 import numpy_financial as npf
+
+
+def float_dtype():
+    return npst.floating_dtypes(sizes=[32, 64], endianness="<")
+
+
+def int_dtype():
+    return npst.integer_dtypes(sizes=[32, 64], endianness="<")
+
+
+def uint_dtype():
+    return npst.unsigned_integer_dtypes(sizes=[32, 64], endianness="<")
+
+
+real_scalar_dtypes = st.one_of(float_dtype(), int_dtype(), uint_dtype())
+
+
+cashflow_array_strategy = npst.arrays(
+    dtype=real_scalar_dtypes,
+    shape=npst.array_shapes(min_dims=1, max_dims=2, min_side=0, max_side=25),
+)
+cashflow_list_strategy = cashflow_array_strategy.map(lambda x: x.tolist())
+
+cashflow_array_like_strategy = st.one_of(
+    cashflow_array_strategy,
+    cashflow_list_strategy,
+)
+
+short_scalar_array = npst.arrays(
+    dtype=real_scalar_dtypes,
+    shape=npst.array_shapes(min_dims=0, max_dims=1, min_side=0, max_side=5),
+)
 
 
 def assert_decimal_close(actual, expected, tol=Decimal("1e-7")):
@@ -244,11 +280,27 @@ class TestNpv:
             rtol=1e-2,
         )
 
-    def test_npv_decimal(self):
-        assert_equal(
-            npf.npv(Decimal("0.05"), [-15000, 1500, 2500, 3500, 4500, 6000]),
-            Decimal("122.894854950942692161628715"),
-        )
+    @given(rates=short_scalar_array, values=cashflow_array_strategy)
+    @settings(deadline=None)
+    def test_fuzz(self, rates, values):
+        npf.npv(rates, values)
+
+    @pytest.mark.parametrize("rates", ([[1, 2, 3]], numpy.empty(shape=(1, 1, 1))))
+    def test_invalid_rates_shape(self, rates):
+        cashflows = [1, 2, 3]
+        with pytest.raises(ValueError):
+            npf.npv(rates, cashflows)
+
+    @pytest.mark.parametrize("cf", ([[[1, 2, 3]]], numpy.empty(shape=(1, 1, 1))))
+    def test_invalid_cashflows_shape(self, cf):
+        rates = [1, 2, 3]
+        with pytest.raises(ValueError):
+            npf.npv(rates, cf)
+
+    @pytest.mark.parametrize("rate", (-1, -1.0))
+    def test_rate_of_negative_one_returns_nan(self, rate):
+        cashflow = numpy.arange(5)
+        assert numpy.isnan(npf.npv(rate, cashflow))
 
 
 class TestPmt:
@@ -335,68 +387,6 @@ class TestMirr:
             assert_allclose(result, expected, atol=difference)
         else:
             assert_(numpy.isnan(result))
-
-    @pytest.mark.parametrize("number_type", [Decimal, float])
-    @pytest.mark.parametrize(
-        "args, expected",
-        [
-            (
-                {
-                    "values": [
-                        "-4500",
-                        "-800",
-                        "800",
-                        "800",
-                        "600",
-                        "600",
-                        "800",
-                        "800",
-                        "700",
-                        "3000",
-                    ],
-                    "finance_rate": "0.08",
-                    "reinvest_rate": "0.055",
-                },
-                "0.066597175031553548874239618",
-            ),
-            (
-                {
-                    "values": ["-120000", "39000", "30000", "21000", "37000", "46000"],
-                    "finance_rate": "0.10",
-                    "reinvest_rate": "0.12",
-                },
-                "0.126094130365905145828421880",
-            ),
-            (
-                {
-                    "values": ["100", "200", "-50", "300", "-200"],
-                    "finance_rate": "0.05",
-                    "reinvest_rate": "0.06",
-                },
-                "0.342823387842176663647819868",
-            ),
-            (
-                {
-                    "values": ["39000", "30000", "21000", "37000", "46000"],
-                    "finance_rate": "0.10",
-                    "reinvest_rate": "0.12",
-                },
-                numpy.nan,
-            ),
-        ],
-    )
-    def test_mirr_decimal(self, number_type, args, expected):
-        values = [number_type(v) for v in args["values"]]
-        result = npf.mirr(
-            values,
-            number_type(args["finance_rate"]),
-            number_type(args["reinvest_rate"]),
-        )
-
-        if expected is not numpy.nan:
-            assert_decimal_close(result, number_type(expected), tol=1e-15)
-        else:
-            assert numpy.isnan(result)
 
     def test_mirr_no_real_solution_exception(self):
         # Test that if there is no solution because all the cashflows
