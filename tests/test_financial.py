@@ -1,19 +1,20 @@
 import math
 from decimal import Decimal
 
+import hypothesis.extra.numpy as npst
+import hypothesis.strategies as st
+
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
 import pytest
+from hypothesis import given, settings
 from numpy.testing import (
     assert_,
     assert_allclose,
     assert_equal,
     assert_raises,
 )
-from hypothesis import given, settings
-import hypothesis.strategies as st
-import hypothesis.extra.numpy as npst
 
 import numpy_financial as npf
 
