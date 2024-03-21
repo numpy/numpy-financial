@@ -65,8 +65,9 @@ Development
 .. toctree::
    :maxdepth: 1
 
-   doc_developer/getting_the_code
-   doc_developer/building_with_poetry
+   dev/getting_the_code.md
+   dev/building_with_poetry.md
+   dev/running_the_benchmarks.md
 
 .. include:: release-notes.rst
 
