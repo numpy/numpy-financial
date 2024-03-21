@@ -33,6 +33,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'numpydoc',
     'sphinx.ext.mathjax',
+    'myst_parser',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
