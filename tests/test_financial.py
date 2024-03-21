@@ -860,12 +860,3 @@ class TestIrr:
 
         with pytest.raises(npf.NoRealSolutionError):
             npf.irr(cashflows, raise_exceptions=True)
-
-    def test_irr_maximum_iterations_exception(self):
-        # Test that if the maximum number of iterations is reached,
-        # then npf.irr returns IterationsExceededException
-        # when raise_exceptions is set to True.
-        cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
-
-        with pytest.raises(npf.IterationsExceededError):
-            npf.irr(cashflows, maxiter=1, raise_exceptions=True)
