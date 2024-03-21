@@ -16,7 +16,6 @@ from decimal import Decimal
 import numba as nb
 import numpy as np
 
-
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
            'NoRealSolutionError', 'IterationsExceededError']
