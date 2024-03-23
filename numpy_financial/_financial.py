@@ -927,13 +927,13 @@ def npv(rate, values):
 
     The NPV calculation may be applied to several ``rates`` and ``cashflows``
     simulatneously. This produces an array of shape ``(len(rates), len(cashflows))``.
+
     >>> rates = [0.00, 0.05, 0.10]
     >>> cashflows = [[-4_000, 500, 800], [-5_000, 600, 900]]
     >>> npf.npv(rates, cashflows).round(2)
     array([[-2700.  , -3500.  ],
            [-2798.19, -3612.24],
            [-2884.3 , -3710.74]])
-
     """
     values_inner = np.atleast_2d(values)
     rate_inner = np.atleast_1d(rate)
