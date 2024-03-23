@@ -50,6 +50,10 @@ short_scalar_array = npst.arrays(
     shape=npst.array_shapes(min_dims=0, max_dims=1, min_side=0, max_side=5),
 )
 
+when_strategy = st.sampled_from(
+    ['end', 'begin', 'e', 'b', 0, 1, 'beginning', 'start', 'finish']
+)
+
 
 def assert_decimal_close(actual, expected, tol=Decimal("1e-7")):
     # Check if both actual and expected are iterable (like arrays)
@@ -425,6 +429,17 @@ class TestNper:
         assert_allclose(
             npf.nper(0.075, -2000, 0, 100000.0, [0, 1]), [21.5449442, 20.76156441], 4
         )
+
+    @given(
+        rates=short_scalar_array,
+        payments=short_scalar_array,
+        present_values=short_scalar_array,
+        future_values=short_scalar_array,
+        whens=when_strategy,
+    )
+    @settings(deadline=None)  # ignore jit compilation of a function
+    def test_fuzz(self, rates, payments, present_values, future_values, whens):
+        npf.nper(rates, payments, present_values, future_values, whens)
 
 
 class TestPpmt:
