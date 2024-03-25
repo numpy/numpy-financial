@@ -22,6 +22,55 @@ git clone https://github.com/<your_username>/numpy-financial.git
 
 Hooray! You now have a working copy of NumPy-Financial.
 
+## Adding the upstream repo
+
+Now that your fork of NumPy-Financial is available locally, it is worth adding the upstream repository as a remote. 
+
+You can view the current remotes by running: 
+
+```shell
+git remote -v
+```
+
+This should produce some output similar to:
+
+```shell
+origin	https://github.com/<your_username>/numpy-financial.git (fetch)
+origin	https://github.com/<your_username>/numpy-financial.git (push)
+```
+
+Now tell git that there is a remote repository that we will call ``upstream`` pointing to the numpy-financial repository: 
+
+```shell
+git remote add upstream https://github.com/numpy/numpy-financial.git
+```
+
+We can now check the remotes again:
+
+```shell
+git remote -v
+```
+
+which gives two additional lines as output:
+
+```shell
+origin	https://github.com/<your_username>/numpy-financial.git (fetch)
+origin	https://github.com/<your_username>/numpy-financial.git (push)
+upstream	https://github.com/numpy/numpy-financial.git (fetch)
+upstream	https://github.com/numpy/numpy-financial.git (push)
+```
+
+
+## Pulling from upstream by default
+
+We want to be able to get the changes from the upstream repo by default. This way you pull the most recent changes into your repo.
+
+To set up your repository to read from the remote that we called `upstream`:
+
+```shell
+git config branch.main.remote upstream
+git config branch.main.merge refs/heads/main
+```
 
 ## Updating the code with other's changes
 
