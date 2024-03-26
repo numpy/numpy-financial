@@ -14,7 +14,11 @@ from numpy.testing import (
 )
 
 import numpy_financial as npf
-from tests.strategies import cashflow_array_strategy, short_scalar_array, when_strategy
+from tests.strategies import (
+    cashflow_array_like_strategy,
+    short_scalar_array_strategy,
+    when_strategy,
+)
 
 
 def assert_decimal_close(actual, expected, tol=Decimal("1e-7")):
@@ -246,7 +250,7 @@ class TestNpv:
             rtol=1e-2,
         )
 
-    @given(rates=short_scalar_array, values=cashflow_array_strategy)
+    @given(rates=short_scalar_array_strategy, values=cashflow_array_like_strategy)
     @settings(deadline=None)
     def test_fuzz(self, rates, values):
         npf.npv(rates, values)
@@ -393,10 +397,10 @@ class TestNper:
         )
 
     @given(
-        rates=short_scalar_array,
-        payments=short_scalar_array,
-        present_values=short_scalar_array,
-        future_values=short_scalar_array,
+        rates=short_scalar_array_strategy,
+        payments=short_scalar_array_strategy,
+        present_values=short_scalar_array_strategy,
+        future_values=short_scalar_array_strategy,
         whens=when_strategy,
     )
     @settings(deadline=None)  # ignore jit compilation of a function

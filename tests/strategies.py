@@ -40,7 +40,7 @@ cashflow_array_like_strategy = st.one_of(
     cashflow_array_strategy,
     cashflow_list_strategy,
 )
-short_scalar_array = npst.arrays(
+short_scalar_array_strategy = npst.arrays(
     dtype=real_scalar_dtypes,
     shape=npst.array_shapes(min_dims=0, max_dims=1, min_side=0, max_side=5),
 )
