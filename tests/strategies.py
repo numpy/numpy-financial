@@ -3,7 +3,6 @@ from typing import Literal
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as npst
 
-
 # numba only supports 32-bit or 64-bit little endian values
 NUMBA_ALLOWED_SIZES: list[Literal[32, 64]] = [32, 64]
 NUMBA_ALLOWED_ENDIANNESS = "<"
