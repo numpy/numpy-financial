@@ -4,6 +4,7 @@ from decimal import Decimal
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
+import numpy as np
 import pytest
 from hypothesis import given, settings
 from numpy.testing import (
@@ -406,6 +407,22 @@ class TestNper:
     @settings(deadline=None)  # ignore jit compilation of a function
     def test_fuzz(self, rates, payments, present_values, future_values, whens):
         npf.nper(rates, payments, present_values, future_values, whens)
+
+    @pytest.mark.parametrize(
+        "rate_,pmt_,pv_,fv_,when_",
+        [
+            (np.empty((5, 2)), np.empty(5), np.empty(5), np.empty(5), np.empty(5)),
+            (np.empty(5), np.empty((5, 2)), np.empty(5), np.empty(5), np.empty(5)),
+            (np.empty(5), np.empty(5), np.empty((5, 2)), np.empty(5), np.empty(5)),
+            (np.empty(5), np.empty(5), np.empty(5), np.empty((5, 2)), np.empty(5)),
+            (np.empty(5), np.empty(5), np.empty(5), np.empty(5), np.empty((5, 2))),
+        ]
+    )
+    def test_2d_array_for_1d_shapes(self, rate_, pmt_, pv_, fv_, when_):
+        # Array values do not matter, only that they have invalid dimensions
+        with pytest.raises(ValueError, match="invalid shape for"):
+            npf.nper(rate_, pmt_, pv_, fv_, when_)
+
 
 
 class TestPpmt:

@@ -12,6 +12,7 @@ otherwise stated.
 """
 
 from decimal import Decimal
+from typing import Optional
 
 import numba as nb
 import numpy as np
@@ -58,6 +59,35 @@ def _convert_when(when):
         return _when_to_num[when]
     except (KeyError, TypeError):
         return [_when_to_num[x] for x in when]
+
+
+def _validate_arrays(
+    *,
+    rate: Optional[np.ndarray],
+    pmt: Optional[np.ndarray],
+    pv: Optional[np.ndarray],
+    fv: Optional[np.ndarray],
+    when: Optional[np.ndarray],
+):
+    if rate is not None and rate.ndim != 1:
+        msg = "invalid shape for rates. Rate must be either a scalar or 1d array"
+        raise ValueError(msg)
+
+    if pmt is not None and pmt.ndim != 1:
+        msg = "invalid shape for pmt. Payments must be either a scalar or 1d array"
+        raise ValueError(msg)
+
+    if pv is not None and pv.ndim != 1:
+        msg = "invalid shape for pv. Present value must be either a scalar or 1d array"
+        raise ValueError(msg)
+
+    if fv is not None and fv.ndim != 1:
+        msg = "invalid shape for fv. Future value must be either a scalar or 1d array"
+        raise ValueError(msg)
+
+    if when is not None and when.ndim != 1:
+        msg = "invalid shape for when. When must be either a scalar or 1d array"
+        raise ValueError(msg)
 
 
 def fv(rate, nper, pmt, pv, when='end'):
@@ -364,27 +394,13 @@ def nper(rate, pmt, pv, fv=0, when='end'):
     fv_inner = np.atleast_1d(fv)
     when_inner = np.atleast_1d(when)
 
-    # TODO: I don't like repeating myself this often, refactor into a function
-    #       that checks all of the arrays at once.
-    if rate_inner.ndim != 1:
-        msg = "invalid shape for rates. Rate must be either a scalar or 1d array"
-        raise ValueError(msg)
-
-    if pmt_inner.ndim != 1:
-        msg = "invalid shape for pmt. Payments must be either a scalar or 1d array"
-        raise ValueError(msg)
-
-    if pv_inner.ndim != 1:
-        msg = "invalid shape for pv. Present value must be either a scalar or 1d array"
-        raise ValueError(msg)
-
-    if fv_inner.ndim != 1:
-        msg = "invalid shape for fv. Future value must be either a scalar or 1d array"
-        raise ValueError(msg)
-
-    if when_inner.ndim != 1:
-        msg = "invalid shape for when. When must be either a scalar or 1d array"
-        raise ValueError(msg)
+    _validate_arrays(
+        rate=rate_inner,
+        pmt=pmt_inner,
+        pv=pv_inner,
+        fv=fv_inner,
+        when=when_inner,
+    )
 
     out_shape = _get_output_array_shape(
         rate_inner, pmt_inner, pv_inner, fv_inner, when_inner
