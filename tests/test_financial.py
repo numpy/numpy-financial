@@ -1,12 +1,7 @@
 import math
 from decimal import Decimal
 
-import hypothesis.extra.numpy as npst
-import hypothesis.strategies as st
-
-# Don't use 'import numpy as np', to avoid accidentally testing
-# the versions in numpy instead of numpy_financial.
-import numpy
+import numpy as np
 import pytest
 from hypothesis import given, settings
 from numpy.testing import (
@@ -17,37 +12,10 @@ from numpy.testing import (
 )
 
 import numpy_financial as npf
-
-
-def float_dtype():
-    return npst.floating_dtypes(sizes=[32, 64], endianness="<")
-
-
-def int_dtype():
-    return npst.integer_dtypes(sizes=[32, 64], endianness="<")
-
-
-def uint_dtype():
-    return npst.unsigned_integer_dtypes(sizes=[32, 64], endianness="<")
-
-
-real_scalar_dtypes = st.one_of(float_dtype(), int_dtype(), uint_dtype())
-
-
-cashflow_array_strategy = npst.arrays(
-    dtype=real_scalar_dtypes,
-    shape=npst.array_shapes(min_dims=1, max_dims=2, min_side=0, max_side=25),
-)
-cashflow_list_strategy = cashflow_array_strategy.map(lambda x: x.tolist())
-
-cashflow_array_like_strategy = st.one_of(
-    cashflow_array_strategy,
-    cashflow_list_strategy,
-)
-
-short_scalar_array = npst.arrays(
-    dtype=real_scalar_dtypes,
-    shape=npst.array_shapes(min_dims=0, max_dims=1, min_side=0, max_side=5),
+from tests.strategies import (
+    cashflow_array_like_strategy,
+    short_scalar_array_strategy,
+    when_strategy,
 )
 
 
@@ -219,7 +187,7 @@ class TestRate:
             number_type(5000.0),
             when=when,
         )
-        is_nan = Decimal.is_nan if number_type == Decimal else numpy.isnan
+        is_nan = Decimal.is_nan if number_type == Decimal else np.isnan
         assert is_nan(result)
 
     def test_rate_decimal(self):
@@ -231,7 +199,7 @@ class TestRate:
         Test the correct result is returned with only infeasible solutions
         converted to nan.
         """
-        des = [-0.39920185, -0.02305873, -0.41818459, 0.26513414, numpy.nan]
+        des = [-0.39920185, -0.02305873, -0.41818459, 0.26513414, np.nan]
         nper = 2
         pmt = 0
         pv = [-593.06, -4725.38, -662.05, -428.78, -13.65]
@@ -280,18 +248,18 @@ class TestNpv:
             rtol=1e-2,
         )
 
-    @given(rates=short_scalar_array, values=cashflow_array_strategy)
+    @given(rates=short_scalar_array_strategy, values=cashflow_array_like_strategy)
     @settings(deadline=None)
     def test_fuzz(self, rates, values):
         npf.npv(rates, values)
 
-    @pytest.mark.parametrize("rates", ([[1, 2, 3]], numpy.empty(shape=(1, 1, 1))))
+    @pytest.mark.parametrize("rates", ([[1, 2, 3]], np.empty(shape=(1, 1, 1))))
     def test_invalid_rates_shape(self, rates):
         cashflows = [1, 2, 3]
         with pytest.raises(ValueError):
             npf.npv(rates, cashflows)
 
-    @pytest.mark.parametrize("cf", ([[[1, 2, 3]]], numpy.empty(shape=(1, 1, 1))))
+    @pytest.mark.parametrize("cf", ([[[1, 2, 3]]], np.empty(shape=(1, 1, 1))))
     def test_invalid_cashflows_shape(self, cf):
         rates = [1, 2, 3]
         with pytest.raises(ValueError):
@@ -299,8 +267,8 @@ class TestNpv:
 
     @pytest.mark.parametrize("rate", (-1, -1.0))
     def test_rate_of_negative_one_returns_nan(self, rate):
-        cashflow = numpy.arange(5)
-        assert numpy.isnan(npf.npv(rate, cashflow))
+        cashflow = np.arange(5)
+        assert np.isnan(npf.npv(rate, cashflow))
 
 
 class TestPmt:
@@ -319,7 +287,7 @@ class TestPmt:
         # Test the case where we use broadcast and
         # the arguments passed in are arrays.
         res = npf.pmt([[0.0, 0.8], [0.3, 0.8]], [12, 3], [2000, 20000])
-        tgt = numpy.array([[-166.66667, -19311.258], [-626.90814, -19311.258]])
+        tgt = np.array([[-166.66667, -19311.258], [-626.90814, -19311.258]])
         assert_allclose(res, tgt)
 
     def test_pmt_decimal_simple(self):
@@ -341,7 +309,7 @@ class TestPmt:
             [Decimal("12"), Decimal("3")],
             [Decimal("2000"), Decimal("20000")],
         )
-        tgt = numpy.array(
+        tgt = np.array(
             [
                 [
                     Decimal("-166.6666666666666666666666667"),
@@ -386,7 +354,7 @@ class TestMirr:
             difference = 10**-decimal_part_len
             assert_allclose(result, expected, atol=difference)
         else:
-            assert_(numpy.isnan(result))
+            assert_(np.isnan(result))
 
     def test_mirr_no_real_solution_exception(self):
         # Test that if there is no solution because all the cashflows
@@ -407,16 +375,16 @@ class TestNper:
         )
 
     def test_gh_18(self):
-        with numpy.errstate(divide="raise"):
+        with np.errstate(divide="raise"):
             assert_allclose(
                 npf.nper(0.1, 0, -500, 1500),
                 11.52670461,  # Computed using Google Sheet's NPER
             )
 
     def test_infinite_payments(self):
-        with numpy.errstate(divide="raise"):
+        with np.errstate(divide="raise"):
             result = npf.nper(0, -0.0, 1000)
-        assert_(result == numpy.inf)
+        assert_(result == np.inf)
 
     def test_no_interest(self):
         assert_(npf.nper(0, -100, 1000) == 10)
@@ -425,6 +393,33 @@ class TestNper:
         assert_allclose(
             npf.nper(0.075, -2000, 0, 100000.0, [0, 1]), [21.5449442, 20.76156441], 4
         )
+
+    @given(
+        rates=short_scalar_array_strategy,
+        payments=short_scalar_array_strategy,
+        present_values=short_scalar_array_strategy,
+        future_values=short_scalar_array_strategy,
+        whens=when_strategy,
+    )
+    @settings(deadline=None)  # ignore jit compilation of a function
+    def test_fuzz(self, rates, payments, present_values, future_values, whens):
+        npf.nper(rates, payments, present_values, future_values, whens)
+
+    @pytest.mark.parametrize(
+        "rate_,pmt_,pv_,fv_,when_",
+        [
+            (np.empty((5, 2)), np.empty(5), np.empty(5), np.empty(5), np.empty(5)),
+            (np.empty(5), np.empty((5, 2)), np.empty(5), np.empty(5), np.empty(5)),
+            (np.empty(5), np.empty(5), np.empty((5, 2)), np.empty(5), np.empty(5)),
+            (np.empty(5), np.empty(5), np.empty(5), np.empty((5, 2)), np.empty(5)),
+            (np.empty(5), np.empty(5), np.empty(5), np.empty(5), np.empty((5, 2))),
+        ]
+    )
+    def test_2d_array_for_1d_shapes(self, rate_, pmt_, pv_, fv_, when_):
+        # Array values do not matter, only that they have invalid dimensions
+        with pytest.raises(ValueError, match="invalid shape for"):
+            npf.nper(rate_, pmt_, pv_, fv_, when_)
+
 
 
 class TestPpmt:
@@ -518,7 +513,7 @@ class TestPpmt:
         ],
     )
     def test_broadcast(self, when, desired):
-        args = (0.1 / 12, numpy.arange(1, 5), 24, 2000, 0)
+        args = (0.1 / 12, np.arange(1, 5), 24, 2000, 0)
         result = npf.ppmt(*args) if when is None else npf.ppmt(*args, when)
         assert_allclose(result, desired, rtol=1e-5)
 
@@ -548,7 +543,7 @@ class TestPpmt:
     def test_broadcast_decimal(self, when, desired):
         args = (
             Decimal("0.1") / Decimal("12"),
-            numpy.arange(1, 5),
+            np.arange(1, 5),
             Decimal("24"),
             Decimal("2000"),
             Decimal("0"),
@@ -610,7 +605,7 @@ class TestIpmt:
     @pytest.mark.parametrize(
         "per, desired",
         [
-            (0, numpy.nan),
+            (0, np.nan),
             (1, 0),
             (2, -594.107158),
             (3, -592.971592),
@@ -620,15 +615,15 @@ class TestIpmt:
         # All desired results computed using Google Sheet's IPMT
         rate = 0.001988079518355057
         result = npf.ipmt(rate, per, 360, 300000, when="begin")
-        if numpy.isnan(desired):
-            assert numpy.isnan(result)
+        if np.isnan(desired):
+            assert np.isnan(result)
         else:
             assert_allclose(result, desired, rtol=1e-6)
 
     def test_broadcasting(self):
-        desired = [numpy.nan, -16.66666667, -16.03647345, -15.40102862, -14.76028842]
+        desired = [np.nan, -16.66666667, -16.03647345, -15.40102862, -14.76028842]
         assert_allclose(
-            npf.ipmt(0.1 / 12, numpy.arange(5), 24, 2000),
+            npf.ipmt(0.1 / 12, np.arange(5), 24, 2000),
             desired,
             rtol=1e-6,
         )
@@ -651,10 +646,10 @@ class TestIpmt:
     def test_0d_inputs(self):
         args = (0.1 / 12, 1, 24, 2000)
         # Scalar inputs should return a scalar.
-        assert numpy.isscalar(npf.ipmt(*args))
-        args = (numpy.array(args[0]),) + args[1:]
+        assert np.isscalar(npf.ipmt(*args))
+        args = (np.array(args[0]),) + args[1:]
         # 0d array inputs should return a scalar.
-        assert numpy.isscalar(npf.ipmt(*args))
+        assert np.isscalar(npf.ipmt(*args))
 
 
 class TestFv:
@@ -733,7 +728,7 @@ class TestIrr:
         # a series of cashflows to be zero, so we should have
         #
         # NPV(IRR(x), x) = 0.
-        cashflows = numpy.array([-40000, 5000, 8000, 12000, 30000])
+        cashflows = np.array([-40000, 5000, 8000, 12000, 30000])
         assert_allclose(
             npf.npv(npf.irr(cashflows), cashflows),
             0,
@@ -771,7 +766,7 @@ class TestIrr:
     )
     def test_numpy_gh_6744(self, v):
         # Test that if there is no solution then npf.irr returns nan.
-        assert numpy.isnan(npf.irr(v))
+        assert np.isnan(npf.irr(v))
 
     def test_gh_15(self):
         v = [
@@ -808,13 +803,13 @@ class TestIrr:
             1.3133070599585015e-313,
         ]
         result = npf.irr(v)
-        assert numpy.isfinite(result)
+        assert np.isfinite(result)
         # Very rough approximation taken from the issue.
         desired = -0.9999999990596069
         assert_allclose(result, desired, rtol=1e-9)
 
     def test_gh_39(self):
-        cashflows = numpy.array(
+        cashflows = np.array(
             [
                 -217500.0,
                 -217500.0,
@@ -856,7 +851,7 @@ class TestIrr:
         # Test that if there is no solution because all the cashflows
         # have the same sign, then npf.irr returns NoRealSolutionException
         # when raise_exceptions is set to True.
-        cashflows = numpy.array([40000, 5000, 8000, 12000, 30000])
+        cashflows = np.array([40000, 5000, 8000, 12000, 30000])
 
         with pytest.raises(npf.NoRealSolutionError):
             npf.irr(cashflows, raise_exceptions=True)
