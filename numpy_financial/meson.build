@@ -6,6 +6,7 @@ py.extension_module(
 )
 
 python_sources = [
+    '__init__.py',
     '_financial.py',
 ]
 
@@ -13,3 +14,5 @@ py.install_sources(
     python_sources,
     subdir: 'numpy_financial',
 )
+
+install_subdir('tests', install_dir: py.get_install_dir() / 'numpy_financial')

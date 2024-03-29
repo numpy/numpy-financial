@@ -1,7 +1,7 @@
 from libc.math cimport NAN
 
 
-def _cnpv(const double[::1] rates, const double[:, ::1] values, double[:, ::1] out):
+def _npv(const double[::1] rates, const double[:, ::1] values, double[:, ::1] out):
     cdef:
         Py_ssize_t i, j, t
         double acc

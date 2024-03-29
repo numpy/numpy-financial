@@ -16,4 +16,3 @@ py = import('python').find_installation(pure: false)
 py_dep = py.dependency()
 
 subdir('numpy_financial')
-subdir('tests')
