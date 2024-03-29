@@ -1,11 +1,15 @@
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+build-backend = "mesonpy"
+requires = [
+    "meson-python>=0.15.0",
+    "Cython>=3.0.9",
+    "numpy>=1.23.5",
+]
 
-
-[tool.poetry]
+[project]
 name = "numpy-financial"
 version = "2.0.0"
+requires-python = ">=3.10"
 description = "Simple financial functions"
 license = "BSD-3-Clause"
 authors = ["Travis E. Oliphant et al."]
@@ -34,30 +38,41 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: MacOS",
 ]
-packages = [{include = "numpy_financial"}]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-numpy = "^1.23"
-numba = "^0.59.1"
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.0"
-hypothesis = {extras = ["numpy"], version = "^6.99.11"}
-pytest-xdist = {extras = ["psutil"], version = "^3.5.0"}
-
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "^7.0"
-numpydoc = "^1.5"
-pydata-sphinx-theme = "^0.15"
-myst-parser = "^2.0.0"
-
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-xdist",
+    "hypothesis",
+]
+doc = [
+    "sphinx>=7.0",
+    "numpydoc>=1.5",
+    "pydata-sphinx-theme>=0.15",
+    "myst-parser>=2.0.0",
+]
+dev = [
+    "ruff>=0.3.0",
+    "asv>=0.6.0",
+]
 
 
-[tool.poetry.group.lint.dependencies]
-ruff = "^0.3"
+[tool.spin]
+package = 'numpy_financial'
 
-
-[tool.poetry.group.bench.dependencies]
-asv = "^0.6"
+[tool.spin.commands]
+"Build" = [
+  "spin.cmds.meson.build",
+  "spin.cmds.meson.test",
+  "spin.cmds.build.sdist",
+  "spin.cmds.pip.install",
+]
+"Documentation" = [
+  "spin.cmds.meson.docs"
+]
+"Environments" = [
+  "spin.cmds.meson.shell",
+  "spin.cmds.meson.ipython",
+  "spin.cmds.meson.python",
+  "spin.cmds.meson.run"
+]

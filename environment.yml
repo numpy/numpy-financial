@@ -1,0 +1,21 @@
+# To use:
+#   $ conda env create -f environment.yml  # `mamba` works too for this command
+#   $ conda activate numpy-financial-dev
+#
+name: numpy-financial-dev
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - cython>=3.0.9
+  - compilers
+  - meson
+  - meson-python
+  - ninja
+  - numpy
+  - pytest
+  - pytest-xdist
+  - asv>=0.6.0
+  - hypothesis
+  - myst-parser
+  - spin

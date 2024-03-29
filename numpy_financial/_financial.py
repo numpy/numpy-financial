@@ -13,8 +13,8 @@ otherwise stated.
 
 from decimal import Decimal
 
-import numba as nb
 import numpy as np
+from _cfinancial import _cnpv
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
@@ -844,20 +844,6 @@ def irr(values, *, raise_exceptions=False):
     return eirr[np.argmin(abs_eirr)]
 
 
-@nb.njit
-def _npv_native(rates, values, out):
-    for i in range(rates.shape[0]):
-        for j in range(values.shape[0]):
-            acc = 0.0
-            for t in range(values.shape[1]):
-                if rates[i] == -1.0:
-                    acc = np.nan
-                    break
-                else:
-                    acc += values[j, t] / ((1.0 + rates[i]) ** t)
-            out[i, j] = acc
-
-
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -948,7 +934,7 @@ def npv(rate, values):
 
     output_shape = _get_output_array_shape(rate_inner, values_inner)
     out = np.empty(output_shape)
-    _npv_native(rate_inner, values_inner, out)
+    _cnpv(rate_inner, values_inner, out)
     return _ufunc_like(out)
 
 
