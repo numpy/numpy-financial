@@ -14,7 +14,7 @@ otherwise stated.
 from decimal import Decimal
 
 import numpy as np
-from _cfinancial import _npv
+import _cfinancial
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
@@ -934,7 +934,7 @@ def npv(rate, values):
 
     output_shape = _get_output_array_shape(rate_inner, values_inner)
     out = np.empty(output_shape)
-    _npv(rate_inner, values_inner, out)
+    _cfinancial.npv(rate_inner, values_inner, out)
     return _ufunc_like(out)
 
 
