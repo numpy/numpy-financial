@@ -1,11 +1,12 @@
 project(
     'numpy-financial',
-    'cython',
+    'cython', 'c',
     version: '2.0.0.dev',
     license: 'BSD-3',
     meson_version: '>=1.4.0',
 )
 
+cc = meson.get_compiler('c')
 cy = meson.get_compiler('cython')
 
 if not cy.version().version_compare('>=3.0.9')
