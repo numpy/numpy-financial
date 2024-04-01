@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -19,7 +22,7 @@ jobs:
         activate-environment: numpy-financial-dev
         environment-file: environment.yml
         auto-activate-base: false
-    - name: Conda info
+    - name: Conda metadata
       run: |
         conda info
         conda list
