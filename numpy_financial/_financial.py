@@ -14,7 +14,7 @@ otherwise stated.
 from decimal import Decimal
 
 import numpy as np
-import _cfinancial
+from . import _cfinancial
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
