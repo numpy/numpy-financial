@@ -922,8 +922,8 @@ def npv(rate, values):
            [-2798.19, -3612.24],
            [-2884.3 , -3710.74]])
     """
-    values_inner = np.atleast_2d(values)
-    rate_inner = np.atleast_1d(rate)
+    values_inner = np.atleast_2d(values).astype(np.float64)
+    rate_inner = np.atleast_1d(rate).astype(np.float64)
 
     if rate_inner.ndim != 1:
         msg = "invalid shape for rates. Rate must be either a scalar or 1d array"
