@@ -11,14 +11,12 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Testing with Python ${{ matrix.python-version }}
       uses: conda-incubator/setup-miniconda@v3
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
         activate-environment: numpy-financial-dev
         environment-file: environment.yml
-    - name: Test with pytest
       run: |
-        conda activate numpy-financial-dev
         spin test -- --doctest-modules
