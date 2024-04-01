@@ -6,18 +6,26 @@ name: numpy-financial-dev
 channels:
   - conda-forge
 dependencies:
+  # Runtime dependencies
   - python
+  - numpy
+  # Build
   - cython>=3.0.9
   - compilers
   - meson
   - meson-python
   - ninja
-  - numpy
+  # Tests
   - pytest
   - pytest-xdist
   - asv>=0.6.0
   - hypothesis
+  # Docs
   - myst-parser
   - numpydoc
   - pydata-sphinx-theme>=0.15.0
   - spin
+  # Lint
+  - ruff>=0.3.0
+  # Benchmarks
+  - asv>=0.6.0

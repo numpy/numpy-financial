@@ -26,6 +26,15 @@ jobs:
       run: |
         conda info
         conda list
+    - name: Lint
+      run: |
+        set -euo pipefail
+        # Tell us what version we are using
+        ruff version
+        # Check the source file, ignore type annotations (ANN) for now.
+        ruff check numpy_financial/ --ignore F403 --select E,F,B,I
+        # Check the test and benchmark files
+        ruff check tests/ benchmarks/ --select E,F,B,I
     - name: Build project
       run: |
         spin build -v
