@@ -20,4 +20,5 @@ jobs:
         environment-file: environment.yml
     - name: Test with pytest
       run: |
+        conda activate numpy-financial-dev
         spin test -- --doctest-modules
