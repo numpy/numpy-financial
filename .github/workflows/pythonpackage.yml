@@ -23,6 +23,9 @@ jobs:
       run: |
         conda info
         conda list
+    - name: Build project
+      run: |
+        spin build -v
     - name: Test with pytest
       run: |
         spin test -- --doctest-modules
