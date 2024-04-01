@@ -1,6 +1,6 @@
 # Building the docs
 
-This guide goes through how to build the NumPy-Financial documentation with poetry
+This guide goes through how to build the NumPy-Financial documentation with spin and conda
 
 ## Assumptions
 

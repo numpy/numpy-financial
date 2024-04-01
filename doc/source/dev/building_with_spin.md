@@ -1,6 +1,6 @@
-# Building with poetry
+# Building with spin and conda
 
-## Installing poetry
+## Installing conda
 numpy-financial uses [spin](https://github.com/scientific-python/spin) and conda 
 to manage dependencies, build wheels and sdists, and publish to PyPI this page 
 documents how to work with spin and conda.
@@ -14,7 +14,7 @@ To check your installation try to check the version of miniconda:
 conda -V
 ```
 
-## Setting up a virtual environment using poetry
+## Setting up a virtual environment using conda
 
 Once conda is installed it is time to set up the virtual environment. To do
 this run:
