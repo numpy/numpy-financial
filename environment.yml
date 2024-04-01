@@ -18,4 +18,6 @@ dependencies:
   - asv>=0.6.0
   - hypothesis
   - myst-parser
+  - numpydoc
+  - pydata-sphinx-theme>=15.0.0
   - spin
