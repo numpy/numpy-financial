@@ -19,5 +19,5 @@ dependencies:
   - hypothesis
   - myst-parser
   - numpydoc
-  - pydata-sphinx-theme>=15.0.0
+  - pydata-sphinx-theme>=0.15.0
   - spin
