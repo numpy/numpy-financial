@@ -13,8 +13,9 @@ otherwise stated.
 
 from decimal import Decimal
 
-import numba as nb
 import numpy as np
+
+from . import _cfinancial
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
@@ -844,20 +845,6 @@ def irr(values, *, raise_exceptions=False):
     return eirr[np.argmin(abs_eirr)]
 
 
-@nb.njit
-def _npv_native(rates, values, out):
-    for i in range(rates.shape[0]):
-        for j in range(values.shape[0]):
-            acc = 0.0
-            for t in range(values.shape[1]):
-                if rates[i] == -1.0:
-                    acc = np.nan
-                    break
-                else:
-                    acc += values[j, t] / ((1.0 + rates[i]) ** t)
-            out[i, j] = acc
-
-
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -935,8 +922,8 @@ def npv(rate, values):
            [-2798.19, -3612.24],
            [-2884.3 , -3710.74]])
     """
-    values_inner = np.atleast_2d(values)
-    rate_inner = np.atleast_1d(rate)
+    values_inner = np.atleast_2d(values).astype(np.float64)
+    rate_inner = np.atleast_1d(rate).astype(np.float64)
 
     if rate_inner.ndim != 1:
         msg = "invalid shape for rates. Rate must be either a scalar or 1d array"
@@ -948,7 +935,7 @@ def npv(rate, values):
 
     output_shape = _get_output_array_shape(rate_inner, values_inner)
     out = np.empty(output_shape)
-    _npv_native(rate_inner, values_inner, out)
+    _cfinancial.npv(rate_inner, values_inner, out)
     return _ufunc_like(out)
 
 

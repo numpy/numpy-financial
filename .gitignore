@@ -62,6 +62,7 @@ GTAGS
 ################
 # setup.py working directory
 build
+build-install
 # sphinx build directory
 _build
 # setup.py dist directory
@@ -112,3 +113,7 @@ poetry.lock
 # Things specific to this project #
 ###################################
 doc/source/_api_stubs
+
+# Misc files that we do not require #
+.asv/
+.hypothesis/
