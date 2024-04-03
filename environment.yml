@@ -16,6 +16,7 @@ dependencies:
   - meson-python
   - ninja
   - spin
+  - pkg-config
   # Tests
   - pytest
   - pytest-xdist
