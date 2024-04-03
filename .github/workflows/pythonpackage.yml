@@ -35,7 +35,7 @@ jobs:
         ruff check numpy_financial/ benchmarks/ --ignore F403 --select E,F,B,I
     - name: Build project
       run: |
-        spin build -v
+        spin build -v --clean
     - name: Test with pytest
       run: |
         spin test -- --doctest-modules
