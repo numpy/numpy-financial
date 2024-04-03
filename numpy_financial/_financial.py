@@ -265,8 +265,6 @@ def pmt(rate, nper, pv, fv=0, when='end'):
 def nper(rate, pmt, pv, fv=0, when='end'):
     """Compute the number of periodic payments.
 
-    :class:`decimal.Decimal` type is not supported.
-
     Parameters
     ----------
     rate : array_like
@@ -306,35 +304,35 @@ def nper(rate, pmt, pv, fv=0, when='end'):
     The same analysis could be done with several different interest rates
     and/or payments and/or total amounts to produce an entire table.
 
-    >>> npf.nper(*(np.ogrid[0.07/12: 0.08/12: 0.01/12,
-    ...                     -150   : -99    : 50    ,
-    ...                     8000   : 9001   : 1000]))
-    array([[[ 64.07334877,  74.06368256],
-            [108.07548412, 127.99022654]],
+    >>> rates = [0.05, 0.06, 0.07]
+    >>> payments = [100, 200, 300]
+    >>> amounts = [7_000, 8_000, 9_000]
+    >>> npf.nper(rates, payments, amounts).round(3)
+    array([[[-30.827, -32.987, -34.94 ],
+            [-20.734, -22.517, -24.158],
+            [-15.847, -17.366, -18.78 ]],
     <BLANKLINE>
-           [[ 66.12443902,  76.87897353],
-            [114.70165583, 137.90124779]]])
+           [[-28.294, -30.168, -31.857],
+            [-19.417, -21.002, -22.453],
+            [-15.025, -16.398, -17.67 ]],
+    <BLANKLINE>
+           [[-26.234, -27.891, -29.381],
+            [-18.303, -19.731, -21.034],
+            [-14.311, -15.566, -16.722]]])
+
     """
     when = _convert_when(when)
-    rate, pmt, pv, fv, when = np.broadcast_arrays(rate, pmt, pv, fv, when)
-    nper_array = np.empty_like(rate, dtype=np.float64)
+    rates = np.atleast_1d(rate).astype(np.float64)
+    pmts = np.atleast_1d(pmt).astype(np.float64)
+    pvs = np.atleast_1d(pv).astype(np.float64)
+    fvs = np.atleast_1d(fv).astype(np.float64)
+    whens = np.atleast_1d(when).astype(np.float64)
 
-    zero = rate == 0
-    nonzero = ~zero
+    out_shape = _get_output_array_shape(rates, pmts, pvs, fvs, whens)
+    out = np.empty(out_shape)
+    _cfinancial.nper(rates, pmts, pvs, fvs, whens, out)
+    return _ufunc_like(out)
 
-    with np.errstate(divide='ignore'):
-        # Infinite numbers of payments are okay, so ignore the
-        # potential divide by zero.
-        nper_array[zero] = -(fv[zero] + pv[zero]) / pmt[zero]
-
-    nonzero_rate = rate[nonzero]
-    z = pmt[nonzero] * (1 + nonzero_rate * when[nonzero]) / nonzero_rate
-    nper_array[nonzero] = (
-            np.log((-fv[nonzero] + z) / (pv[nonzero] + z))
-            / np.log(1 + nonzero_rate)
-    )
-
-    return nper_array
 
 
 def _value_like(arr, value):

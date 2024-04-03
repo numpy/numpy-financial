@@ -1,6 +1,32 @@
 from libc.math cimport NAN
 cimport cython
 
+cdef extern from "src/_inner_loop.h" namespace "npf":
+    double nper_inner_loop(const double rate, const double pmt, const double pv, const double fv, const double when) noexcept nogil
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def nper(
+    const double[::1] rates,
+    const double[::1] pmts,
+    const double[::1] pvs,
+    const double[::1] fvs,
+    const double[::1] whens,
+    double[:, :, :, :, ::1] out):
+
+    cdef:
+        Py_ssize_t rate_, pmt_, pv_, fv_, when_
+
+    for rate_ in range(rates.shape[0]):
+        for pmt_ in range(pmts.shape[0]):
+            for pv_ in range(pvs.shape[0]):
+                for fv_ in range(fvs.shape[0]):
+                    for when_ in range(whens.shape[0]):
+                        out[rate_, pmt_, pv_, fv_, when_] = nper_inner_loop(
+                            rates[rate_], pmts[pmt_], pvs[pv_], fvs[fv_], whens[when_]
+                        )
+
+
 @cython.boundscheck(False)
 @cython.cdivision(True)
 def npv(const double[::1] rates, const double[:, ::1] values, double[:, ::1] out):
