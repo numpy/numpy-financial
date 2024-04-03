@@ -45,9 +45,14 @@ cashflow_array_like_strategy = st.one_of(
     cashflow_list_strategy,
 )
 
-short_scalar_array = npst.arrays(
+short_scalar_array_strategy = npst.arrays(
     dtype=real_scalar_dtypes,
     shape=npst.array_shapes(min_dims=0, max_dims=1, min_side=0, max_side=5),
+)
+
+
+when_strategy = st.sampled_from(
+    ['end', 'begin', 'e', 'b', 0, 1, 'beginning', 'start', 'finish']
 )
 
 
@@ -280,7 +285,7 @@ class TestNpv:
             rtol=1e-2,
         )
 
-    @given(rates=short_scalar_array, values=cashflow_array_strategy)
+    @given(rates=short_scalar_array_strategy, values=cashflow_array_strategy)
     @settings(deadline=None)
     def test_fuzz(self, rates, values):
         npf.npv(rates, values)
@@ -425,6 +430,16 @@ class TestNper:
         assert_allclose(
             npf.nper(0.075, -2000, 0, 100000.0, [0, 1]), [21.5449442, 20.76156441], 4
         )
+
+    @given(
+        rates=short_scalar_array_strategy,
+        payments=short_scalar_array_strategy,
+        present_values=short_scalar_array_strategy,
+        future_values=short_scalar_array_strategy,
+        whens=when_strategy,
+    )
+    def test_fuzz(self, rates, payments, present_values, future_values, whens):
+        npf.nper(rates, payments, present_values, future_values, whens)
 
 
 class TestPpmt:
