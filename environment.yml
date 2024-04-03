@@ -15,6 +15,8 @@ dependencies:
   - meson
   - meson-python
   - ninja
+  - spin
+  - pkg-config
   # Tests
   - pytest
   - pytest-xdist
@@ -24,8 +26,9 @@ dependencies:
   - myst-parser
   - numpydoc
   - pydata-sphinx-theme>=0.15.0
-  - spin
   # Lint
   - ruff>=0.3.0
   # Benchmarks
   - asv>=0.6.0
+  # Misc tools
+  - ipython
