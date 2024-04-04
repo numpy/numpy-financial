@@ -13,12 +13,16 @@ cdef double nper_inner_loop(
         return INFINITY
 
     if rate_ == 0.0:
-        return -(fv_ + pv_) / pmt_
+        with cython.cdivision(True):
+            # We know that pmt_ != 0, we don't need to check for division by 0
+            return -(fv_ + pv_) / pmt_
 
     if rate_ <= -1.0:
         return NAN
 
-    z = pmt_ * (1.0 + rate_ * when_) / rate_
+    with cython.cdivision(True):
+        # We know that rate_ != 0, we don't need to check for division by 0
+        z = pmt_ * (1.0 + rate_ * when_) / rate_
     return log((-fv_ + z) / (pv_ + z)) / log(1.0 + rate_)
 
 
