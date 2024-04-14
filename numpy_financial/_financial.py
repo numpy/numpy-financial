@@ -708,8 +708,9 @@ def rate(
             rn[~close] = np.nan
     return rn
 
+
 # default selection logic for IRR function when there are > 2 real solutions
-def irr_default_selection(eirr):
+def _irr_default_selection(eirr):
      # check sign of all IRR solutions
     same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
 
@@ -727,7 +728,8 @@ def irr_default_selection(eirr):
     abs_eirr = np.abs(eirr)
     return eirr[np.argmin(abs_eirr)]
 
-def irr(values, *, raise_exceptions=False, selection_logic=irr_default_selection):
+
+def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selection):
     r"""Return the Internal Rate of Return (IRR).
 
     This is the "average" periodically compounded rate of return
@@ -749,6 +751,11 @@ def irr(values, *, raise_exceptions=False, selection_logic=irr_default_selection
         having reached the maximum number of iterations (IterationsExceededException).
         Set to False as default, thus returning NaNs in the two previous
         cases.
+    selection_logic: function, optional
+        Function for selection logic when more than 1 real solutions is found. User may 
+        insert their own customised function for selection of IRR values. 
+        The function should accept a one-dimensional array of numbers and return a number.
+        
 
     Returns
     -------
