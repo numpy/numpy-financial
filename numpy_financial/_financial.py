@@ -708,8 +708,26 @@ def rate(
             rn[~close] = np.nan
     return rn
 
+# default selection logic for IRR function when there are > 2 real solutions
+def irr_default_selection(eirr):
+     # check sign of all IRR solutions
+    same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
 
-def irr(values, *, raise_exceptions=False):
+    # if the signs of IRR solutions are not the same, first filter potential IRR
+    # by comparing the total positive and negative cash flows.
+    if not same_sign:
+        pos = sum(eirr[eirr > 0])
+        neg = sum(eirr[eirr < 0])
+        if pos >= neg:
+            eirr = eirr[eirr >= 0]
+        else:
+            eirr = eirr[eirr < 0]
+
+    # pick the smallest one in magnitude and return
+    abs_eirr = np.abs(eirr)
+    return eirr[np.argmin(abs_eirr)]
+
+def irr(values, *, raise_exceptions=False, selection_logic=irr_default_selection):
     r"""Return the Internal Rate of Return (IRR).
 
     This is the "average" periodically compounded rate of return
@@ -824,23 +842,8 @@ def irr(values, *, raise_exceptions=False):
     if len(eirr) == 1:
         return eirr[0]
     
-    # below is for the situation when there are more than 2 real solutions.
-    # check sign of all IRR solutions
-    same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
-    
-    # if the signs of IRR solutions are not the same, first filter potential IRR
-    # by comparing the total positive and negative cash flows.
-    if not same_sign:
-        pos = sum(values[values>0])
-        neg = sum(values[values<0])
-        if pos >= neg:
-            eirr = eirr[eirr>=0]
-        else:
-            eirr = eirr[eirr<0]
-    
-    # pick the smallest one in magnitude and return
-    abs_eirr = np.abs(eirr)
-    return eirr[np.argmin(abs_eirr)]
+    eirr = selection_logic(eirr)
+    return eirr
 
 
 def npv(rate, values):
