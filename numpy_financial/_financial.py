@@ -752,10 +752,10 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
         Set to False as default, thus returning NaNs in the two previous
         cases.
     selection_logic: function, optional
-        Function for selection logic when more than 1 real solutions is found. User may 
-        insert their own customised function for selection of IRR values. 
-        The function should accept a one-dimensional array of numbers
-        and return a number.
+        Function for selection logic when more than 1 real solutions is found.
+        User may insert their own customised function for selection
+        of IRR values.The function should accept a one-dimensional array
+        of numbers and return a number.
         
 
     Returns
