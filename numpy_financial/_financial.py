@@ -754,7 +754,8 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     selection_logic: function, optional
         Function for selection logic when more than 1 real solutions is found. User may 
         insert their own customised function for selection of IRR values. 
-        The function should accept a one-dimensional array of numbers and return a number.
+        The function should accept a one-dimensional array of numbers
+        and return a number.
         
 
     Returns
