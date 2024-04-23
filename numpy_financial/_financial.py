@@ -803,18 +803,20 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     0.0886
 
     """
-    values = np.atleast_1d(values)
-    if values.ndim != 1:
-        raise ValueError("Cashflows must be a rank-1 array")
+    values = np.atleast_2d(values)
+    if values.ndim not in [1, 2]:
+        raise ValueError("Cashflows must be a 2D array")
 
-    # If all values are of the same sign no solution exists
-    # we don't perform any further calculations and exit early
-    same_sign = np.all(values > 0) if values[0] > 0 else np.all(values < 0)
-    if same_sign:
-        if raise_exceptions:
-            raise NoRealSolutionError('No real solution exists for IRR since all '
-                                      'cashflows are of the same sign.')
-        return np.nan
+    irr_results = []
+    for row in values:
+        # If all values are of the same sign, no solution exists
+        # We don't perform any further calculations and exit early
+        same_sign = np.all(row > 0) if row[0] > 0 else np.all(row < 0)
+        if same_sign:
+            if raise_exceptions:
+                raise NoRealSolutionError('No real solution exists for IRR since all '
+                                          'cashflows are of the same sign.')
+            irr_results.append(np.nan)
 
     # We aim to solve eirr such that NPV is exactly zero. This can be framed as
     # simply finding the closest root of a polynomial to a given initial guess
@@ -833,25 +835,25 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     #
     # which we solve using Newton-Raphson and then reverse out the solution
     # as eirr = g - 1 (if we are close enough to a solution)
-    
-    g = np.roots(values)
-    eirr = np.real(g[np.isreal(g)]) - 1
+        g = np.roots(row)
+        eirr = np.real(g[np.isreal(g)]) - 1
 
-    # realistic IRR
-    eirr = eirr[eirr>=-1]
+        # Realistic IRR
+        eirr = eirr[eirr >= -1]
 
-    # if no real solution
-    if len(eirr) == 0:
-        if raise_exceptions:
-            raise NoRealSolutionError("No real solution is found for IRR.")
-        return np.nan
+        # If no real solution
+        if len(eirr) == 0:
+                if raise_exceptions:
+                    raise NoRealSolutionError("No real solution is found for IRR.")
+                irr_results.append(np.nan)
+        # If only one real solution
+        if len(eirr) == 1:
+                irr_results.append(eirr[0])
+            
+        eirr = selection_logic(eirr)
+        irr_results.append(eirr)
 
-    # if only one real solution
-    if len(eirr) == 1:
-        return eirr[0]
-    
-    eirr = selection_logic(eirr)
-    return eirr
+    return np.array(irr_results)
 
 
 def npv(rate, values):
