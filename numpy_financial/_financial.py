@@ -835,25 +835,26 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     #
     # which we solve using Newton-Raphson and then reverse out the solution
     # as eirr = g - 1 (if we are close enough to a solution)
-        g = np.roots(row)
-        eirr = np.real(g[np.isreal(g)]) - 1
+        else:
+            g = np.roots(row)
+            eirr = np.real(g[np.isreal(g)]) - 1
 
-        # Realistic IRR
-        eirr = eirr[eirr >= -1]
+            # Realistic IRR
+            eirr = eirr[eirr >= -1]
 
-        # If no real solution
-        if len(eirr) == 0:
-                if raise_exceptions:
-                    raise NoRealSolutionError("No real solution is found for IRR.")
-                irr_results.append(np.nan)
-        # If only one real solution
-        if len(eirr) == 1:
-                irr_results.append(eirr[0])
-            
-        eirr = selection_logic(eirr)
-        irr_results.append(eirr)
-
-    return np.array(irr_results)
+            # If no real solution
+            if len(eirr) == 0:
+                    if raise_exceptions:
+                        raise NoRealSolutionError("No real solution is found for IRR.")
+                    irr_results.append(np.nan)
+            # If only one real solution
+            elif len(eirr) == 1:
+                    irr_results.append(eirr[0])
+            else:   
+                eirr = selection_logic(eirr)
+                irr_results.append(eirr)
+                
+    return _ufunc_like(np.array(irr_results))
 
 
 def npv(rate, values):
