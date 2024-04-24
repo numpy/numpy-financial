@@ -807,8 +807,8 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     if values.ndim not in [1, 2]:
         raise ValueError("Cashflows must be a 2D array")
 
-    irr_results = []
-    for row in values:
+    irr_results = np.empty(values.shape[0])
+    for i, row in enumerate(values):
         # If all values are of the same sign, no solution exists
         # We don't perform any further calculations and exit early
         same_sign = np.all(row > 0) if row[0] > 0 else np.all(row < 0)
@@ -816,7 +816,7 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
             if raise_exceptions:
                 raise NoRealSolutionError('No real solution exists for IRR since all '
                                           'cashflows are of the same sign.')
-            irr_results.append(np.nan)
+            irr_results[i] = np.nan
 
     # We aim to solve eirr such that NPV is exactly zero. This can be framed as
     # simply finding the closest root of a polynomial to a given initial guess
@@ -844,17 +844,16 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
 
             # If no real solution
             if len(eirr) == 0:
-                    if raise_exceptions:
-                        raise NoRealSolutionError("No real solution is found for IRR.")
-                    irr_results.append(np.nan)
+                if raise_exceptions:
+                    raise NoRealSolutionError("No real solution is found for IRR.")
+                irr_results[i] = np.nan
             # If only one real solution
             elif len(eirr) == 1:
-                    irr_results.append(eirr[0])
+                irr_results[i] = eirr[0]
             else:   
-                eirr = selection_logic(eirr)
-                irr_results.append(eirr)
-                
-    return _ufunc_like(np.array(irr_results))
+                irr_results[i] = selection_logic(eirr)
+
+    return _ufunc_like(irr_results)
 
 
 def npv(rate, values):
