@@ -709,8 +709,8 @@ def rate(
     return rn
 
 
-# default selection logic for IRR function when there are > 2 real solutions
 def _irr_default_selection(eirr):
+    """ default selection logic for IRR function when there are > 1 real solutions """
      # check sign of all IRR solutions
     same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
 
@@ -801,7 +801,9 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     0.06206
     >>> round(npf.irr([-5, 10.5, 1, -8, 1]), 5)
     0.0886
-
+    >>> npf.irr([[-100, 0, 0, 74], [-100, 100, 0, 7]]).round(5)
+    array([-0.0955 ,  0.06206])
+    
     """
     values = np.atleast_2d(values)
     if values.ndim not in [1, 2]:
