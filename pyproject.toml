@@ -11,9 +11,9 @@ name = "numpy-financial"
 version = "2.0.0"
 requires-python = ">=3.10"
 description = "Simple financial functions"
-license = "BSD-3-Clause"
-authors = ["Travis E. Oliphant et al."]
-maintainers = ["Numpy Financial Developers <numpy-discussion@python.org>"]
+license = {file = "LICENSE.txt"}
+authors = [{name = "Travis E. Oliphant et al."}]
+maintainers = [{ name = "Numpy Financial Developers", email = "numpy-discussion@python.org" }]
 readme = "README.md"
 homepage = "https://numpy.org/numpy-financial/latest/"
 repository = "https://github.com/numpy/numpy-financial"
