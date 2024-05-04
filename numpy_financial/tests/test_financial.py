@@ -432,7 +432,7 @@ class TestMirr:
         finance_rate=short_scalar_array_strategy,
         reinvestment_rate=short_scalar_array_strategy,
     )
-    def test_fuzz(self, values, finance_rate, reinvestment_rate):
+    def test_mismatching_rates_raise(self, values, finance_rate, reinvestment_rate):
         assume(finance_rate.size != reinvestment_rate.size)
         with pytest.raises(ValueError):
             npf.mirr(values, finance_rate, reinvestment_rate, raise_exceptions=True)
