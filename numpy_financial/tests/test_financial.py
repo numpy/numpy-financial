@@ -8,7 +8,7 @@ import hypothesis.strategies as st
 # the versions in numpy instead of numpy_financial.
 import numpy
 import pytest
-from hypothesis import given, settings, assume
+from hypothesis import assume, given, settings
 from numpy.testing import (
     assert_,
     assert_allclose,
@@ -17,6 +17,7 @@ from numpy.testing import (
 )
 
 import numpy_financial as npf
+
 
 def float_dtype():
     return npst.floating_dtypes(sizes=[32, 64], endianness="<")
