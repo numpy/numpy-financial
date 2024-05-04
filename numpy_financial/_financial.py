@@ -963,12 +963,12 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
 
     Parameters
     ----------
-    values : array_like
+    values : array_like, 1D or 2D
         Cash flows, where the first value is considered a sunk cost at time zero.
         It must contain at least one positive and one negative value.
-    finance_rate : scalar
+    finance_rate : scalar or 1D array
         Interest rate paid on the cash flows.
-    reinvest_rate : scalar
+    reinvest_rate : scalar or D array
         Interest rate received on the cash flows upon reinvestment.
     raise_exceptions: bool, optional
         Flag to raise an exception when the MIRR cannot be computed due to
@@ -977,7 +977,7 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
 
     Returns
     -------
-    out : float
+    out : float or 2D array
         Modified internal rate of return
 
     Notes
@@ -1007,6 +1007,22 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     >>> npf.mirr([-100, 50, -60, 70], 0.10, 0.12)
     np.float64(-0.03909366594356467)
 
+    It is also possible to supply multiple cashflows or pairs of
+    finance and reinvstment rates, note that in this case the number of elements
+    in each of the rates arrays must match.
+
+    >>> values = [
+    ...             [-4500, -800, 800, 800, 600],
+    ...             [-120000, 39000, 30000, 21000, 37000],
+    ...             [100, 200, -50, 300, -200],
+    ...         ]
+    >>> finance_rate = [0.05, 0.08, 0.10]
+    >>> reinvestment_rate = [0.08, 0.10, 0.12]
+    >>> npf.mirr(values, finance_rate, reinvestment_rate)
+    array([[-0.1784449 , -0.17328716, -0.1684366 ],
+           [ 0.04627293,  0.05437856,  0.06252201],
+           [ 0.35712458,  0.40628857,  0.44435295]])
+
     Now, let's consider the scenario where all cash flows are negative.
 
     >>> npf.mirr([-100, -50, -60, -70], 0.10, 0.12)
@@ -1025,22 +1041,31 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     numpy_financial._financial.NoRealSolutionError: 
     No real solution exists for MIRR since  all cashflows are of the same sign.
     """
-    values = np.asarray(values)
-    n = values.size
+    values_inner = np.atleast_2d(values).astype(np.float64)
+    finance_rate_inner = np.atleast_1d(finance_rate).astype(np.float64)
+    reinvest_rate_inner = np.atleast_1d(reinvest_rate).astype(np.float64)
+    n = values_inner.shape[1]
 
-    # Without this explicit cast the 1/(n - 1) computation below
-    # becomes a float, which causes TypeError when using Decimal
-    # values.
-    if isinstance(finance_rate, Decimal):
-        n = Decimal(n)
-
-    pos = values > 0
-    neg = values < 0
-    if not (pos.any() and neg.any()):
+    if finance_rate_inner.size != reinvest_rate_inner.size:
         if raise_exceptions:
-            raise NoRealSolutionError('No real solution exists for MIRR since'
-                                      ' all cashflows are of the same sign.')
+            raise ValueError("finance_rate and reinvest_rate must have the same size")
         return np.nan
-    numer = np.abs(npv(reinvest_rate, values * pos))
-    denom = np.abs(npv(finance_rate, values * neg))
-    return (numer / denom) ** (1 / (n - 1)) * (1 + reinvest_rate) - 1
+
+    out_shape = _get_output_array_shape(values_inner, finance_rate_inner)
+    out = np.empty(out_shape)
+
+    for i, v in enumerate(values_inner):
+        for j, (rr, fr) in enumerate(zip(reinvest_rate_inner, finance_rate_inner)):
+            pos = v > 0
+            neg = v < 0
+
+            if not (pos.any() and neg.any()):
+                if raise_exceptions:
+                    raise NoRealSolutionError("No real solution exists for MIRR since"
+                                              " all cashflows are of the same sign.")
+                out[i, j] = np.nan
+            else:
+                numer = np.abs(npv(rr, v * pos))
+                denom = np.abs(npv(fr, v * neg))
+                out[i, j] = (numer / denom) ** (1 / (n - 1)) * (1 + rr) - 1
+    return _ufunc_like(out)

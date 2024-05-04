@@ -8,7 +8,7 @@ import hypothesis.strategies as st
 # the versions in numpy instead of numpy_financial.
 import numpy
 import pytest
-from hypothesis import given, settings
+from hypothesis import given, settings, assume
 from numpy.testing import (
     assert_,
     assert_allclose,
@@ -17,7 +17,6 @@ from numpy.testing import (
 )
 
 import numpy_financial as npf
-
 
 def float_dtype():
     return npst.floating_dtypes(sizes=[32, 64], endianness="<")
@@ -393,6 +392,23 @@ class TestMirr:
         else:
             assert_(numpy.isnan(result))
 
+    def test_mirr_broadcast(self):
+        values = [
+            [-4500, -800, 800, 800, 600],
+            [-120000, 39000, 30000, 21000, 37000],
+            [100, 200, -50, 300, -200],
+        ]
+        finance_rate = [0.05, 0.08, 0.10]
+        reinvestment_rate = [0.08, 0.10, 0.12]
+        # Found using Google sheets
+        expected = numpy.array([
+            [-0.1784449, -0.17328716, -0.1684366],
+            [0.04627293, 0.05437856, 0.06252201],
+            [0.35712458, 0.40628857, 0.44435295]
+        ])
+        actual = npf.mirr(values, finance_rate, reinvestment_rate)
+        assert_allclose(actual, expected)
+
     def test_mirr_no_real_solution_exception(self):
         # Test that if there is no solution because all the cashflows
         # have the same sign, then npf.mirr returns NoRealSolutionException
@@ -401,6 +417,25 @@ class TestMirr:
 
         with pytest.raises(npf.NoRealSolutionError):
             npf.mirr(val, 0.10, 0.12, raise_exceptions=True)
+
+    @given(
+        values=cashflow_array_like_strategy,
+        finance_rate=short_scalar_array_strategy,
+        reinvestment_rate=short_scalar_array_strategy,
+    )
+    def test_fuzz(self, values, finance_rate, reinvestment_rate):
+        assume(finance_rate.size == reinvestment_rate.size)
+        npf.mirr(values, finance_rate, reinvestment_rate)
+
+    @given(
+        values=cashflow_array_like_strategy,
+        finance_rate=short_scalar_array_strategy,
+        reinvestment_rate=short_scalar_array_strategy,
+    )
+    def test_fuzz(self, values, finance_rate, reinvestment_rate):
+        assume(finance_rate.size != reinvestment_rate.size)
+        with pytest.raises(ValueError):
+            npf.mirr(values, finance_rate, reinvestment_rate, raise_exceptions=True)
 
 
 class TestNper:
