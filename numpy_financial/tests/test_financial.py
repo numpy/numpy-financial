@@ -1,4 +1,5 @@
 import math
+import warnings
 from decimal import Decimal
 
 # Don't use 'import numpy as np', to avoid accidentally testing
@@ -391,7 +392,13 @@ class TestMirr:
     )
     def test_fuzz(self, values, finance_rate, reinvestment_rate):
         assume(finance_rate.size == reinvestment_rate.size)
-        npf.mirr(values, finance_rate, reinvestment_rate)
+
+        # NumPy warns us of arithmetic overflow/underflow
+        # this only occurs when hypothesis generates extremely large values
+        # that are unlikely to ever occur in the real world.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            npf.mirr(values, finance_rate, reinvestment_rate)
 
     @given(
         values=cashflow_array_like_strategy,
