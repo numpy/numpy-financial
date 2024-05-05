@@ -15,8 +15,8 @@ from numpy.testing import (
 
 import numpy_financial as npf
 from numpy_financial.tests.strategies import (
-    cashflow_array_strategy,
     cashflow_array_like_strategy,
+    cashflow_array_strategy,
     short_nicely_behaved_doubles,
     when_strategy,
 )
