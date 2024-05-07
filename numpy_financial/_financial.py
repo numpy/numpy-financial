@@ -806,7 +806,7 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     
     """
     values = np.atleast_2d(values)
-    if values.ndim not in [1, 2]:
+    if values.ndim != 2:
         raise ValueError("Cashflows must be a 2D array")
 
     irr_results = np.empty(values.shape[0])
