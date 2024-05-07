@@ -709,7 +709,27 @@ def rate(
     return rn
 
 
-def irr(values, *, raise_exceptions=False):
+def _irr_default_selection(eirr):
+    """ default selection logic for IRR function when there are > 1 real solutions """
+     # check sign of all IRR solutions
+    same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
+
+    # if the signs of IRR solutions are not the same, first filter potential IRR
+    # by comparing the total positive and negative cash flows.
+    if not same_sign:
+        pos = sum(eirr[eirr > 0])
+        neg = sum(eirr[eirr < 0])
+        if pos >= neg:
+            eirr = eirr[eirr >= 0]
+        else:
+            eirr = eirr[eirr < 0]
+
+    # pick the smallest one in magnitude and return
+    abs_eirr = np.abs(eirr)
+    return eirr[np.argmin(abs_eirr)]
+
+
+def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selection):
     r"""Return the Internal Rate of Return (IRR).
 
     This is the "average" periodically compounded rate of return
@@ -731,6 +751,12 @@ def irr(values, *, raise_exceptions=False):
         having reached the maximum number of iterations (IterationsExceededException).
         Set to False as default, thus returning NaNs in the two previous
         cases.
+    selection_logic: function, optional
+        Function for selection logic when more than 1 real solutions is found.
+        User may insert their own customised function for selection
+        of IRR values.The function should accept a one-dimensional array
+        of numbers and return a number.
+        
 
     Returns
     -------
@@ -775,20 +801,24 @@ def irr(values, *, raise_exceptions=False):
     0.06206
     >>> round(npf.irr([-5, 10.5, 1, -8, 1]), 5)
     0.0886
-
+    >>> npf.irr([[-100, 0, 0, 74], [-100, 100, 0, 7]]).round(5)
+    array([-0.0955 ,  0.06206])
+    
     """
-    values = np.atleast_1d(values)
-    if values.ndim != 1:
-        raise ValueError("Cashflows must be a rank-1 array")
+    values = np.atleast_2d(values)
+    if values.ndim != 2:
+        raise ValueError("Cashflows must be a 2D array")
 
-    # If all values are of the same sign no solution exists
-    # we don't perform any further calculations and exit early
-    same_sign = np.all(values > 0) if values[0] > 0 else np.all(values < 0)
-    if same_sign:
-        if raise_exceptions:
-            raise NoRealSolutionError('No real solution exists for IRR since all '
-                                      'cashflows are of the same sign.')
-        return np.nan
+    irr_results = np.empty(values.shape[0])
+    for i, row in enumerate(values):
+        # If all values are of the same sign, no solution exists
+        # We don't perform any further calculations and exit early
+        same_sign = np.all(row > 0) if row[0] > 0 else np.all(row < 0)
+        if same_sign:
+            if raise_exceptions:
+                raise NoRealSolutionError('No real solution exists for IRR since all '
+                                          'cashflows are of the same sign.')
+            irr_results[i] = np.nan
 
     # We aim to solve eirr such that NPV is exactly zero. This can be framed as
     # simply finding the closest root of a polynomial to a given initial guess
@@ -807,40 +837,25 @@ def irr(values, *, raise_exceptions=False):
     #
     # which we solve using Newton-Raphson and then reverse out the solution
     # as eirr = g - 1 (if we are close enough to a solution)
-    
-    g = np.roots(values)
-    eirr = np.real(g[np.isreal(g)]) - 1
-
-    # realistic IRR
-    eirr = eirr[eirr>=-1]
-
-    # if no real solution
-    if len(eirr) == 0:
-        if raise_exceptions:
-            raise NoRealSolutionError("No real solution is found for IRR.")
-        return np.nan
-
-    # if only one real solution
-    if len(eirr) == 1:
-        return eirr[0]
-    
-    # below is for the situation when there are more than 2 real solutions.
-    # check sign of all IRR solutions
-    same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
-    
-    # if the signs of IRR solutions are not the same, first filter potential IRR
-    # by comparing the total positive and negative cash flows.
-    if not same_sign:
-        pos = sum(values[values>0])
-        neg = sum(values[values<0])
-        if pos >= neg:
-            eirr = eirr[eirr>=0]
         else:
-            eirr = eirr[eirr<0]
-    
-    # pick the smallest one in magnitude and return
-    abs_eirr = np.abs(eirr)
-    return eirr[np.argmin(abs_eirr)]
+            g = np.roots(row)
+            eirr = np.real(g[np.isreal(g)]) - 1
+
+            # Realistic IRR
+            eirr = eirr[eirr >= -1]
+
+            # If no real solution
+            if len(eirr) == 0:
+                if raise_exceptions:
+                    raise NoRealSolutionError("No real solution is found for IRR.")
+                irr_results[i] = np.nan
+            # If only one real solution
+            elif len(eirr) == 1:
+                irr_results[i] = eirr[0]
+            else:   
+                irr_results[i] = selection_logic(eirr)
+
+    return _ufunc_like(irr_results)
 
 
 def npv(rate, values):
