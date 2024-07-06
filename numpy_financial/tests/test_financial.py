@@ -1,14 +1,12 @@
 import math
+import warnings
 from decimal import Decimal
-
-import hypothesis.extra.numpy as npst
-import hypothesis.strategies as st
 
 # Don't use 'import numpy as np', to avoid accidentally testing
 # the versions in numpy instead of numpy_financial.
 import numpy
 import pytest
-from hypothesis import given, settings
+from hypothesis import assume, given
 from numpy.testing import (
     assert_,
     assert_allclose,
@@ -17,42 +15,11 @@ from numpy.testing import (
 )
 
 import numpy_financial as npf
-
-
-def float_dtype():
-    return npst.floating_dtypes(sizes=[32, 64], endianness="<")
-
-
-def int_dtype():
-    return npst.integer_dtypes(sizes=[32, 64], endianness="<")
-
-
-def uint_dtype():
-    return npst.unsigned_integer_dtypes(sizes=[32, 64], endianness="<")
-
-
-real_scalar_dtypes = st.one_of(float_dtype(), int_dtype(), uint_dtype())
-
-
-cashflow_array_strategy = npst.arrays(
-    dtype=real_scalar_dtypes,
-    shape=npst.array_shapes(min_dims=1, max_dims=2, min_side=0, max_side=25),
-)
-cashflow_list_strategy = cashflow_array_strategy.map(lambda x: x.tolist())
-
-cashflow_array_like_strategy = st.one_of(
+from numpy_financial.tests.strategies import (
+    cashflow_array_like_strategy,
     cashflow_array_strategy,
-    cashflow_list_strategy,
-)
-
-short_scalar_array_strategy = npst.arrays(
-    dtype=real_scalar_dtypes,
-    shape=npst.array_shapes(min_dims=0, max_dims=1, min_side=0, max_side=5),
-)
-
-
-when_strategy = st.sampled_from(
-    ['end', 'begin', 'e', 'b', 0, 1, 'beginning', 'start', 'finish']
+    short_nicely_behaved_doubles,
+    when_strategy,
 )
 
 
@@ -285,8 +252,7 @@ class TestNpv:
             rtol=1e-2,
         )
 
-    @given(rates=short_scalar_array_strategy, values=cashflow_array_strategy)
-    @settings(deadline=None)
+    @given(rates=short_nicely_behaved_doubles, values=cashflow_array_strategy)
     def test_fuzz(self, rates, values):
         npf.npv(rates, values)
 
@@ -393,6 +359,23 @@ class TestMirr:
         else:
             assert_(numpy.isnan(result))
 
+    def test_mirr_broadcast(self):
+        values = [
+            [-4500, -800, 800, 800, 600],
+            [-120000, 39000, 30000, 21000, 37000],
+            [100, 200, -50, 300, -200],
+        ]
+        finance_rate = [0.05, 0.08, 0.10]
+        reinvestment_rate = [0.08, 0.10, 0.12]
+        # Found using Google sheets
+        expected = numpy.array([
+            [-0.1784449, -0.17328716, -0.1684366],
+            [0.04627293, 0.05437856, 0.06252201],
+            [0.35712458, 0.40628857, 0.44435295]
+        ])
+        actual = npf.mirr(values, finance_rate, reinvestment_rate)
+        assert_allclose(actual, expected)
+
     def test_mirr_no_real_solution_exception(self):
         # Test that if there is no solution because all the cashflows
         # have the same sign, then npf.mirr returns NoRealSolutionException
@@ -401,6 +384,31 @@ class TestMirr:
 
         with pytest.raises(npf.NoRealSolutionError):
             npf.mirr(val, 0.10, 0.12, raise_exceptions=True)
+
+    @given(
+        values=cashflow_array_like_strategy,
+        finance_rate=short_nicely_behaved_doubles,
+        reinvestment_rate=short_nicely_behaved_doubles,
+    )
+    def test_fuzz(self, values, finance_rate, reinvestment_rate):
+        assume(finance_rate.size == reinvestment_rate.size)
+
+        # NumPy warns us of arithmetic overflow/underflow
+        # this only occurs when hypothesis generates extremely large values
+        # that are unlikely to ever occur in the real world.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            npf.mirr(values, finance_rate, reinvestment_rate)
+
+    @given(
+        values=cashflow_array_like_strategy,
+        finance_rate=short_nicely_behaved_doubles,
+        reinvestment_rate=short_nicely_behaved_doubles,
+    )
+    def test_mismatching_rates_raise(self, values, finance_rate, reinvestment_rate):
+        assume(finance_rate.size != reinvestment_rate.size)
+        with pytest.raises(ValueError):
+            npf.mirr(values, finance_rate, reinvestment_rate, raise_exceptions=True)
 
 
 class TestNper:
@@ -432,10 +440,10 @@ class TestNper:
         )
 
     @given(
-        rates=short_scalar_array_strategy,
-        payments=short_scalar_array_strategy,
-        present_values=short_scalar_array_strategy,
-        future_values=short_scalar_array_strategy,
+        rates=short_nicely_behaved_doubles,
+        payments=short_nicely_behaved_doubles,
+        present_values=short_nicely_behaved_doubles,
+        future_values=short_nicely_behaved_doubles,
         whens=when_strategy,
     )
     def test_fuzz(self, rates, payments, present_values, future_values, whens):
