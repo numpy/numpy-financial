@@ -8,7 +8,7 @@ channels:
 dependencies:
   # Runtime dependencies
   - python
-  - numpy
+  - numpy>=2.0.0
   # Build
   - cython>=3.0.9
   - compilers
