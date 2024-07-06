@@ -245,7 +245,7 @@ def pmt(rate, nper, pv, fv=0, when='end'):
     years at an annual interest rate of 7.5%?
 
     >>> npf.pmt(0.075/12, 12*15, 200000)
-    -1854.0247200054619
+    np.float64(-1854.0247200054619)
 
     In order to pay-off (i.e., have a future-value of 0) the $200,000 obtained
     today, a monthly payment of $1,854.02 would be required.  Note that this
@@ -424,7 +424,7 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
 
     >>> interestpd = np.sum(ipmt)
     >>> np.round(interestpd, 2)
-    -112.98
+    np.float64(-112.98)
 
     """
     when = _convert_when(when)
@@ -562,7 +562,7 @@ def pv(rate, nper, pmt, fv=0, when='end'):
     interest rate is 5% (annually) compounded monthly.
 
     >>> npf.pv(0.05/12, 10*12, -100, 15692.93)
-    -100.00067131625819
+    np.float64(-100.00067131625819)
 
     By convention, the negative sign represents cash flow out
     (i.e., money not available today).  Thus, to end up with
@@ -913,7 +913,7 @@ def npv(rate, values):
 
     >>> rate, cashflows = 0.08, [-40_000, 5_000, 8_000, 12_000, 30_000]
     >>> np.round(npf.npv(rate, cashflows), 5)
-    3065.22267
+    np.float64(3065.22267)
 
     It may be preferable to split the projected cashflow into an initial
     investment and expected future cashflows. In this case, the value of
@@ -923,7 +923,7 @@ def npv(rate, values):
     >>> initial_cashflow = cashflows[0]
     >>> cashflows[0] = 0
     >>> np.round(npf.npv(rate, cashflows) + initial_cashflow, 5)
-    3065.22267
+    np.float64(3065.22267)
 
     The NPV calculation may be applied to several ``rates`` and ``cashflows``
     simulatneously. This produces an array of shape ``(len(rates), len(cashflows))``.

@@ -19,7 +19,7 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-        activate-environment: numpy-financial-dev
+        activate-environment: npf-dev
         environment-file: environment.yml
         auto-activate-base: false
     - name: Conda metadata
