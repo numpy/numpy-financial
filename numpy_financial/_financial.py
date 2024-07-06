@@ -1005,7 +1005,7 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     The project has a finance rate of 10% and a reinvestment rate of 12%.
 
     >>> npf.mirr([-100, 50, -60, 70], 0.10, 0.12)
-    np.float64(-0.03909366594356467)
+    -0.03909366594356467
 
     It is also possible to supply multiple cashflows or pairs of
     finance and reinvstment rates, note that in this case the number of elements
