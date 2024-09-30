@@ -466,7 +466,7 @@ def _rbl(rate, per, pmt, pv, when):
 
 
 def ppmt(rate, per, nper, pv, fv=0, when='end'):
-    """Compute the payment against loan principle.
+    """Compute the payment against loan principal.
 
     Parameters
     ----------
