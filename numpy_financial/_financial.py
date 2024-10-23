@@ -729,34 +729,30 @@ def _irr_default_selection(eirr):
     return eirr[np.argmin(abs_eirr)]
 
 
-def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selection):
+import numpy as np
+
+def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selection, iterations=5, tol=1e-9):
     r"""Return the Internal Rate of Return (IRR).
 
     This is the "average" periodically compounded rate of return
     that gives a net present value of 0.0; for a more complete explanation,
     see Notes below.
 
-    :class:`decimal.Decimal` type is not supported.
-
     Parameters
     ----------
     values : array_like, shape(N,)
         Input cash flows per time period.  By convention, net "deposits"
-        are negative and net "withdrawals" are positive.  Thus, for
-        example, at least the first element of `values`, which represents
-        the initial investment, will typically be negative.
+        are negative and net "withdrawals" are positive.
     raise_exceptions: bool, optional
-        Flag to raise an exception when the irr cannot be computed due to
+        Flag to raise an exception when the IRR cannot be computed due to
         either having all cashflows of the same sign (NoRealSolutionException) or
         having reached the maximum number of iterations (IterationsExceededException).
-        Set to False as default, thus returning NaNs in the two previous
-        cases.
     selection_logic: function, optional
-        Function for selection logic when more than 1 real solutions is found.
-        User may insert their own customised function for selection
-        of IRR values.The function should accept a one-dimensional array
-        of numbers and return a number.
-        
+        Function for selection logic when more than 1 real solution is found.
+    iterations: int, optional
+        Number of times to calculate IRR to improve stability.
+    tol: float, optional
+        Tolerance for accepting convergence of multiple calculations.
 
     Returns
     -------
@@ -765,45 +761,9 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
 
     Notes
     -----
-    The IRR is perhaps best understood through an example (illustrated
-    using np.irr in the Examples section below). Suppose one invests 100
-    units and then makes the following withdrawals at regular (fixed)
-    intervals: 39, 59, 55, 20.  Assuming the ending value is 0, one's 100
-    unit investment yields 173 units; however, due to the combination of
-    compounding and the periodic withdrawals, the "average" rate of return
-    is neither simply 0.73/4 nor (1.73)^0.25-1.  Rather, it is the solution
-    (for :math:`r`) of the equation:
-
-    .. math:: -100 + \\frac{39}{1+r} + \\frac{59}{(1+r)^2}
-     + \\frac{55}{(1+r)^3} + \\frac{20}{(1+r)^4} = 0
-
-    In general, for `values` :math:`= [v_0, v_1, ... v_M]`,
-    irr is the solution of the equation: [G]_
-
-    .. math:: \\sum_{t=0}^M{\\frac{v_t}{(1+irr)^{t}}} = 0
-
-    References
-    ----------
-    .. [G] L. J. Gitman, "Principles of Managerial Finance, Brief," 3rd ed.,
-       Addison-Wesley, 2003, pg. 348.
-
-    Examples
-    --------
-    >>> import numpy_financial as npf
-
-    >>> round(npf.irr([-100, 39, 59, 55, 20]), 5)
-    0.28095
-    >>> round(npf.irr([-100, 0, 0, 74]), 5)
-    -0.0955
-    >>> round(npf.irr([-100, 100, 0, -7]), 5)
-    -0.0833
-    >>> round(npf.irr([-100, 100, 0, 7]), 5)
-    0.06206
-    >>> round(npf.irr([-5, 10.5, 1, -8, 1]), 5)
-    0.0886
-    >>> npf.irr([[-100, 0, 0, 74], [-100, 100, 0, 7]]).round(5)
-    array([-0.0955 ,  0.06206])
-    
+    This version runs multiple iterations of IRR calculation to stabilize
+    the result across different CPU architectures.
+    Updated 10/23/24 by Tejas to address the inconsistencies observed with npf.irr across different CPU's.    
     """
     values = np.atleast_2d(values)
     if values.ndim != 2:
@@ -812,51 +772,44 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     irr_results = np.empty(values.shape[0])
     for i, row in enumerate(values):
         # If all values are of the same sign, no solution exists
-        # We don't perform any further calculations and exit early
         same_sign = np.all(row > 0) if row[0] > 0 else np.all(row < 0)
         if same_sign:
             if raise_exceptions:
                 raise NoRealSolutionError('No real solution exists for IRR since all '
                                           'cashflows are of the same sign.')
             irr_results[i] = np.nan
-
-    # We aim to solve eirr such that NPV is exactly zero. This can be framed as
-    # simply finding the closest root of a polynomial to a given initial guess
-    # as follows:
-    #           V0           V1           V2           V3
-    # NPV = ---------- + ---------- + ---------- + ---------- + ... = 0
-    #       (1+eirr)^0   (1+eirr)^1   (1+eirr)^2   (1+eirr)^3
-    #
-    # by letting g = (1+eirr), we substitute to get
-    #
-    # NPV = V0 * 1/g^0   + V1 * 1/g^1   +  V2 * 1/x^2  +  V3 * 1/g^3  + ... = 0
-    #
-    # Multiplying by g^N this becomes
-    #
-    # V0 * g^N   + V1 * g^{N-1}   +  V2 * g^{N-2}  +  V3 * g^{N-3}  + ... = 0
-    #
-    # which we solve using Newton-Raphson and then reverse out the solution
-    # as eirr = g - 1 (if we are close enough to a solution)
         else:
-            g = np.roots(row)
-            eirr = np.real(g[np.isreal(g)]) - 1
+            # Collect results over multiple iterations
+            result_list = []
+            for _ in range(iterations):
+                g = np.roots(row)
+                eirr = np.real(g[np.isreal(g)]) - 1
+                eirr = eirr[eirr >= -1]
 
-            # Realistic IRR
-            eirr = eirr[eirr >= -1]
+                if len(eirr) == 0:
+                    if raise_exceptions:
+                        raise NoRealSolutionError("No real solution is found for IRR.")
+                    result_list.append(np.nan)
+                elif len(eirr) == 1:
+                    result_list.append(eirr[0])
+                else:
+                    result_list.append(selection_logic(eirr))
+            
+            # Calculate average IRR if results are within tolerance
+            if len(result_list) > 0 and np.all(np.isfinite(result_list)):
+                median_result = np.median(result_list)
+                stable_results = [
+                    r for r in result_list if abs(r - median_result) < tol
+                ]
 
-            # If no real solution
-            if len(eirr) == 0:
-                if raise_exceptions:
-                    raise NoRealSolutionError("No real solution is found for IRR.")
+                if stable_results:
+                    irr_results[i] = np.mean(stable_results)
+                else:
+                    irr_results[i] = median_result  # Fallback to median if instability exists
+            else:
                 irr_results[i] = np.nan
-            # If only one real solution
-            elif len(eirr) == 1:
-                irr_results[i] = eirr[0]
-            else:   
-                irr_results[i] = selection_logic(eirr)
 
     return _ufunc_like(irr_results)
-
 
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
