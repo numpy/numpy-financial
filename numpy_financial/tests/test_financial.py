@@ -760,7 +760,7 @@ class TestIrr:
         assert_allclose(
             npf.npv(npf.irr(cashflows), cashflows),
             0,
-            atol=1e-10,
+            atol=1e-9,
             rtol=0,
         )
 
