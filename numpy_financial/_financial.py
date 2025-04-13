@@ -756,7 +756,7 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
         User may insert their own customised function for selection
         of IRR values.The function should accept a one-dimensional array
         of numbers and return a number.
-        
+
 
     Returns
     -------
@@ -803,7 +803,7 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     0.0886
     >>> npf.irr([[-100, 0, 0, 74], [-100, 100, 0, 7]]).round(5)
     array([-0.0955 ,  0.06206])
-    
+
     """
     values = np.atleast_2d(values)
     if values.ndim != 2:
@@ -852,7 +852,7 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
             # If only one real solution
             elif len(eirr) == 1:
                 irr_results[i] = eirr[0]
-            else:   
+            else:
                 irr_results[i] = selection_logic(eirr)
 
     return _ufunc_like(irr_results)
@@ -986,7 +986,7 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
 
     .. math::
 
-        MIRR = 
+        MIRR =
         \\left( \\frac{{FV_{positive}}}{{PV_{negative}}} \\right)^{\\frac{{1}}{{n-1}}}
         * (1+r) - 1
 
@@ -1000,8 +1000,8 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     --------
     >>> import numpy_financial as npf
 
-    Consider a project with an initial investment of -$100 
-    and projected cash flows of $50, -$60, and $70 at the end of each period. 
+    Consider a project with an initial investment of -$100
+    and projected cash flows of $50, -$60, and $70 at the end of each period.
     The project has a finance rate of 10% and a reinvestment rate of 12%.
 
     >>> npf.mirr([-100, 50, -60, 70], 0.10, 0.12)
@@ -1028,17 +1028,17 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     >>> npf.mirr([-100, -50, -60, -70], 0.10, 0.12)
     nan
 
-    Finally, let's explore the situation where all cash flows are positive, 
+    Finally, let's explore the situation where all cash flows are positive,
     and the `raise_exceptions` parameter is set to True.
 
     >>> npf.mirr([
-    ...    100, 50, 60, 70], 
-    ...    0.10, 0.12, 
+    ...    100, 50, 60, 70],
+    ...    0.10, 0.12,
     ...    raise_exceptions=True
     ... ) #doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
         ...
-    numpy_financial._financial.NoRealSolutionError: 
+    numpy_financial._financial.NoRealSolutionError:
     No real solution exists for MIRR since  all cashflows are of the same sign.
     """
     values_inner = np.atleast_2d(values).astype(np.float64)
@@ -1055,7 +1055,9 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
     out = np.empty(out_shape)
 
     for i, v in enumerate(values_inner):
-        for j, (rr, fr) in enumerate(zip(reinvest_rate_inner, finance_rate_inner)):
+        for j, (rr, fr) in enumerate(
+            zip(reinvest_rate_inner, finance_rate_inner, strict=False)
+        ):
             pos = v > 0
             neg = v < 0
 
