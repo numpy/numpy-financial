@@ -1056,7 +1056,7 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
 
     for i, v in enumerate(values_inner):
         for j, (rr, fr) in enumerate(
-            zip(reinvest_rate_inner, finance_rate_inner, strict=False)
+            zip(reinvest_rate_inner, finance_rate_inner, strict=True)
         ):
             pos = v > 0
             neg = v < 0
