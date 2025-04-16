@@ -11,7 +11,7 @@ name = "numpy-financial"
 version = "2.0.0"
 requires-python = ">=3.10"
 description = "Simple financial functions"
-license = {file = "LICENSE.txt"}
+license = "BSD-3-Clause"
 authors = [{name = "Travis E. Oliphant et al."}]
 maintainers = [{ name = "Numpy Financial Developers", email = "numpy-discussion@python.org" }]
 readme = "README.md"
@@ -22,7 +22,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Financial and Insurance Industry",
-    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
