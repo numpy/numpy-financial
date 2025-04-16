@@ -26,7 +26,7 @@ from numpy_financial.tests.strategies import (
 def assert_decimal_close(actual, expected, tol=Decimal("1e-7")):
     # Check if both actual and expected are iterable (like arrays)
     if hasattr(actual, "__iter__") and hasattr(expected, "__iter__"):
-        for a, e in zip(actual, expected, strict=False):
+        for a, e in zip(actual, expected, strict=True):
             assert abs(a - e) <= tol
     else:
         # For single value comparisons
