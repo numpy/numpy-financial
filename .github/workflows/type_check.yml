@@ -1,0 +1,43 @@
+name: Type-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  type-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+
+      - name: env setup
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install .
+          uv pip install mypy
+
+      - name: run mypy
+        run: >
+          mypy
+          --no-incremental
+          --cache-dir=/dev/null
+          --soft-error-limit=-1
+          --traceback
+          numpy_financial
+
+      - name: run pyright
+        uses: jakebailey/pyright-action@v2
+        with:
+          working-directory: numpy_financial
