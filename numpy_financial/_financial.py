@@ -75,7 +75,9 @@ _co_numeric: TypeAlias = np.floating[Any] | np.integer[Any] | np.bool_ | np.obje
 _CoNumeric: TypeAlias = float | Decimal | _co_numeric
 _CoNumeric1D: TypeAlias = _CanArrayAndLen[_co_numeric] | Sequence[_CoNumeric]
 _CoNumericND: TypeAlias = _CanArrayAndLen[_co_numeric] | _NestedSequence[_CoNumeric]
-_CoNumericOrND: TypeAlias = float | Decimal | _CanArray[_co_numeric] | _NestedSequence[_CoNumeric]
+_CoNumericOrND: TypeAlias = (
+    float | Decimal | _CanArray[_co_numeric] | _NestedSequence[_CoNumeric]
+)
 
 _ArrayLike: TypeAlias = npt.ArrayLike | _NestedSequence[Decimal] | Decimal
 
