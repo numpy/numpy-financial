@@ -36,6 +36,7 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: Unix",
     "Operating System :: MacOS",
+    "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
