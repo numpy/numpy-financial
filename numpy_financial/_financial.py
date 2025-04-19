@@ -11,20 +11,9 @@ Functions support the :class:`decimal.Decimal` type unless
 otherwise stated.
 """
 
+from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
-from typing import (
-    Any,
-    Callable,
-    Final,
-    Iterable,
-    Literal,
-    Mapping,
-    Protocol,
-    Sequence,
-    TypeAlias,
-    TypeVar,
-    overload,
-)
+from typing import Any, Callable, Final, Literal, Protocol, TypeAlias, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
