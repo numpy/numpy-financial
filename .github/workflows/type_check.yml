@@ -31,10 +31,10 @@ jobs:
       - name: run mypy
         run: >
           mypy
+          --tb
           --no-incremental
           --cache-dir=/dev/null
           --soft-error-limit=-1
-          --traceback
           numpy_financial
 
       - name: run pyright
