@@ -25,18 +25,10 @@ jobs:
         run: |
           uv venv .venv
           source .venv/bin/activate
-          uv pip install ".[test]" numpy mypy
+          uv pip install . numpy mypy
 
       - name: run mypy
-        run: >
-          mypy
-          --tb
-          --no-incremental
-          --cache-dir=/dev/null
-          --soft-error-limit=-1
-          numpy_financial
+        run: mypy --no-incremental --cache-dir=/dev/null .
 
       - name: run pyright
         uses: jakebailey/pyright-action@v2
-        with:
-          working-directory: numpy_financial
