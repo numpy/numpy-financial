@@ -25,7 +25,7 @@ jobs:
         run: |
           uv venv .venv
           source .venv/bin/activate
-          uv pip install . numpy mypy
+          uv pip install ".[test]" numpy mypy
 
       - name: run mypy
         run: >
