@@ -30,7 +30,7 @@ import numpy as np
 import numpy.typing as npt
 from numpy._typing import _NestedSequence  # pyright: ignore[reportPrivateImportUsage]
 
-from . import _cfinancial
+from numpy_financial import _cfinancial
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
