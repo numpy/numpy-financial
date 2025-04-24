@@ -8,6 +8,8 @@ py.extension_module(
 python_sources = [
     '__init__.py',
     '_financial.py',
+    '_cfinancial.pyi',
+    'py.typed',
 ]
 
 py.install_sources(

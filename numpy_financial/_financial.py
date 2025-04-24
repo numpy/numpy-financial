@@ -11,22 +11,81 @@ Functions support the :class:`decimal.Decimal` type unless
 otherwise stated.
 """
 
+from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
+from typing import Any, Callable, Final, Literal, Protocol, TypeAlias, TypeVar, overload
 
 import numpy as np
+import numpy.typing as npt
+from numpy._typing import _NestedSequence  # pyright: ignore[reportPrivateImportUsage]
 
-from . import _cfinancial
+from numpy_financial import _cfinancial
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
            'irr', 'npv', 'mirr',
            'NoRealSolutionError', 'IterationsExceededError']
 
-_when_to_num = {'end': 0, 'begin': 1,
-                'e': 0, 'b': 1,
-                0: 0, 1: 1,
-                'beginning': 1,
-                'start': 1,
-                'finish': 0}
+_ArrayT = TypeVar("_ArrayT", bound=npt.NDArray[Any])
+_ScalarT = TypeVar("_ScalarT", bound=np.generic)
+_ScalarT_co = TypeVar("_ScalarT_co", bound=np.generic, covariant=True)
+
+# accepts arrays and scalars
+class _CanArray(Protocol[_ScalarT_co]):
+    def __array__(self, /) -> npt.NDArray[_ScalarT_co]: ...
+
+# accepts arrays, rejects scalars
+class _CanArrayAndLen(_CanArray[_ScalarT_co], Protocol[_ScalarT_co]):
+    def __len__(self, /) -> int: ...
+
+# casts *as* float64
+_AsFloat: TypeAlias = float | np.float64
+_AsFloat1D: TypeAlias = _CanArrayAndLen[np.float64] | Sequence[_AsFloat]
+_AsFloatND: TypeAlias = _CanArrayAndLen[np.float64] | _NestedSequence[_AsFloat]
+
+_AsDecimal: TypeAlias = Decimal | int
+
+# *co*ercible to float64 (assuming NEP 50 promotion rules and `same_kind` casting)
+_co_float64: TypeAlias = (
+    np.float64
+    | np.float32
+    | np.float16
+    | np.integer[Any]
+    | np.bool_
+)
+_CoFloat: TypeAlias = float | _co_float64
+_CoFloat1D: TypeAlias = _CanArrayAndLen[_co_float64] | Sequence[_CoFloat]
+_CoFloatND: TypeAlias = _CanArrayAndLen[_co_float64] | _NestedSequence[_CoFloat]
+# concise aliases for `_CoFloat | _CoFloat1D` and `_CoFloat | _CoFloatND`
+_CoFloatOr1D: TypeAlias = float | _CanArray[_co_float64] | Sequence[_CoFloat]
+_CoFloatOrND: TypeAlias = float | _CanArray[_co_float64] | _NestedSequence[_CoFloat]
+
+# coercible to (presumed to be) number-like dtypes
+_co_numeric: TypeAlias = np.floating[Any] | np.integer[Any] | np.bool_ | np.object_
+_CoNumeric: TypeAlias = float | Decimal | _co_numeric
+_CoNumeric1D: TypeAlias = _CanArrayAndLen[_co_numeric] | Sequence[_CoNumeric]
+_CoNumericND: TypeAlias = _CanArrayAndLen[_co_numeric] | _NestedSequence[_CoNumeric]
+_CoNumericOrND: TypeAlias = (
+    float | Decimal | _CanArray[_co_numeric] | _NestedSequence[_CoNumeric]
+)
+
+_ArrayLike: TypeAlias = npt.ArrayLike | _NestedSequence[Decimal] | Decimal
+
+_WhenOut: TypeAlias = Literal[0, 1]
+_When: TypeAlias = str | int | npt.NDArray[Any] | Iterable[str | int]
+
+#
+
+_when_to_num: Final[Mapping[_When, _WhenOut]] = {
+    'end': 0,
+    "begin": 1,
+    "e": 0,
+    "b": 1,
+    0: 0,
+    1: 1,
+    "beginning": 1,
+    "start": 1,
+    "finish": 0,
+}
 
 
 class NoRealSolutionError(Exception):
@@ -37,11 +96,11 @@ class IterationsExceededError(Exception):
     """Maximum number of iterations reached."""
 
 
-def _get_output_array_shape(*arrays):
+def _get_output_array_shape(*arrays: npt.NDArray[Any]) -> tuple[int, ...]:
     return tuple(array.shape[0] for array in arrays)
 
 
-def _ufunc_like(array):
+def _ufunc_like(array: np.generic | npt.NDArray[Any]) -> Any:
     try:
         # If size of array is one, return scalar
         return array.item()
@@ -49,8 +108,13 @@ def _ufunc_like(array):
         # Otherwise, return entire array
         return array.squeeze()
 
-
-def _convert_when(when):
+@overload
+def _convert_when(when: _ArrayT) -> _ArrayT: ...
+@overload
+def _convert_when(when: str | int) -> _WhenOut: ...  # type: ignore[overload-overlap]
+@overload
+def _convert_when(when: Iterable[str | int]) -> list[_WhenOut]: ...
+def _convert_when(when: Any) -> Any:
     # Test to see if when has already been converted to ndarray
     # This will happen if one function calls another, for example ppmt
     if isinstance(when, np.ndarray):
@@ -60,8 +124,39 @@ def _convert_when(when):
     except (KeyError, TypeError):
         return [_when_to_num[x] for x in when]
 
-
-def fv(rate, nper, pmt, pv, when='end'):
+@overload
+def fv(
+    rate: _AsFloat,
+    nper: _CoFloat,
+    pmt: _CoFloat,
+    pv: _CoFloat,
+    when: _When = 'end',
+) -> float: ...
+@overload
+def fv(
+    rate: Decimal,
+    nper: _AsDecimal,
+    pmt: _AsDecimal,
+    pv: _AsDecimal,
+    when: _When = 'end',
+) -> Decimal: ...
+@overload
+def fv(
+    rate: _AsFloat1D,
+    nper: _CoFloatOr1D,
+    pmt: _CoFloatOr1D,
+    pv: _CoFloatOr1D,
+    when: _When = 'end',
+) -> npt.NDArray[np.float64]: ...
+@overload
+def fv(
+    rate: _ArrayLike,
+    nper: _ArrayLike,
+    pmt: _ArrayLike,
+    pv: _ArrayLike,
+    when: _When = 'end',
+) -> Any: ...
+def fv(rate, nper, pmt, pv, when: _When = 'end'):
     """Compute the future value.
 
     Given:
@@ -159,7 +254,7 @@ def fv(rate, nper, pmt, pv, when='end'):
             - pv[nonzero] * temp
             - pmt[nonzero] * (1 + rate_nonzero * when[nonzero]) / rate_nonzero
             * (temp - 1)
-    )
+    )  # fmt: skip
 
     if np.ndim(fv_array) == 0:
         # Follow the ufunc convention of returning scalars for scalar
@@ -167,8 +262,39 @@ def fv(rate, nper, pmt, pv, when='end'):
         return fv_array.item(0)
     return fv_array
 
-
-def pmt(rate, nper, pv, fv=0, when='end'):
+@overload
+def pmt(
+    rate: _AsFloat,
+    nper: _CoFloat,
+    pv: _CoFloat,
+    fv: _CoFloat = 0,
+    when: _When = 'end',
+) -> float: ...
+@overload
+def pmt(
+    rate: Decimal,
+    nper: _AsDecimal,
+    pv: _AsDecimal,
+    fv: _AsDecimal = 0,
+    when: _When = 'end',
+) -> Decimal: ...
+@overload
+def pmt(
+    rate: _AsFloatND,
+    nper: _CoFloatOrND,
+    pv: _CoFloatOrND,
+    fv: _CoFloatOrND = 0,
+    when: _When = 'end',
+) -> npt.NDArray[np.float64]: ...
+@overload
+def pmt(
+    rate: _ArrayLike,
+    nper: _ArrayLike,
+    pv: _ArrayLike,
+    fv: _ArrayLike = 0,
+    when: _When = 'end',
+) -> Any: ...
+def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
     """Compute the payment against loan principal plus interest.
 
     Given:
@@ -261,8 +387,31 @@ def pmt(rate, nper, pv, fv=0, when='end'):
                     (1 + masked_rate * when) * (temp - 1) / masked_rate)
     return -(fv + pv * temp) / fact
 
-
-def nper(rate, pmt, pv, fv=0, when='end'):
+@overload
+def nper(
+    rate: _CoNumeric,
+    pmt: _CoNumeric,
+    pv: _CoNumeric,
+    fv: _CoNumeric = 0,
+    when: _When = 'end',
+) -> float: ...
+@overload
+def nper(
+    rate: _CoNumericND,
+    pmt: _CoNumericOrND,
+    pv: _CoNumericOrND,
+    fv: _CoNumericOrND = 0,
+    when: _When = 'end',
+) -> npt.NDArray[np.float64]: ...
+@overload
+def nper(
+    rate: _ArrayLike,
+    pmt: _ArrayLike,
+    pv: _ArrayLike,
+    fv: _ArrayLike = 0,
+    when: _When = 'end',
+) -> Any: ...
+def nper(rate, pmt, pv, fv: Any = 0, when: _When = 'end'):
     """Compute the number of periodic payments.
 
     :class:`decimal.Decimal` type is not supported.
@@ -335,14 +484,49 @@ def nper(rate, pmt, pv, fv=0, when='end'):
     return _ufunc_like(out)
 
 
-def _value_like(arr, value):
+def _value_like(arr: npt.NDArray[Any], value: Decimal | float) -> Any:
     entry = arr.item(0)
     if isinstance(entry, Decimal):
         return Decimal(value)
     return np.array(value, dtype=arr.dtype).item(0)
 
-
-def ipmt(rate, per, nper, pv, fv=0, when='end'):
+@overload
+def ipmt(
+    rate: _AsFloat,
+    per: _CoFloat,
+    nper: _CoFloat,
+    pv: _CoFloat,
+    fv: _CoFloat = 0,
+    when: _When = 'end',
+) -> float: ...
+@overload
+def ipmt(
+    rate: Decimal,
+    per: _AsDecimal,
+    nper: _AsDecimal,
+    pv: _AsDecimal,
+    fv: _AsDecimal = 0,
+    when: _When = 'end',
+) -> Decimal: ...
+@overload
+def ipmt(
+    rate: _AsFloat1D,
+    per: _CoFloatOr1D,
+    nper: _CoFloatOr1D,
+    pv: _CoFloatOr1D,
+    fv: _CoFloatOr1D = 0,
+    when: _When = 'end',
+) -> npt.NDArray[np.float64]: ...
+@overload
+def ipmt(
+    rate: _ArrayLike,
+    per: _ArrayLike,
+    nper: _ArrayLike,
+    pv: _ArrayLike,
+    fv: _ArrayLike = 0,
+    when: _When = 'end',
+) -> Any: ...
+def ipmt(rate, per, nper, pv, fv: Any = 0, when: _When = 'end') -> Any:
     """Compute the interest portion of a payment.
 
     Parameters
@@ -454,7 +638,39 @@ def ipmt(rate, per, nper, pv, fv=0, when='end'):
     return ipmt_array
 
 
-def _rbl(rate, per, pmt, pv, when):
+@overload
+def _rbl(
+    rate: _AsFloat,
+    per: _CoFloat,
+    pmt: _CoFloat,
+    pv: _CoFloat,
+    when: _When,
+) -> float: ...
+@overload
+def _rbl(
+    rate: Decimal,
+    per: _AsDecimal,
+    pmt: _AsDecimal,
+    pv: _AsDecimal,
+    when: _When,
+) -> Decimal: ...
+@overload
+def _rbl(
+    rate: _AsFloat1D,
+    per: _CoFloatOr1D,
+    pmt: _CoFloatOr1D,
+    pv: _CoFloatOr1D,
+    when: _When,
+) -> npt.NDArray[np.float64]: ...
+@overload
+def _rbl(
+    rate: _ArrayLike,
+    per: _ArrayLike,
+    pmt: _ArrayLike,
+    pv: _ArrayLike,
+    when: _When,
+) -> Any: ...
+def _rbl(rate, per, pmt, pv, when: _When):
     """Remaining balance on loan.
 
     This function is here to simply have a different name for the 'fv'
@@ -465,7 +681,43 @@ def _rbl(rate, per, pmt, pv, when):
     return fv(rate, (per - 1), pmt, pv, when)
 
 
-def ppmt(rate, per, nper, pv, fv=0, when='end'):
+@overload
+def ppmt(
+    rate: _AsFloat,
+    per: _CoFloat,
+    nper: _CoFloat,
+    pv: _CoFloat,
+    fv: _CoFloat = 0,
+    when: _When = 'end',
+) -> float: ...
+@overload
+def ppmt(
+    rate: Decimal,
+    per: _AsDecimal,
+    nper: _AsDecimal,
+    pv: _AsDecimal,
+    fv: _AsDecimal = 0,
+    when: _When = 'end',
+) -> Decimal: ...
+@overload
+def ppmt(
+    rate: _AsFloat1D,
+    per: _CoFloatOr1D,
+    nper: _CoFloatOr1D,
+    pv: _CoFloatOr1D,
+    fv: _CoFloatOr1D = 0,
+    when: _When = 'end',
+) -> npt.NDArray[np.float64]: ...
+@overload
+def ppmt(
+    rate: _ArrayLike,
+    per: _ArrayLike,
+    nper: _ArrayLike,
+    pv: _ArrayLike,
+    fv: _ArrayLike = 0,
+    when: _When = 'end',
+) -> Any: ...
+def ppmt(rate, per, nper, pv, fv: Any = 0, when: _When = 'end'):
     """Compute the payment against loan principal.
 
     Parameters
@@ -493,7 +745,39 @@ def ppmt(rate, per, nper, pv, fv=0, when='end'):
     return total - ipmt(rate, per, nper, pv, fv, when)
 
 
-def pv(rate, nper, pmt, fv=0, when='end'):
+@overload
+def pv(
+    rate: _AsFloat,
+    nper: _CoFloat,
+    pmt: _CoFloat,
+    fv: _CoFloat = 0,
+    when: _When = 'end',
+) -> np.float64: ...
+@overload
+def pv(
+    rate: Decimal,
+    nper: _AsDecimal,
+    pmt: _AsDecimal,
+    fv: _AsDecimal = 0,
+    when: _When = 'end',
+) -> Decimal: ...
+@overload
+def pv(
+    rate: _AsFloatND,
+    nper: _CoFloatOrND,
+    pmt: _CoFloatOrND,
+    fv: _CoFloatOrND = 0,
+    when: _When = 'end',
+) -> npt.NDArray[np.float64]: ...
+@overload
+def pv(
+    rate: _ArrayLike,
+    nper: _ArrayLike,
+    pmt: _ArrayLike,
+    fv: _ArrayLike = 0,
+    when: _When = 'end',
+) -> Any: ...
+def pv(rate, nper, pmt, fv: Any = 0, when: _When = 'end'):
     """Compute the present value.
 
     Given:
@@ -582,7 +866,7 @@ def pv(rate, nper, pmt, fv=0, when='end'):
 
     """
     when = _convert_when(when)
-    (rate, nper, pmt, fv, when) = map(np.asarray, [rate, nper, pmt, fv, when])
+    rate, nper, pmt, fv, when = map(np.asarray, [rate, nper, pmt, fv, when])
     temp = (1 + rate) ** nper
     fact = np.where(rate == 0, nper, (1 + rate * when) * (temp - 1) / rate)
     return -(fv + pmt * fact) / temp
@@ -594,7 +878,7 @@ def pv(rate, nper, pmt, fv=0, when='end'):
 #  p*((r + 1)^n - 1)*w/r)
 
 
-def _g_div_gp(r, n, p, x, y, w):
+def _g_div_gp(r, n, p, x, y, w) -> Any:
     # Evaluate g(r_n)/g'(r_n), where g =
     # fv + pv*(1+rate)**nper + pmt*(1+rate*when)/rate * ((1+rate)**nper - 1)
     t1 = (r + 1) ** n
@@ -615,16 +899,17 @@ def _g_div_gp(r, n, p, x, y, w):
 #  g(r) is the formula
 #  g'(r) is the derivative with respect to r.
 def rate(
-        nper,
-        pmt,
-        pv,
-        fv,
-        when='end',
-        guess=None,
-        tol=None,
-        maxiter=100,
-        *,
-        raise_exceptions=False):
+    nper,
+    pmt,
+    pv,
+    fv,
+    when: _When = 'end',
+    guess: float | Decimal | None = None,
+    tol: float | Decimal | None = None,
+    maxiter: int = 100,
+    *,
+    raise_exceptions: bool = False,
+) -> Any:
     """Compute the rate of interest per period.
 
     Parameters
@@ -682,11 +967,11 @@ def rate(
     if tol is None:
         tol = default_type('1e-6')
 
-    (nper, pmt, pv, fv, when) = map(np.asarray, [nper, pmt, pv, fv, when])
+    nper, pmt, pv, fv, when = map(np.asarray, [nper, pmt, pv, fv, when])
 
-    rn = guess
+    rn: Any = guess
     iterator = 0
-    close = False
+    close: Any = False
     while (iterator < maxiter) and not np.all(close):
         rnp1 = rn - _g_div_gp(rn, nper, pmt, pv, fv, when)
         diff = abs(rnp1 - rn)
@@ -709,7 +994,7 @@ def rate(
     return rn
 
 
-def _irr_default_selection(eirr):
+def _irr_default_selection(eirr: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """ default selection logic for IRR function when there are > 1 real solutions """
      # check sign of all IRR solutions
     same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
@@ -729,6 +1014,33 @@ def _irr_default_selection(eirr):
     return eirr[np.argmin(abs_eirr)]
 
 
+_SelectionFunc: TypeAlias = Callable[
+    [npt.NDArray[np.float64]],
+    npt.NDArray[np.float64],
+]
+
+
+@overload
+def irr(
+    values: Sequence[_CoFloat],
+    *,
+    raise_exceptions: bool = False,
+    selection_logic: _SelectionFunc = ...,
+) -> float: ...
+@overload
+def irr(
+    values: Sequence[Sequence[_CoFloat]],
+    *,
+    raise_exceptions: bool = False,
+    selection_logic: _SelectionFunc = ...,
+) -> npt.NDArray[np.float64]: ...
+@overload
+def irr(
+    values: _ArrayLike,
+    *,
+    raise_exceptions: bool = False,
+    selection_logic: _SelectionFunc = ...,
+) -> Any: ...
 def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selection):
     r"""Return the Internal Rate of Return (IRR).
 
@@ -858,6 +1170,12 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
     return _ufunc_like(irr_results)
 
 
+@overload
+def npv(rate: _CoNumeric, values: _CoNumericND) -> float: ...
+@overload
+def npv(rate: _CoNumeric1D, values: _CoNumericND) -> npt.NDArray[np.float64]: ...
+@overload
+def npv(rate: _ArrayLike, values: _ArrayLike) -> Any: ...
 def npv(rate, values):
     r"""Return the NPV (Net Present Value) of a cash flow series.
 
@@ -952,7 +1270,31 @@ def npv(rate, values):
     return _ufunc_like(out)
 
 
-def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions=False):
+@overload
+def mirr(
+    values: _CoNumericND,
+    finance_rate: _CoNumeric,
+    reinvest_rate: _CoNumeric,
+    *,
+    raise_exceptions: bool = False,
+) -> float: ...
+@overload
+def mirr(
+    values: _CoNumericND,
+    finance_rate: _CoNumeric1D,
+    reinvest_rate: _CoNumeric1D,
+    *,
+    raise_exceptions: bool = False,
+) -> npt.NDArray[np.float64]: ...
+@overload
+def mirr(
+    values: _ArrayLike,
+    finance_rate: _ArrayLike,
+    reinvest_rate: _ArrayLike,
+    *,
+    raise_exceptions: bool = False,
+) -> Any: ...
+def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions: bool = False):
     r"""
     Return the Modified Internal Rate of Return (MIRR).
 
