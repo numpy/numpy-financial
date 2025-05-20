@@ -36,6 +36,7 @@ classifiers = [
     "Operating System :: POSIX",
     "Operating System :: Unix",
     "Operating System :: MacOS",
+    "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
@@ -54,6 +55,33 @@ dev = [
     "ruff>=0.11.5",
     "asv>=0.6.0",
 ]
+
+
+[tool.mypy]
+exclude = [
+  "^benchmarks/.*",
+  "^doc/.*",
+  "^docweb/.*",
+  "^numpy_financial/tests/.*",
+]
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+local_partial_types = true
+warn_unreachable = false
+warn_unused_ignores = true
+strict_bytes = true
+
+
+[tool.pyright]
+pythonPlatform = "All"
+include = ["numpy_financial"]
+exclude = [
+  "benchmarks",
+  "doc",
+  "docweb",
+  "numpy_financial/tests",
+]
+stubPath = "."
+typeCheckingMode = "standard"
 
 
 [tool.spin]
