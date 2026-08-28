@@ -82,6 +82,8 @@ exclude = [
 ]
 stubPath = "."
 typeCheckingMode = "standard"
+# _cfinancial is a Cython extension, so we only have a .pyi stub
+reportMissingModuleSource = "none"
 
 
 [tool.spin]
@@ -103,3 +105,11 @@ package = 'numpy_financial'
   "spin.cmds.meson.python",
   "spin.cmds.meson.run"
 ]
+"Lint" = [
+  ".spin/cmds.py:lint"
+]
+
+
+[tool.ruff.lint]
+ignore = ["F403"]
+select = ["E", "F", "B", "I"]
