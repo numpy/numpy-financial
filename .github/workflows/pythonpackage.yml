@@ -29,10 +29,8 @@ jobs:
     - name: Lint
       run: |
         set -euo pipefail
-        # Tell us what version we are using
         ruff version
-        # Check the source file, ignore type annotations (ANN) for now.
-        ruff check numpy_financial/ benchmarks/ --ignore F403 --select E,F,B,I
+        ruff check numpy_financial/ benchmarks/
     - name: Build project
       run: |
         spin build -v
