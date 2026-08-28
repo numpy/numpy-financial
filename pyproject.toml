@@ -54,6 +54,8 @@ doc = [
 dev = [
     "ruff>=0.11.5",
     "asv>=0.6.0",
+    "mypy",
+    "pyright"
 ]
 
 
