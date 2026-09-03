@@ -19,7 +19,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.11"
+          python-version: "3.14"
           activate-environment: true
 
       - name: env setup

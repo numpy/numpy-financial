@@ -19,3 +19,11 @@ alias is `npf`.  For example,
 >>> npf.irr([-250000, 100000, 150000, 200000, 250000, 300000])
 0.5672303344358536
 ```
+
+## Development
+
+Test the package:
+
+```
+spin test -- --doctest-modules
+```

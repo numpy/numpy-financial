@@ -27,6 +27,8 @@ dependencies:
   - pydata-sphinx-theme>=0.15.0
   # Lint
   - ruff>=0.11.5
+  - mypy
+  - pyright
   # Benchmarks
   - asv>=0.6.0
   # Misc tools

@@ -9,7 +9,7 @@ requires = [
 [project]
 name = "numpy-financial"
 version = "2.0.0"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 description = "Simple financial functions"
 license = "BSD-3-Clause"
 authors = [{name = "Travis E. Oliphant et al."}]
@@ -24,10 +24,6 @@ classifiers = [
     "Intended Audience :: Financial and Insurance Industry",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development",
     "Topic :: Office/Business :: Financial :: Accounting",
     "Topic :: Office/Business :: Financial :: Investment",
@@ -37,6 +33,9 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Typing :: Typed",
+]
+dependencies = [
+  "numpy>=1.23.5"
 ]
 
 [project.optional-dependencies]
@@ -52,6 +51,7 @@ doc = [
     "myst-parser>=2.0.0",
 ]
 dev = [
+    "spin",
     "ruff>=0.11.5",
     "asv>=0.6.0",
     "mypy",
