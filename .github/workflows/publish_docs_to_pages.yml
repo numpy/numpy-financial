@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -15,9 +15,8 @@ jobs:
     steps:
     - uses: actions/checkout@v5
       with:
-        # The deploy step below checks out gh-pages.
+        # The deploy step below checks out gh-pages and pushes to it.
         fetch-depth: 0
-        persist-credentials: false
     - uses: actions/setup-python@v7
       with:
         python-version: '3.13'
@@ -32,32 +31,11 @@ jobs:
         mv build/html /tmp
         cd ..
     - name: Deploy to gh-pages branch
-      env:
-        GH_ACTION_PAGES_DEPLOY_KEY: ${{ secrets.GH_ACTION_PAGES_DEPLOY_KEY }}
       run: |
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Set up SSH key
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        mkdir -p ~/.ssh/
-        echo "$GH_ACTION_PAGES_DEPLOY_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan github.com >> ~/.ssh/known_hosts
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Reconfigure the git remote to use SSH
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        git remote rm origin
-        git remote add origin git@github.com:numpy/numpy-financial.git
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Configure the git user
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         git config user.name "${GITHUB_ACTOR}"
         git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        # Go to work on gh-pages...
-        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        echo "Fetching gh-pages"
-        git fetch origin gh-pages
         echo "Checking out gh-pages branch"
+        git fetch origin gh-pages
         git checkout gh-pages
         echo "Removing old dev documentation"
         git clean -xdf .
