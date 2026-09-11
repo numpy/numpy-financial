@@ -84,6 +84,29 @@ PyPI trusted publishing. Do not build or upload artifacts by hand.
 
       rm ${CHANGES}
 
+- Publish the documentation for the release. The `Publish docs to
+  gh-pages` workflow builds `dev/` from `main`; the released versions
+  are published by hand. Skip this step for a pre-release.
+
+      - build the docs from the tag:
+
+            git checkout v${VERSION}
+            spin docs
+            git checkout main
+
+      - in a separate clone of the `gh-pages` branch, add the new
+        version and point `latest` at it:
+
+            cp -r <numpy-financial>/doc/build/html version/${VERSION}
+            rm -rf latest
+            ln -s version/${VERSION} latest
+
+      - commit and push `gh-pages`
+
+  The site then serves ${VERSION} at
+  https://numpy.org/numpy-financial/version/${VERSION}/ and at
+  https://numpy.org/numpy-financial/latest/
+
 - Update https://github.com/numpy/numpy-financial/milestones:
 
       - close old milestone
