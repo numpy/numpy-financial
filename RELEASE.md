@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Example `version number`
+Example `version number`, set in `__init__.py`:
 
 - 1.8.dev0 # development version of 1.8 (release candidate 1)
 - 1.8rc1 # 1.8 release candidate 1
@@ -14,10 +14,6 @@ Releases are published to PyPI by the `Build Wheel and Release` workflow
 (`.github/workflows/release.yml`), which starts when you push a `v*` tag.
 It builds the wheels and the sdist, attests them, and uploads them with
 PyPI trusted publishing. Do not build or upload artifacts by hand.
-
-The workflow only runs in the `numpy` organization, and the publish job
-uses the `release` GitHub environment. If that environment has required
-reviewers, the upload waits for an approval.
 
 ## Process
 
@@ -38,13 +34,14 @@ reviewers, the upload waits for an approval.
 
       changelist ${ORG}/${REPO} v${PREVIOUS} main --version ${VERSION} --config pyproject.toml
 
-- Set the release version. `__version__` in `numpy_financial/__init__.py`
-  is the only place that holds it; `meson.build` reads it from there at
-  build time, and the package metadata follows.
+- Set the release version. `__version__` in `numpy_financial/__init__.py`.
+
+- Ensure that the Python versions you want to build for are updated in
+  `[tool.cibuildwheel]` in `pyproject.toml`.
 
 - Commit changes:
 
-      git add numpy_financial/__init__.py ${NOTES}
+      git add numpy_financial/__init__.py pyproject.toml ${NOTES}
       git commit -m "Designate ${VERSION} release"
 
 - Tag the release in git:
@@ -52,7 +49,7 @@ reviewers, the upload waits for an approval.
       git tag -s v${VERSION} -m "signed ${VERSION} tag"
 
   If you do not have a gpg key, use -u instead; it is important for
-  Debian packaging that the tags are annotated
+  Debian packaging that the tags are annotated.
 
 - Push the new meta-data to github:
 
@@ -64,11 +61,8 @@ reviewers, the upload waits for an approval.
 - Wait for the release workflow to complete, then check that the new
   version is on https://pypi.org/project/numpy-financial/
 
-      - approve the deployment to the `release` environment, if it waits
-        for a review
-      - the workflow builds CPython wheels for the versions in
-        `[tool.cibuildwheel]` in `pyproject.toml`; add the new
-        interpreter there before you release for it
+      - Approve the deployment to the `release` environment, if it waits
+        for a review.
 
 - Create release from tag
 
