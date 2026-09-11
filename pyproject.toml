@@ -117,6 +117,9 @@ build = "cp313-* cp314-*"
 skip = "*-musllinux* *_i686 *-win32"
 test-command = "python -c \"import numpy_financial\""
 
+[tool.changelist]
+ignored_user_logins = ["dependabot[bot]", "pre-commit-ci[bot]"]
+
 [tool.ruff.lint]
 ignore = ["F403"]
 select = ["E", "F", "B", "I"]
