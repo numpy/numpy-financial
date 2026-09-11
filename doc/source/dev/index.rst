@@ -11,4 +11,8 @@ Development
    checking_out_an_upstream_pr.md
 
 
-.. include:: ../_includes/release-notes.rst
+Release Notes
+-------------
+
+.. include:: ../../../CHANGELOG.md
+   :parser: myst_parser.sphinx_

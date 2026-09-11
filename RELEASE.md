@@ -23,16 +23,25 @@ PyPI trusted publishing. Do not build or upload artifacts by hand.
       export PREVIOUS=<previous version number>
       export ORG="numpy"
       export REPO="numpy-financial"
-      export NOTES="doc/source/_includes/release-notes.rst"
+      export NOTES="CHANGELOG.md"
+      export CHANGES="${VERSION}.md"
 
 - Make sure the test suite is green on `main`, for all operating systems
   and Python versions in `.github/workflows/pythonpackage.yml`.
 
-- Write the release notes for ${VERSION} at the top of the version list in
-  ${NOTES}. To get a list of the merged pull requests since the last
-  release:
+- Generate the list of merged pull requests since the last release:
 
-      changelist ${ORG}/${REPO} v${PREVIOUS} main --version ${VERSION} --config pyproject.toml
+      changelist ${ORG}/${REPO} v${PREVIOUS} main --version ${VERSION} --config pyproject.toml --out ${CHANGES}
+
+  ${CHANGES} is a scratch file. Keep it until the GitHub release is
+  made, then delete it. Do not commit it.
+
+- Put the generated notes at the top of ${NOTES}:
+
+      cat ${CHANGES} | cat - ${NOTES} > temp && mv temp ${NOTES}
+
+  Then edit the new section: keep what is useful to a reader, and remove
+  the rest.
 
 - Set the release version. `__version__` in `numpy_financial/__init__.py`.
 
@@ -68,8 +77,12 @@ PyPI trusted publishing. Do not build or upload artifacts by hand.
 
       - go to https://github.com/numpy/numpy-financial/releases/new?tag=v${VERSION}
       - add v${VERSION} for the `Release title`
-      - paste the ${VERSION} section of ${NOTES} in the `Describe this release section`
+      - paste the contents of ${CHANGES} in the `Describe this release section`
       - if pre-release check the box labelled `Set as a pre-release`
+
+- Delete the scratch file:
+
+      rm ${CHANGES}
 
 - Update https://github.com/numpy/numpy-financial/milestones:
 
