@@ -3,27 +3,28 @@ name: Publish docs to gh-pages
 on:
   push:
     branches:
-      - master
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    if: github.repository_owner == 'numpy'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v5
       with:
-        python-version: '3.7'
-    - name: Install dependencies
+        # The deploy step below checks out gh-pages.
+        fetch-depth: 0
+        persist-credentials: false
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.13'
+    - name: Install numpy-financial and the documentation dependencies
       run: |
-        export DEBIAN_FRONTEND=noninteractive
-        sudo apt-get -q -y install dvipng texlive-latex-extra
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install sphinx
-        pip install numpydoc
-    - name: Install numpy-financial
-      run: |
-        pip install .
+        pip install .[doc]
     - name: Build documentation with Sphinx
       run: |
         cd doc
