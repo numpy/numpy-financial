@@ -1,7 +1,7 @@
 project(
     'numpy-financial',
     'cython', 'c',
-    version: '2.0.0.dev',
+    version: run_command('tools/version.py', check: true).stdout().strip(),
     license: 'BSD-3',
     meson_version: '>=1.4.0',
 )

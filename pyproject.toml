@@ -8,7 +8,7 @@ requires = [
 
 [project]
 name = "numpy-financial"
-version = "2.0.0"
+dynamic = ['version']
 requires-python = ">=3.13"
 description = "Simple financial functions"
 license = "BSD-3-Clause"
