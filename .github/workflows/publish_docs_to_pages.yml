@@ -44,7 +44,7 @@ jobs:
         cd ..
         echo "Committing emptied dev directory"
         git commit -m "Remove old dev documentation"
-        mkdir dev
+        mkdir -p dev
         cd dev
         echo "Copying /tmp/html here"
         cp -v -r /tmp/html/* .
