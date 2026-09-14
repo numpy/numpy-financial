@@ -84,6 +84,24 @@ PyPI trusted publishing. Do not build or upload artifacts by hand.
 
       rm ${CHANGES}
 
+- Publish the documentation for the release. A GH workflow builds
+  `dev/` from `main`; the released versions have to be published by
+  hand. Skip this step for a pre-release.
+
+      - wait for the workflow to rebuild `dev/` from the release
+        commit, and check that https://numpy.org/numpy-financial/dev/
+        shows ${VERSION}. Do this before the version bump below, which
+        returns `dev/` to a development version.
+
+      - in a clone of the `gh-pages` branch, copy those docs to their
+        permanent location and point `latest` at them:
+
+            cp -r dev version/${VERSION}
+            rm -rf latest
+            ln -s version/${VERSION} latest
+
+      - commit and push `gh-pages`
+
 - Update https://github.com/numpy/numpy-financial/milestones:
 
       - close old milestone
