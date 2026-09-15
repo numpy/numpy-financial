@@ -1,6 +1,6 @@
-# 1.1.0rc0
+# 1.1.0
 
-We're happy to announce the release of numpy-financial 1.1.0rc0!
+We're happy to announce the release of numpy-financial 1.1.0!
 
 ## Enhancements
 
@@ -124,7 +124,6 @@ We're happy to announce the release of numpy-financial 1.1.0rc0!
 - SeanZ ([@seanzian2093](https://github.com/seanzian2093))
 - Stefan van der Walt ([@stefanv](https://github.com/stefanv))
 - Warren Weckesser ([@WarrenWeckesser](https://github.com/WarrenWeckesser))
-
 
 # 1.0.0
 
