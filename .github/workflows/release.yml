@@ -43,8 +43,8 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install spin
-        run: pip install spin
+      - name: Install spin and build
+        run: pip install spin build
 
       - name: Build sdist
         run: spin sdist
