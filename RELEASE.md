@@ -70,19 +70,12 @@ PyPI trusted publishing. Do not build or upload artifacts by hand.
 - Wait for the release workflow to complete, then check that the new
   version is on https://pypi.org/project/numpy-financial/
 
-      - Approve the deployment to the `release` environment, if it waits
-        for a review.
-
 - Create release from tag
 
       - go to https://github.com/numpy/numpy-financial/releases/new?tag=v${VERSION}
       - add v${VERSION} for the `Release title`
       - paste the contents of ${CHANGES} in the `Describe this release section`
       - if pre-release check the box labelled `Set as a pre-release`
-
-- Delete the scratch file:
-
-      rm ${CHANGES}
 
 - Publish the documentation for the release. A GH workflow builds
   `dev/` from `main`; the released versions have to be published by
@@ -97,8 +90,10 @@ PyPI trusted publishing. Do not build or upload artifacts by hand.
         permanent location and point `latest` at them:
 
             cp -r dev version/${VERSION}
-            rm -rf latest
+            git add version/${VERSION}
+            git rm -rf latest
             ln -s version/${VERSION} latest
+            git add latest
 
       - commit and push `gh-pages`
 
@@ -113,5 +108,5 @@ PyPI trusted publishing. Do not build or upload artifacts by hand.
 - Commit changes:
 
       git add numpy_financial/__init__.py
-      git commit -m 'Bump version'
+      git commit -m 'Bump version to development'
       git push origin main
