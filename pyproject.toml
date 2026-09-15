@@ -119,7 +119,7 @@ test-command = "python -c \"import numpy_financial\""
 
 [tool.changelist]
 title_template = "{version}"
-ignored_user_logins = ["dependabot[bot]", "pre-commit-ci[bot]"]
+ignored_user_logins = ["dependabot[bot]", "pre-commit-ci[bot]", "web-flow"]
 
 [tool.ruff.lint]
 ignore = ["F403"]
