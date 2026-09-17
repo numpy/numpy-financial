@@ -4,18 +4,19 @@ on:
   push:
     branches:
       - main
+    tags:
+      - v*
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  build-and-deploy:
     if: github.repository_owner == 'numpy'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
       with:
-        # The deploy step below checks out gh-pages and pushes to it.
         fetch-depth: 0
     - uses: actions/setup-python@v7
       with:
@@ -24,32 +25,109 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .[doc]
+    - name: Determine docs version
+      id: version
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "is_release=true" >> $GITHUB_OUTPUT
+          echo "docs_path=version/$VERSION" >> $GITHUB_OUTPUT
+        else
+          echo "version=dev" >> $GITHUB_OUTPUT
+          echo "is_release=false" >> $GITHUB_OUTPUT
+          echo "docs_path=dev" >> $GITHUB_OUTPUT
+        fi
     - name: Build documentation with Sphinx
+      env:
+        DOCS_VERSION: ${{ steps.version.outputs.version }}
       run: |
         cd doc
         make html
-        mv build/html /tmp
+        mv build/html /tmp/html
         cd ..
     - name: Deploy to gh-pages branch
+      env:
+        DOCS_PATH: ${{ steps.version.outputs.docs_path }}
+        IS_RELEASE: ${{ steps.version.outputs.is_release }}
+        VERSION: ${{ steps.version.outputs.version }}
       run: |
         git config user.name "${GITHUB_ACTOR}"
         git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-        echo "Checking out gh-pages branch"
         git fetch origin gh-pages
         git checkout gh-pages
-        echo "Removing old dev documentation"
-        git clean -xdf .
-        cd dev
-        git rm -r '*'
-        cd ..
-        echo "Committing emptied dev directory"
-        git commit -m "Remove old dev documentation"
-        mkdir -p dev
-        cd dev
-        echo "Copying /tmp/html here"
-        cp -v -r /tmp/html/* .
-        echo "Adding new dev documentation"
+
+        if [ "$IS_RELEASE" = "true" ]; then
+          mkdir -p "$DOCS_PATH"
+          rm -rf "${DOCS_PATH:?}"/*
+        else
+          git clean -xdf .
+          if [ -d "dev" ]; then
+            cd dev
+            git rm -r '*' || true
+            cd ..
+            git commit -m "Remove old dev documentation" || true
+          fi
+          mkdir -p dev
+        fi
+
+        cp -r /tmp/html/* "$DOCS_PATH/"
+
+        # Generate versions.json by scanning existing version directories
+        python3 << 'EOF'
+        import json
+        import os
+        from packaging.version import Version, InvalidVersion
+
+        base_url = "https://numpy.org/numpy-financial"
+        versions = []
+
+        # Add dev entry
+        if os.path.isdir('dev'):
+            versions.append({"name": "dev", "version": "dev", "url": f"{base_url}/dev/"})
+
+        # Scan version/ directory for released versions
+        if os.path.isdir('version'):
+            release_versions = []
+            for name in os.listdir('version'):
+                if os.path.isdir(f'version/{name}'):
+                    try:
+                        release_versions.append((Version(name), name))
+                    except InvalidVersion:
+                        pass
+            # Sort by version descending
+            release_versions.sort(reverse=True)
+            # Find the highest non-prerelease version for stable
+            stable_name = next((name for ver, name in release_versions if not ver.is_prerelease), None)
+            for ver, name in release_versions:
+                entry = {"name": name, "version": name, "url": f"{base_url}/version/{name}/"}
+                if name == stable_name:
+                    entry["name"] = f"{name} (stable)"
+                    entry["preferred"] = True
+                versions.append(entry)
+
+        os.makedirs('_static', exist_ok=True)
+        with open('_static/versions.json', 'w') as f:
+            json.dump(versions, f, indent=4)
+        EOF
+
+        # Update latest symlink on releases
+        if [ "$IS_RELEASE" = "true" ]; then
+          rm -f latest
+          ln -s "version/$VERSION" latest
+          git add latest
+        fi
+
         git add -A .
-        git commit -m "Add new dev documentation"
-        echo "Pushing new documentation to origin"
-        git push -v origin gh-pages
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        elif [ "$IS_RELEASE" = "true" ]; then
+          git commit -m "Add documentation for version $VERSION"
+          git push -v origin gh-pages
+        elif [ "$VERSION" = "dev" ]; then
+          git commit -m "Update dev documentation"
+          git push -v origin gh-pages
+        else
+          echo "Unexpected state: IS_RELEASE=$IS_RELEASE, VERSION=$VERSION"
+          exit 1
+        fi
