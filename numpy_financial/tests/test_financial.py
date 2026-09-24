@@ -273,6 +273,20 @@ class TestNpv:
         cashflow = numpy.arange(5)
         assert numpy.isnan(npf.npv(rate, cashflow))
 
+    def test_npv_zero_rate(self):     
+        # With a zero discount rate, NPV is simply the sum of cashflows
+        cashflows = [-1000, 200, 300, 400, 100]
+        assert_allclose(npf.npv(0.0, cashflows), sum(cashflows), rtol=1e-10)
+
+    def test_npv_all_negative_cashflows(self):
+        # All negative cashflows should always give a negative NPV
+        cashflows = [-100, -200, -300]
+        assert npf.npv(0.05, cashflows) < 0
+
+    def test_npv_single_cashflow(self):
+        # Single future cashflow: NPV = cf / (1 + rate)
+        assert_allclose(npf.npv(0.1, [-100, 110]), 0.0, atol=1e-10)
+
 
 class TestPmt:
     def test_pmt_simple(self):
@@ -883,3 +897,13 @@ class TestIrr:
 
         with pytest.raises(npf.NoRealSolutionError):
             npf.irr(cashflows, raise_exceptions=True)
+
+    def test_irr_single_positive_cashflow(self):
+        # A single positive cashflow with no investment has no real IRR
+        assert numpy.isnan(npf.irr([100]))
+
+    def test_irr_zero_cashflows_in_middle(self):
+        # Zero cashflows in the middle shift the final cashflow to t=3,
+        # so -100 + 130.301 / (1 + r)**3 = 0  ->  r = 1.30301**(1/3) - 1
+        expected = 1.30301 ** (1 / 3) - 1
+        assert_allclose(npf.irr([-100, 0, 0, 130.301]), expected, rtol=1e-10)
