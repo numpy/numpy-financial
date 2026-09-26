@@ -317,9 +317,10 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
     nper : array_like
         Number of compounding periods
     pv : array_like
-        Present value
+        Present value. For a loan, the amount received is positive.
     fv : array_like,  optional
-        Future value (default = 0)
+        Future cash balance (default = 0). For a loan with positive `pv`,
+        use a negative value for a balance that remains to be repaid.
     when : {{'begin', 1}, {'end', 0}}, {string, int}
         When payments are due ('begin' (1) or 'end' (0))
 
@@ -344,6 +345,11 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
       fv + pv + pmt * nper == 0
 
     for ``pmt``.
+
+    Cash received is positive and cash paid out is negative. For example,
+    from a borrower's perspective, the loan principal `pv` is positive and
+    the payments returned by `pmt` are negative. A remaining loan balance
+    is represented by a negative `fv`, since it must still be paid out.
 
     Note that computing a monthly mortgage payment is only
     one use for this function.  For example, pmt returns the
@@ -376,6 +382,18 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
     In order to pay-off (i.e., have a future-value of 0) the $200,000 obtained
     today, a monthly payment of $1,854.02 would be required.  Note that this
     example illustrates usage of `fv` having a default value of 0.
+
+    For a $200,000 loan over 30 years at an annual interest rate of 5%,
+    compounded monthly, compare paying off the loan with leaving $50,000
+    to be repaid at the end of the term:
+
+    >>> print(f"{npf.pmt(0.05/12, 12*30, 200000):.2f}")
+    -1073.64
+    >>> print(f"{npf.pmt(0.05/12, 12*30, 200000, fv=-50000):.2f}")
+    -1013.57
+
+    Leaving a balance reduces the monthly payment. The negative `fv`
+    represents the $50,000 still owed after the regular payments.
 
     """
     when = _convert_when(when)
