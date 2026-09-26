@@ -346,11 +346,6 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
 
     for ``pmt``.
 
-    Cash received is positive and cash paid out is negative. For example,
-    from a borrower's perspective, the loan principal `pv` is positive and
-    the payments returned by `pmt` are negative. A remaining loan balance
-    is represented by a negative `fv`, since it must still be paid out.
-
     Note that computing a monthly mortgage payment is only
     one use for this function.  For example, pmt returns the
     periodic deposit one must make to achieve a specified
@@ -383,17 +378,12 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
     today, a monthly payment of $1,854.02 would be required.  Note that this
     example illustrates usage of `fv` having a default value of 0.
 
-    For a $200,000 loan over 30 years at an annual interest rate of 5%,
-    compounded monthly, compare paying off the loan with leaving $50,000
-    to be repaid at the end of the term:
+    For a $100 loan with no interest, ten payments of $8 leave $20 owed.
+    Use ``fv=-20`` for this remaining debt; payments are negative because
+    they represent money paid out:
 
-    >>> print(f"{npf.pmt(0.05/12, 12*30, 200000):.2f}")
-    -1073.64
-    >>> print(f"{npf.pmt(0.05/12, 12*30, 200000, fv=-50000):.2f}")
-    -1013.57
-
-    Leaving a balance reduces the monthly payment. The negative `fv`
-    represents the $50,000 still owed after the regular payments.
+    >>> float(npf.pmt(0, 10, 100, fv=-20))
+    -8.0
 
     """
     when = _convert_when(when)
