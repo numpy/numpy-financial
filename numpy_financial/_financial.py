@@ -500,19 +500,35 @@ def _value_like(arr: npt.NDArray[Any], value: Decimal | float) -> Any:
         return Decimal(value)
     return np.array(value, dtype=arr.dtype).item(0)
 
+
 def _broadcast_payment_inputs(
-    rate: Any, per: Any, nper: Any, pv: Any, fv: Any, when: Any
-) -> tuple[Any, Any, Any, Any, Any, Any]:
+    rate: _ArrayLike,
+    per: _ArrayLike,
+    nper: _ArrayLike,
+    pv: _ArrayLike,
+    fv: _ArrayLike,
+    when: _ArrayLike,
+) -> tuple[
+    npt.NDArray[Any],
+    npt.NDArray[Any],
+    npt.NDArray[Any],
+    npt.NDArray[Any],
+    npt.NDArray[Any],
+    npt.NDArray[Any],
+]:
     """Broadcast row parameters over nested periods in object arrays."""
     period_values = np.asarray(per)
     if period_values.ndim == 1 and period_values.dtype == object:
         rows = [np.asarray(value) for value in period_values]
-        if rows and rows[0].ndim > 0 and all(
-            row.shape == rows[0].shape for row in rows
+        if (
+            rows
+            and rows[0].ndim > 0
+            and all(row.shape == rows[0].shape for row in rows)
         ):
             period_values = np.stack(rows)
             row_count = period_values.shape[0]
-            def expand_row_parameter(value: Any) -> Any:
+
+            def expand_row_parameter(value: _ArrayLike) -> _ArrayLike:
                 if np.ndim(value) == 1 and np.shape(value) == (row_count,):
                     return np.asarray(value)[:, np.newaxis]
                 return value
@@ -526,10 +542,16 @@ def _broadcast_payment_inputs(
             )
 
     return cast(
-        tuple[Any, Any, Any, Any, Any, Any],
+        tuple[
+            npt.NDArray[Any],
+            npt.NDArray[Any],
+            npt.NDArray[Any],
+            npt.NDArray[Any],
+            npt.NDArray[Any],
+            npt.NDArray[Any],
+        ],
         np.broadcast_arrays(rate, period_values, nper, pv, fv, when),
     )
-
 
 @overload
 def ipmt(
