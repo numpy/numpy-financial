@@ -21,7 +21,6 @@ from typing import (
     Protocol,
     TypeAlias,
     TypeVar,
-    cast,
     overload,
 )
 
@@ -541,17 +540,11 @@ def _broadcast_payment_inputs(
                 expand_row_parameter(when),
             )
 
-    return cast(
-        tuple[
-            npt.NDArray[Any],
-            npt.NDArray[Any],
-            npt.NDArray[Any],
-            npt.NDArray[Any],
-            npt.NDArray[Any],
-            npt.NDArray[Any],
-        ],
-        np.broadcast_arrays(rate, period_values, nper, pv, fv, when),
+    rate, per, nper, pv, fv, when = np.broadcast_arrays(
+        rate, period_values, nper, pv, fv, when
     )
+    return rate, per, nper, pv, fv, when
+
 
 @overload
 def ipmt(
