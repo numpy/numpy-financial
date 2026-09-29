@@ -507,14 +507,7 @@ def _broadcast_payment_inputs(
     pv: _ArrayLike,
     fv: _ArrayLike,
     when: _ArrayLike,
-) -> tuple[
-    npt.NDArray[Any],
-    npt.NDArray[Any],
-    npt.NDArray[Any],
-    npt.NDArray[Any],
-    npt.NDArray[Any],
-    npt.NDArray[Any],
-]:
+):
     """Broadcast row parameters over nested periods in object arrays."""
     period_values = np.asarray(per)
     if period_values.ndim == 1 and period_values.dtype == object:
