@@ -2,9 +2,9 @@
 
 patterned after spreadsheet computations.
 
-Cash received is positive and cash paid out is negative, from a consistent
-perspective. For a borrower, loan proceeds are positive and repayments are
-negative; for a lender, the signs are reversed.
+Cash received is positive and cash paid out is negative. For a borrower,
+loan proceeds are positive and repayments are negative; for a lender,
+the signs are reversed.
 
 There is some complexity in each function
 so that the functions behave like ufuncs with
