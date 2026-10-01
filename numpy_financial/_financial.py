@@ -2,6 +2,10 @@
 
 patterned after spreadsheet computations.
 
+Cash received is positive and cash paid out is negative, from a consistent
+perspective. For a borrower, loan proceeds are positive and repayments are
+negative; for a lender, the signs are reversed.
+
 There is some complexity in each function
 so that the functions behave like ufuncs with
 broadcasting and being able to be called with scalars
@@ -317,9 +321,10 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
     nper : array_like
         Number of compounding periods
     pv : array_like
-        Present value. For a loan, the amount received is positive.
+        Present value. Cash received is positive and cash paid out is
+        negative. For a borrower, the loan amount is positive.
     fv : array_like,  optional
-        Future cash balance (default = 0). For a loan with positive `pv`,
+        Future value (default = 0). For a loan with positive `pv`,
         use a negative value for a balance that remains to be repaid.
     when : {{'begin', 1}, {'end', 0}}, {string, int}
         When payments are due ('begin' (1) or 'end' (0))
