@@ -18,7 +18,7 @@ spin bench
 
 This builds the local checkout and runs the benchmarks against that build,
 including uncommitted changes. It uses the current Python environment and
-does not save results. To select benchmarks by name or regular expression:
+does not save results. Because it is a dry run, the timings are only a rough guide and are not meant to be compared across sessions or machines. To select benchmarks by name or regular expression:
 
 ```shell
 spin bench -t Npv2D.time_broadcast
