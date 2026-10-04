@@ -32,7 +32,7 @@ asv run
 
 ## Viewing the results
 
-There are two steps to viewing the results locally. The results need to be published and the launched in a local web browser.
+There are two steps to viewing the results locally. The results need to be published and then launched in a local web browser.
 
 To publish the results use:
 
