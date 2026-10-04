@@ -21,7 +21,8 @@ def bench(ctx, tests, build_dir):
     meson._set_pythonpath(build_dir)
     env = os.environ.copy()
     # ASV removes PYTHONPATH unless it is explicitly passed this way.
-    env['ASV_PYTHONPATH'] = env.get('PYTHONPATH', '')
+    if env.get('PYTHONPATH'):
+        env['ASV_PYTHONPATH'] = env['PYTHONPATH']
     spin.util.run(args, env=env)
 
 
