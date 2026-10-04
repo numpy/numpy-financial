@@ -7,18 +7,14 @@ from spin.cmds import meson
 
 
 @click.command()
-@click.option('--quick', '-q', is_flag=True,
-              help='Run each benchmark once to check that it works.')
 @click.option('--tests', '-t', multiple=True,
               help='Select benchmarks by name or regular expression.')
 @meson.build_dir_option
 @click.pass_context
-def bench(ctx, quick, tests, build_dir):
+def bench(ctx, tests, build_dir):
     """Run benchmarks against the local build without saving results."""
     args = [sys.executable, '-m', 'asv', 'run', '--python=same',
             '--dry-run', '--show-stderr']
-    if quick:
-        args.append('--quick')
     for test in tests:
         args.extend(['--bench', test])
     ctx.invoke(meson.build, build_dir=build_dir)

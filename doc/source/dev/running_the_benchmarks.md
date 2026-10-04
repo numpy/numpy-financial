@@ -24,9 +24,6 @@ does not save results. To select benchmarks by name or regular expression:
 spin bench -t Npv2D.time_broadcast
 ```
 
-For a quick check that the benchmarks run, use ``spin bench --quick``.
-Quick runs are not suitable for reliable performance measurements.
-
 To benchmark committed revisions and save results for publishing, use ASV:
 
 ```shell
