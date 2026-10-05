@@ -13,7 +13,16 @@ otherwise stated.
 
 from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
-from typing import Any, Callable, Final, Literal, Protocol, TypeAlias, TypeVar, overload
+from typing import (
+    Any,
+    Callable,
+    Final,
+    Literal,
+    Protocol,
+    TypeAlias,
+    TypeVar,
+    overload,
+)
 
 import numpy as np
 import numpy.typing as npt
@@ -490,6 +499,46 @@ def _value_like(arr: npt.NDArray[Any], value: Decimal | float) -> Any:
         return Decimal(value)
     return np.array(value, dtype=arr.dtype).item(0)
 
+
+def _broadcast_payment_inputs(
+    rate: _ArrayLike,
+    per: _ArrayLike,
+    nper: _ArrayLike,
+    pv: _ArrayLike,
+    fv: _ArrayLike,
+    when: _ArrayLike,
+):
+    """Broadcast row parameters over nested periods in object arrays."""
+    period_values = np.asarray(per)
+    if period_values.ndim == 1 and period_values.dtype == object:
+        rows = [np.asarray(value) for value in period_values]
+        if (
+            rows
+            and rows[0].ndim > 0
+            and all(row.shape == rows[0].shape for row in rows)
+        ):
+            period_values = np.stack(rows)
+            row_count = period_values.shape[0]
+
+            def expand_row_parameter(value: _ArrayLike) -> _ArrayLike:
+                if np.ndim(value) == 1 and np.shape(value) == (row_count,):
+                    return np.asarray(value)[:, np.newaxis]
+                return value
+
+            rate, nper, pv, fv, when = (
+                expand_row_parameter(rate),
+                expand_row_parameter(nper),
+                expand_row_parameter(pv),
+                expand_row_parameter(fv),
+                expand_row_parameter(when),
+            )
+
+    rate, per, nper, pv, fv, when = np.broadcast_arrays(
+        rate, period_values, nper, pv, fv, when
+    )
+    return rate, per, nper, pv, fv, when
+
+
 @overload
 def ipmt(
     rate: _AsFloat,
@@ -611,9 +660,9 @@ def ipmt(rate, per, nper, pv, fv: Any = 0, when: _When = 'end') -> Any:
     np.float64(-112.98)
 
     """
-    when = _convert_when(when)
-    rate, per, nper, pv, fv, when = np.broadcast_arrays(rate, per, nper,
-                                                        pv, fv, when)
+    rate, per, nper, pv, fv, when = _broadcast_payment_inputs(
+        rate, per, nper, pv, fv, _convert_when(when)
+    )
 
     total_pmt = pmt(rate, nper, pv, fv, when)
     ipmt_array = np.array(_rbl(rate, per, total_pmt, pv, when) * rate)
@@ -741,6 +790,9 @@ def ppmt(rate, per, nper, pv, fv: Any = 0, when: _When = 'end'):
     pmt, pv, ipmt
 
     """
+    rate, per, nper, pv, fv, when = _broadcast_payment_inputs(
+        rate, per, nper, pv, fv, _convert_when(when)
+    )
     total = pmt(rate, nper, pv, fv, when)
     return total - ipmt(rate, per, nper, pv, fv, when)
 
