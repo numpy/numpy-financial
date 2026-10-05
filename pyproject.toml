@@ -101,6 +101,9 @@ package = 'numpy_financial'
 "Documentation" = [
   "spin.cmds.meson.docs"
 ]
+"Benchmarks" = [
+  ".spin/cmds.py:bench"
+]
 "Environments" = [
   "spin.cmds.meson.shell",
   "spin.cmds.meson.ipython",

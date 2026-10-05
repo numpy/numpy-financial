@@ -4,7 +4,27 @@ This document outlines how to setup and run the benchmarks using [asv](https://a
 
 ## Running the benchmarks
 
-To run the benchmarks with ``asv``, simply enter:
+With the development environment activated, register your machine once:
+
+```shell
+asv machine --yes
+```
+
+Then run:
+
+```shell
+spin bench
+```
+
+This builds the local checkout and runs the benchmarks against that build,
+including uncommitted changes. It uses the current Python environment and
+does not save results. Because it is a dry run, the timings are only a rough guide and are not meant to be compared across sessions or machines. To select benchmarks by name or regular expression:
+
+```shell
+spin bench -t Npv2D.time_broadcast
+```
+
+To benchmark committed revisions and save results for publishing, use ASV:
 
 ```shell
 asv run
@@ -12,7 +32,7 @@ asv run
 
 ## Viewing the results
 
-There are two steps to viewing the results locally. The results need to be published and the launched in a local web browser.
+There are two steps to viewing the results locally. The results need to be published and then launched in a local web browser.
 
 To publish the results use:
 
@@ -27,19 +47,3 @@ asv preview
 ```
 
 This will launch a local web browser from which you can view the results
-
-## Dry runs
-
-One common use case is to use ``asv`` in development, there are several useful flags that should be used:
-
-```shell
-asv --python=same --quick --dry-run
-```
-
-We are adding three flags, these flags are:
-
-1. `--python=same` uses the same environment as your development environment (saves time to avoid building environments)
-2. `--quick` only runs the benchmarks once
-3. `--dry-run` to not save the results of the benchmarks
-
-These can be useful for getting quick feedback during development, but should not be used as anything other than a rough guide.
