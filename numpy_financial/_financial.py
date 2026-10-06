@@ -891,6 +891,82 @@ def _g_div_gp(r, n, p, x, y, w) -> Any:
     return g / gp
 
 
+def _rate_residual(r, n, p, x, y, w):
+    """Evaluate the rate equation continuously at zero."""
+    if r == 0:
+        return y + x + p * n
+    if isinstance(r, Decimal):
+        growth = (1 + r) ** n
+        annuity = (growth - 1) / r
+    else:
+        exponent = n * np.log1p(r)
+        growth = np.exp(exponent)
+        annuity = np.expm1(exponent) / r
+    return y + x * growth + p * (1 + r * w) * annuity
+
+
+def _rate_bisect(n, p, x, y, w, guess, tol, maxiter):
+    """Find a sign-changing bracket above -1, then bisect it.
+
+    Search outwards from the guess. This is a fallback, not an exhaustive
+    search for all roots; a root without a sign change may be missed.
+    """
+    decimal = isinstance(p, Decimal)
+    number = Decimal if decimal else float
+    nan = number('NaN')
+    center: Any = number(guess)
+    if not np.isfinite(float(center)) or center <= -1:
+        return nan
+    left = right = center
+    fl = fr = _rate_residual(center, n, p, x, y, w)
+    if fl == 0:
+        return center
+    bracket = False
+    for _ in range(maxiter):
+        if not bracket:
+            # Geometric expansion in the positive compounding factor 1+r.
+            new_left = (left - 1) / 2
+            new_right = 2 * right + 1
+            if new_left <= -1 or new_right == right:
+                return nan
+            fleft = _rate_residual(new_left, n, p, x, y, w)
+            fright = _rate_residual(new_right, n, p, x, y, w)
+            if fleft == 0:
+                return new_left
+            if fright == 0:
+                return new_right
+            if (fleft < 0 < fl) or (fl < 0 < fleft):
+                right, fr = left, fl
+                left, fl = new_left, fleft
+                bracket = True
+            elif (fr < 0 < fright) or (fright < 0 < fr):
+                left, fl = right, fr
+                right, fr = new_right, fright
+                bracket = True
+            else:
+                left, fl, right, fr = new_left, fleft, new_right, fright
+            continue
+        mid = (left + right) / 2
+        fm = _rate_residual(mid, n, p, x, y, w)
+        if not np.isfinite(float(fm)):
+            return nan
+        if fm == 0:
+            return mid
+        if right - left <= tol:
+            scale = abs(y) + abs(x * (1 + mid) ** n)
+            scale += abs(p * (1 + mid * w) * (
+                n if mid == 0 else ((1 + mid) ** n - 1) / mid))
+            if (np.isfinite(float(scale))
+                    and abs(fm) <= tol * max(number(1), scale)):
+                return mid
+            return nan
+        if (fl < 0 < fm) or (fm < 0 < fl):
+            right, fr = mid, fm
+        else:
+            left, fl = mid, fm
+    return nan
+
+
 # Use Newton's iteration until the change is less than 1e-6
 #  for all values or a maximum of 100 iterations is reached.
 #  Newton's rule is
@@ -925,7 +1001,8 @@ def rate(
     when : {{'begin', 1}, {'end', 0}}, {string, int}, optional
         When payments are due ('begin' (1) or 'end' (0))
     guess : Number, optional
-        Starting guess for solving the rate of interest, default 0.1
+        Starting guess for solving the rate of interest, default 0.1.
+        Must be finite and greater than -1.
     tol : Number, optional
         Required tolerance for the solution, default 1e-6
     maxiter : int, optional
@@ -943,7 +1020,10 @@ def rate(
 
      fv + pv*(1+rate)**nper + pmt*(1+rate*when)/rate * ((1+rate)**nper - 1) = 0
 
-    for ``rate``.
+    for ``rate`` in the domain ``rate > -1``. If Newton's method finds a
+    root outside this domain, a sign-changing bracket is sought around
+    ``guess`` and solved by bisection. This search does not find all roots
+    and cannot guarantee the root nearest to ``guess``.
 
     References
     ----------
@@ -969,15 +1049,39 @@ def rate(
 
     nper, pmt, pv, fv, when = map(np.asarray, [nper, pmt, pv, fv, when])
 
+    if not np.isfinite(float(guess)) or guess <= -1:
+        raise ValueError("guess must be finite and greater than -1")
+
     rn: Any = guess
     iterator = 0
     close: Any = False
+    converged_iteration: Any = 0
     while (iterator < maxiter) and not np.all(close):
         rnp1 = rn - _g_div_gp(rn, nper, pmt, pv, fv, when)
         diff = abs(rnp1 - rn)
         close = diff < tol
         iterator += 1
+        converged_iteration = np.where(
+            close & (converged_iteration == 0), iterator, converged_iteration)
         rn = rnp1
+
+    # A converged algebraic root below -1 is not a financial rate.
+    invalid = np.asarray(rn <= -1) & np.asarray(close)
+    if np.any(invalid):
+        rn = np.asarray(rn).copy()
+        close = np.asarray(close).copy()
+        inputs = np.broadcast_arrays(nper, pmt, pv, fv, when, rn)
+        for index in np.ndindex(rn.shape):
+            if invalid[index]:
+                n, p, x, y, w = (values[index] for values in inputs[:5])
+                with np.errstate(over="ignore", invalid="ignore"):
+                    result = _rate_bisect(
+                        n, p, x, y, w, guess, tol,
+                        max(0, maxiter - int(converged_iteration[index])))
+                rn[index] = result
+                close[index] = np.isfinite(float(result))
+        if rn.ndim == 0:
+            rn = rn.item()
 
     if not np.all(close):
         if np.isscalar(rn):

@@ -170,6 +170,54 @@ class TestPV:
 
 
 class TestRate:
+    @pytest.mark.parametrize("number_type", [float, Decimal])
+    @pytest.mark.parametrize("pmt,pv,expected", [
+        (-440000, 263175, 1.6711838275594646),
+        (263175, -440000, 0.5838779110248231),
+    ])
+    def test_gh126(self, number_type, pmt, pv, expected):
+        args = [number_type(v) for v in (8, pmt, pv, 25500)]
+        result = npf.rate(*args, tol=number_type("1e-10"))
+        assert result > -1
+        assert_allclose(float(result), expected, atol=1e-10, rtol=0)
+        if number_type is Decimal:
+            assert isinstance(result, Decimal)
+        # Independently discount the actual cash flows at the returned rate.
+        cashflows = [pv] + [pmt] * 7 + [pmt + 25500]
+        residual = sum(c / (1 + float(result)) ** t
+                       for t, c in enumerate(cashflows))
+        assert abs(residual) < 1e-3
+
+    def test_gh126_broadcast(self):
+        pmt = numpy.array([[-440000], [263175]])
+        pv = numpy.array([[263175], [-440000]])
+        result = npf.rate(8, pmt, pv, [25500, 25500], tol=1e-10)
+        assert_allclose(result, [[1.6711838275594646] * 2,
+                                 [0.5838779110248231] * 2], atol=1e-10)
+
+    def test_gh126_mixed_results(self):
+        result = npf.rate([8, 2, 2], [263175, 0, 0],
+                          [-440000, -100, 100], [25500, 81, 81])
+        assert_allclose(result, [0.583877911, -0.1, numpy.nan], atol=1e-6)
+
+    @pytest.mark.parametrize("when", [0, 1])
+    def test_rate_repayment_round_trip(self, when):
+        target = 0.6
+        pmt = npf.pmt(target, 8, -440000, 25500, when=when)
+        result = npf.rate(8, pmt, -440000, 25500, when=when, tol=1e-10)
+        assert_allclose(result, target, atol=1e-10)
+
+    @pytest.mark.parametrize("guess", [-1, -2, numpy.nan, numpy.inf])
+    def test_rate_invalid_guess(self, guess):
+        with pytest.raises(ValueError, match="guess"):
+            npf.rate(8, 263175, -440000, 25500, guess=guess)
+
+    def test_gh126_iteration_budget(self):
+        assert numpy.isnan(npf.rate(8, 263175, -440000, 25500, maxiter=10))
+        with pytest.raises(npf.IterationsExceededError):
+            npf.rate(8, 263175, -440000, 25500, maxiter=10,
+                     raise_exceptions=True)
+
     def test_rate(self):
         assert_allclose(npf.rate(10, 0, -3500, 10000), 0.1107, rtol=1e-4)
 
