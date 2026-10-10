@@ -22,7 +22,7 @@ from numpy._typing import _NestedSequence  # pyright: ignore[reportPrivateImport
 from numpy_financial import _cfinancial
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
-           'irr', 'npv', 'mirr',
+           'irr', 'npv', 'mirr', 'cumprinc', 'cumipmt',
            'NoRealSolutionError', 'IterationsExceededError']
 
 _ArrayT = TypeVar("_ArrayT", bound=npt.NDArray[Any])
@@ -1413,3 +1413,274 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions: bool = False)
                 denom = np.abs(npv(fr, v * neg))
                 out[i, j] = (numer / denom) ** (1 / (n - 1)) * (1 + rr) - 1
     return _ufunc_like(out)
+
+
+@overload
+def cumprinc(
+    rate: _AsFloat,
+    start: _CoFloat,
+    end: _CoFloat,
+    nper: _CoFloat,
+    pv: _CoFloat,
+    fv: _CoFloat = 0,
+    when: _When = 'end',
+) -> float: ...
+@overload
+def cumprinc(
+    rate: Decimal,
+    start: _AsDecimal,
+    end: _AsDecimal,
+    nper: _AsDecimal,
+    pv: _AsDecimal,
+    fv: _AsDecimal = 0,
+    when: _When = 'end',
+) -> Decimal: ...
+@overload
+def cumprinc(
+    rate: _AsFloat1D,
+    start: _CoFloatOr1D,
+    end: _CoFloatOr1D,
+    nper: _CoFloatOr1D,
+    pv: _CoFloatOr1D,
+    fv: _CoFloatOr1D = 0,
+    when: _When = 'end',
+) -> npt.NDArray[np.float64]: ...
+@overload
+def cumprinc(
+    rate: _ArrayLike,
+    start: _ArrayLike,
+    end: _ArrayLike,
+    nper: _ArrayLike,
+    pv: _ArrayLike,
+    fv: _ArrayLike = 0,
+    when: _When = 'end',
+) -> Any: ...
+def cumprinc(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> Any:
+    """Compute the cumulative principal paid between two periods.
+
+    Parameters
+    ----------
+    rate : scalar or array_like of shape(M, )
+        Rate of interest as decimal (not per cent) per period
+    start : scalar or array_like of shape(M, )
+        First period included in the total.
+    end : scalar or array_like of shape(M, )
+        Last period included in the total. Both `start` and `end` are
+        inclusive, so the range covers ``end - start + 1`` payments.
+    nper : scalar or array_like of shape(M, )
+        Number of compounding periods
+    pv : scalar or array_like of shape(M, )
+        Present value
+    fv : scalar or array_like of shape(M, ), optional
+        Future value
+    when : {{'begin', 1}, {'end', 0}}, {string, int}, optional
+        When payments are due ('begin' (1) or 'end' (0)).
+        Defaults to {'end', 0}.
+
+    Returns
+    -------
+    out : ndarray
+        Principal paid between `start` and `end` inclusive. If all input
+        is scalar, returns a scalar float. If any input is array_like,
+        returns the cumulative principal for each input element. ``nan``
+        is returned where `start` is less than 1, `end` is before
+        `start`, or `end` is beyond `nper`.
+
+    See Also
+    --------
+    ppmt, ipmt, pmt, fv
+
+    Notes
+    -----
+    The total payment is made up of payment against principal plus
+    interest, so ``pmt * (end - start + 1) == cumprinc + cumipmt``.
+
+    The cumulative principal is obtained as the difference between two
+    loan balances rather than by summing `ppmt` across the range. Each
+    principal payment is, by definition, the amount by which the
+    outstanding balance falls during that period, so summing them over
+    periods `start` through `end` telescopes::
+
+        sum(ppmt) = (b[start-1] - b[start]) + ... + (b[end-1] - b[end])
+                  =  b[start-1] - b[end]
+
+    Every intermediate balance appears once positively and once
+    negatively and cancels, leaving only the balance entering the range
+    and the balance leaving it. Each of those is a single closed-form
+    evaluation, so the cost is two evaluations however long the range.
+
+    When ``when == 1`` the payment is made before the period's interest
+    accrues, so the balance at the payment instant is the period-boundary
+    balance discounted by one period. The first period is exempt, since
+    no interest has accrued when that payment is made.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import numpy_financial as npf
+
+    What is the principal repaid during the first year of a 30 year
+    $125,000 loan at 9% interest per year compounded monthly, and over
+    the full term?
+
+    >>> np.round(npf.cumprinc(0.09 / 12, 1, 12, 30 * 12, 125000), 2)
+    np.float64(-854.0)
+    >>> np.round(npf.cumprinc(0.09 / 12, 1, 30 * 12, 30 * 12, 125000), 2)
+    np.float64(-125000.0)
+
+    Paying at the beginning of each period repays far more in the first
+    year, since the first payment accrues no interest:
+
+    >>> np.round(
+    ...     npf.cumprinc(0.09 / 12, 1, 12, 30 * 12, 125000, 0, 'begin'), 2
+    ... )
+    np.float64(-1778.16)
+
+    """
+    when = _convert_when(when)
+    rate, start, end, nper, pv, fv, when = np.broadcast_arrays(rate, start, end, 
+                                                               nper, pv, fv, when)
+
+    total_pmt = pmt(rate, nper, pv, fv, when)
+
+    b_start = np.array(_rbl(rate, start, total_pmt, pv, when))
+    b_end   = np.array(_rbl(rate, end + 1, total_pmt, pv, when))   
+
+    begin = (when == 1)
+    begin_mid = begin & (start > 1)
+
+    b_start[begin_mid] = b_start[begin_mid] / (1 + rate[begin_mid])
+    b_end[begin] = b_end[begin] / (1 + rate[begin])
+
+    # Arithmetic on two 0-d arrays yields a scalar, which cannot be
+    # indexed, so re-wrap before masking.
+    result = np.array(b_start - b_end)
+
+    invalid = (start < 1) | (end < start) | (end > nper)
+    result[invalid] = _value_like(result, np.nan)
+
+    return _ufunc_like(result)
+
+@overload
+def cumipmt(
+    rate: _AsFloat,
+    start: _CoFloat,
+    end: _CoFloat,
+    nper: _CoFloat,
+    pv: _CoFloat,
+    fv: _CoFloat = 0,
+    when: _When = 'end',
+) -> float: ...
+@overload
+def cumipmt(
+    rate: Decimal,
+    start: _AsDecimal,
+    end: _AsDecimal,
+    nper: _AsDecimal,
+    pv: _AsDecimal,
+    fv: _AsDecimal = 0,
+    when: _When = 'end',
+) -> Decimal: ...
+@overload
+def cumipmt(
+    rate: _AsFloat1D,
+    start: _CoFloatOr1D,
+    end: _CoFloatOr1D,
+    nper: _CoFloatOr1D,
+    pv: _CoFloatOr1D,
+    fv: _CoFloatOr1D = 0,
+    when: _When = 'end',
+) -> npt.NDArray[np.float64]: ...
+@overload
+def cumipmt(
+    rate: _ArrayLike,
+    start: _ArrayLike,
+    end: _ArrayLike,
+    nper: _ArrayLike,
+    pv: _ArrayLike,
+    fv: _ArrayLike = 0,
+    when: _When = 'end',
+) -> Any: ...
+def cumipmt(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> Any:
+    """Compute the cumulative interest paid between two periods.
+
+    Parameters
+    ----------
+    rate : scalar or array_like of shape(M, )
+        Rate of interest as decimal (not per cent) per period
+    start : scalar or array_like of shape(M, )
+        First period included in the total.
+    end : scalar or array_like of shape(M, )
+        Last period included in the total. Both `start` and `end` are
+        inclusive, so the range covers ``end - start + 1`` payments.
+    nper : scalar or array_like of shape(M, )
+        Number of compounding periods
+    pv : scalar or array_like of shape(M, )
+        Present value
+    fv : scalar or array_like of shape(M, ), optional
+        Future value
+    when : {{'begin', 1}, {'end', 0}}, {string, int}, optional
+        When payments are due ('begin' (1) or 'end' (0)).
+        Defaults to {'end', 0}.
+
+    Returns
+    -------
+    out : ndarray
+        Interest paid between `start` and `end` inclusive. If all input
+        is scalar, returns a scalar float. If any input is array_like,
+        returns the cumulative interest for each input element. ``nan``
+        is returned where `start` is less than 1, `end` is before
+        `start`, or `end` is beyond `nper`.
+
+    See Also
+    --------
+    cumprinc, ipmt, ppmt, pmt
+
+    Notes
+    -----
+    Each payment is made up of interest plus principal, so summing that
+    identity over the range gives::
+
+        pmt * (end - start + 1) == cumipmt + cumprinc
+
+    The interest is therefore taken as the total paid over the range less
+    the part that reduced the balance. Since `ppmt` is defined as
+    ``pmt - ipmt``, this holds exactly for both values of `when`, so no
+    separate derivation is needed; see `cumprinc` for how the principal
+    is obtained.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import numpy_financial as npf
+
+    How much interest is paid during the first year of a 30 year
+    $125,000 loan at 9% interest per year compounded monthly, and over
+    the full term?
+
+    >>> np.round(npf.cumipmt(0.09 / 12, 1, 12, 30 * 12, 125000), 2)
+    np.float64(-11215.34)
+    >>> np.round(npf.cumipmt(0.09 / 12, 1, 30 * 12, 30 * 12, 125000), 2)
+    np.float64(-237080.18)
+
+    Paying at the beginning of each period costs less interest, since
+    the first payment accrues none at all:
+
+    >>> np.round(
+    ...     npf.cumipmt(0.09 / 12, 1, 12, 30 * 12, 125000, 0, 'begin'), 2
+    ... )
+    np.float64(-10201.33)
+
+    """
+    when = _convert_when(when)
+    rate, start, end, nper, pv, fv, when = np.broadcast_arrays(rate, start, end,
+                                                               nper, pv, fv, when)
+
+    total_pmt = pmt(rate, nper, pv, fv, when)
+
+    result = np.array(
+        total_pmt * (end - start + 1)
+        - cumprinc(rate, start, end, nper, pv, fv, when)
+    )
+
+    return _ufunc_like(result)
