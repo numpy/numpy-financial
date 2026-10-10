@@ -173,6 +173,10 @@ class TestRate:
     def test_rate(self):
         assert_allclose(npf.rate(10, 0, -3500, 10000), 0.1107, rtol=1e-4)
 
+    def test_rate_zero_payment(self):
+    result = npf.rate(nper=10, pmt=0, pv=-1000, fv=1000)
+    assert np.isfinite(result)
+
     @pytest.mark.parametrize("number_type", [Decimal, float])
     @pytest.mark.parametrize("when", [0, 1, "end", "begin"])
     def test_rate_with_infeasible_solution(self, number_type, when):
