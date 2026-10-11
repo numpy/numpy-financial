@@ -218,6 +218,44 @@ class TestRate:
             npf.rate(8, 263175, -440000, 25500, maxiter=10,
                      raise_exceptions=True)
 
+    @pytest.mark.parametrize("scale", ["1e-400", "1", "1e400"])
+    def test_gh126_decimal_currency_scale(self, scale):
+        factor = Decimal(scale)
+        result = npf.rate(Decimal(8), Decimal(263175) * factor,
+                          Decimal(-440000) * factor, Decimal(25500) * factor,
+                          tol=Decimal("1e-10"))
+        assert isinstance(result, Decimal)
+        assert_allclose(float(result), 0.5838779110248231,
+                        atol=1e-10, rtol=0)
+
+    @pytest.mark.parametrize("scale", [1e-200, 1.0, 1e200])
+    def test_gh126_float_currency_scale(self, scale):
+        result = npf.rate(8, 263175 * scale, -440000 * scale,
+                          25500 * scale, tol=1e-10)
+        assert_allclose(result, 0.5838779110248231, atol=1e-10, rtol=0)
+
+    def test_rate_fallback_large_root(self):
+        from numpy_financial._financial import _rate_bisect
+
+        # Analytic one-period growth. Reaching the lower domain boundary
+        # must not prevent discovery of a much larger positive root.
+        growth = 2.0 ** 60
+        result = _rate_bisect(1, 0, -1, growth, 0, 0.1, 1e-10, 200)
+        assert_allclose(result, growth - 1, rtol=1e-12)
+
+    def test_rate_fallback_near_lower_boundary(self):
+        from numpy_financial._financial import _rate_bisect
+
+        result = _rate_bisect(1, 0, -1, 1e-8, 0, 0.1, 1e-14, 200)
+        assert result > -1
+        assert_allclose(result, -1 + 1e-8, atol=1e-14, rtol=0)
+
+    def test_rate_fallback_without_sign_change(self):
+        from numpy_financial._financial import _rate_bisect
+
+        # Positive cash flows cannot cancel anywhere in r > -1.
+        assert numpy.isnan(_rate_bisect(1, 0, 1, 1, 0, 0.1, 1e-10, 100))
+
     def test_rate(self):
         assert_allclose(npf.rate(10, 0, -3500, 10000), 0.1107, rtol=1e-4)
 

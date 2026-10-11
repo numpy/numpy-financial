@@ -917,6 +917,11 @@ def _rate_bisect(n, p, x, y, w, guess, tol, maxiter):
     center: Any = number(guess)
     if not np.isfinite(float(center)) or center <= -1:
         return nan
+    # The rate is independent of the currency unit. Normalization avoids
+    # rejecting finite Decimal cash flows outside the float exponent range.
+    cash_scale = max(abs(p), abs(x), abs(y))
+    if cash_scale != 0:
+        p, x, y = p / cash_scale, x / cash_scale, y / cash_scale
     left = right = center
     fl = fr = _rate_residual(center, n, p, x, y, w)
     if fl == 0:
@@ -927,7 +932,12 @@ def _rate_bisect(n, p, x, y, w, guess, tol, maxiter):
             # Geometric expansion in the positive compounding factor 1+r.
             new_left = (left - 1) / 2
             new_right = 2 * right + 1
-            if new_left <= -1 or new_right == right:
+            # Exhausting one direction must not stop the other direction.
+            if new_left <= -1 or new_left == left:
+                new_left = left
+            if not np.isfinite(float(new_right)) or new_right == right:
+                new_right = right
+            if new_left == left and new_right == right:
                 return nan
             fleft = _rate_residual(new_left, n, p, x, y, w)
             fright = _rate_residual(new_right, n, p, x, y, w)
@@ -952,7 +962,7 @@ def _rate_bisect(n, p, x, y, w, guess, tol, maxiter):
             return nan
         if fm == 0:
             return mid
-        if right - left <= tol:
+        if right - left <= tol or mid == left or mid == right:
             scale = abs(y) + abs(x * (1 + mid) ** n)
             scale += abs(p * (1 + mid * w) * (
                 n if mid == 0 else ((1 + mid) ** n - 1) / mid))
