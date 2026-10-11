@@ -1,5 +1,5 @@
-Loans and compounding
-=====================
+Loan portfolios
+===============
 
 Multiple loans and rate scenarios
 ---------------------------------
@@ -26,4 +26,3 @@ add a scenario axis unless the cross-product of loans and scenarios is wanted.
 For very large portfolios, process slices of loans to limit temporary memory.
 Keep full precision internally and round only where a contractual schedule
 requires it.
-
