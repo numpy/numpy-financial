@@ -412,6 +412,45 @@ class TestMirr:
 
 
 class TestNper:
+    @pytest.mark.parametrize("rate", [1e-4 / 12, 1e-8, 1e-12, 1e-20,
+                                      -1e-12, -1e-20])
+    @pytest.mark.parametrize("when", [0, 1])
+    @pytest.mark.parametrize("payment,present,future", [
+        (-1000, 12000, 0),  # Repayment of a low-interest loan.
+        (-200, -5000, 10000),  # Savings with regular contributions.
+    ])
+    def test_small_rates(self, rate, when, payment, present, future):
+        from decimal import localcontext
+
+        # Independent high-precision evaluation of the defining equation.
+        with localcontext() as context:
+            context.prec = 80
+            r = Decimal(str(rate))
+            z = Decimal(payment) * (1 + r * when) / r
+            ratio = (z - future) / (z + present)
+            expected = float(ratio.ln() / (1 + r).ln())
+        actual = npf.nper(rate, payment, present, future, when)
+        assert_allclose(actual, expected, rtol=1e-10, atol=1e-12)
+
+    def test_small_rates_broadcast(self):
+        result = npf.nper([0, 1e-20, -1e-20], -1000, 12000, 0, [0, 1])
+        assert_allclose(result, numpy.full((3, 2), 12.0), atol=1e-12)
+
+    @pytest.mark.parametrize("when,payment", [(0, -62.5), (1, -62.5 / 1.0625)])
+    def test_interest_only_unchanged(self, when, payment):
+        assert numpy.isnan(npf.nper(0.0625, payment, 1000, 0, when))
+
+    def test_payment_just_above_interest(self):
+        from decimal import localcontext
+
+        rate, payment = 0.005, -50.01
+        with localcontext() as context:
+            context.prec = 60
+            r, p = Decimal("0.005"), Decimal("-50.01")
+            z = p / r
+            expected = float((z / (10000 + z)).ln() / (1 + r).ln())
+        assert_allclose(npf.nper(rate, payment, 10000), expected, rtol=1e-10)
+
     def test_basic_values(self):
         assert_allclose(
             npf.nper([0, 0.075], -2000, 0, 100000),

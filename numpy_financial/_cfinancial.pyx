@@ -1,4 +1,4 @@
-from libc.math cimport NAN, INFINITY, log
+from libc.math cimport NAN, INFINITY, fabs, isfinite, log, log1p
 cimport cython
 
 
@@ -20,10 +20,19 @@ cdef double nper_inner_loop(
     if rate_ <= -1.0:
         return NAN
 
+    # Avoid forming pmt_/rate_ and rounding the log argument to one
+    # when the rate is small. Keep the original path near singular balances
+    # or when the correction approaches the logarithm's domain boundary.
+    denominator = rate_ * pv_ + pmt_ * (1.0 + rate_ * when_)
+    if denominator != 0.0 and isfinite(denominator):
+        correction = -rate_ * (fv_ + pv_) / denominator
+        if fabs(correction) <= 0.5:
+            return log1p(correction) / log1p(rate_)
+
     with cython.cdivision(True):
         # We know that rate_ != 0, we don't need to check for division by 0
         z = pmt_ * (1.0 + rate_ * when_) / rate_
-    return log((-fv_ + z) / (pv_ + z)) / log(1.0 + rate_)
+    return log((-fv_ + z) / (pv_ + z)) / log1p(rate_)
 
 
 @cython.boundscheck(False)
