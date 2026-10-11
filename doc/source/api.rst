@@ -16,3 +16,5 @@ API Documentation
    ppmt
    pv
    rate
+   cumipmt
+   cumprinc
