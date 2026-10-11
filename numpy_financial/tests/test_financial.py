@@ -256,6 +256,37 @@ class TestRate:
         # Positive cash flows cannot cancel anywhere in r > -1.
         assert numpy.isnan(_rate_bisect(1, 0, 1, 1, 0, 0.1, 1e-10, 100))
 
+    @pytest.mark.parametrize("principal,nper,annual,balloon", [
+        (250000, 300, "0.04", 0),
+        (250000, 300, "0.06", 0),
+        (15000, 48, "0.08", 0),
+        (20000, 48, "0.07", 8000),
+    ])
+    @pytest.mark.parametrize("when", [0, 1])
+    def test_rate_practitioner_loans(self, principal, nper, annual, balloon, when):
+        from decimal import localcontext
+
+        # Independent high-precision annuity calculation, without npf.pmt.
+        # Annual rates are nominal, compounded monthly; payments are unrounded.
+        with localcontext() as context:
+            context.prec = 60
+            monthly = Decimal(annual) / 12
+            growth = (1 + monthly) ** nper
+            payment = ((principal * growth - balloon) * monthly
+                       / ((growth - 1) * (1 + monthly * when)))
+        result = npf.rate(nper, -float(payment), principal, -balloon,
+                          when=when, tol=1e-10)
+        assert_allclose(result, float(monthly), atol=1e-10, rtol=0)
+        # Check the actual month-by-month outstanding balance independently.
+        balance = float(principal)
+        for _ in range(nper):
+            if when:
+                balance -= float(payment)
+            balance *= 1 + result
+            if not when:
+                balance -= float(payment)
+        assert_allclose(balance, balloon, atol=0.01, rtol=0)
+
     def test_rate(self):
         assert_allclose(npf.rate(10, 0, -3500, 10000), 0.1107, rtol=1e-4)
 
