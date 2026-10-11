@@ -29,27 +29,3 @@ class Npv2D:
 
     def time_broadcast(self, n_cashflows, cashflow_lengths, rates_lengths):
         npf.npv(self.rates, self.cashflows)
-
-
-class MortgageScenarios:
-    """Compare per-loan calls with existing pmt broadcasting."""
-
-    param_names = ["loans", "scenarios"]
-    params = [(100, 1000, 10000), (1, 5)]
-
-    def setup(self, loans, scenarios):
-        self.principal = np.linspace(75000, 450000, loans)
-        self.periods = np.resize([120, 180, 240, 300, 360], loans)
-        annual_rates = np.linspace(0.03, 0.065, loans)
-        shifts = np.linspace(-0.01, 0.01, scenarios) if scenarios > 1 else [0]
-        self.rates = (annual_rates[:, None] + np.asarray(shifts)[None, :]) / 12
-
-    def time_individual_calls(self, loans, scenarios):
-        return np.array([
-            [npf.pmt(self.rates[i, j], self.periods[i], self.principal[i])
-             for j in range(scenarios)]
-            for i in range(loans)
-        ])
-
-    def time_broadcast(self, loans, scenarios):
-        return npf.pmt(self.rates, self.periods[:, None], self.principal[:, None])
