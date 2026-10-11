@@ -67,3 +67,9 @@ jobs:
     - name: Test with pytest
       run: |
         spin test -- --doctest-modules
+    - name: Smoke test benchmarks
+      # Runs a single benchmark in asv dry-run mode so that CI catches
+      # future incompatibilities between spin bench, spin and asv.
+      run: |
+        asv machine --yes
+        spin bench -t Npv2D.time_broadcast
