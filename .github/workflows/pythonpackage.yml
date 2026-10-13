@@ -72,4 +72,4 @@ jobs:
       # future incompatibilities between spin bench, spin and asv.
       run: |
         asv machine --yes
-        spin bench -t Npv2D.time_broadcast
+        spin bench --quick
