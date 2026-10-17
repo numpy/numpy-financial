@@ -29,7 +29,7 @@ in a virtual environment. It is now possible to launch an interactive REPL
 by running the following command:
 
 ```shell
-conda activate numpy-financial-dev
+conda activate npf-dev
 ```
 
 ## Building NumPy-Financial
