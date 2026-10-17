@@ -242,7 +242,9 @@ def fv(rate, nper, pmt, pv, when: _When = 'end'):
     when = _convert_when(when)
     rate, nper, pmt, pv, when = np.broadcast_arrays(rate, nper, pmt, pv, when)
 
-    fv_array = np.empty_like(rate)
+    # An integer `rate` on its own would give an integer buffer, truncating
+    # the result, so take the dtype from all the inputs (gh-166).
+    fv_array = np.empty_like(rate, dtype=np.result_type(rate, nper, pmt, pv, 1.0))
     zero = rate == 0
     nonzero = ~zero
 
