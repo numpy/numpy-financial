@@ -379,6 +379,20 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
 
     """
     when = _convert_when(when)
+    if (type(rate) in (float, np.float64)
+            and type(when) is int
+            and all(type(value) in (int, float, np.float64)
+                    and (type(value) is not int or -2**63 <= value < 2**63)
+                    for value in (nper, pv, fv))):
+        # Keep NumPy floating-point error handling, without allocating arrays
+        # for ordinary scalar loans. Other dtypes retain the general path.
+        rate, nper, pv, fv = map(np.float64, (rate, nper, pv, fv))
+        temp = (1 + rate) ** nper
+        masked_rate = np.float64(1) if rate == 0 else rate
+        fact = (1 + masked_rate * when) * (temp - 1) / masked_rate
+        if rate == 0:
+            fact = nper
+        return -(fv + pv * temp) / fact
     (rate, nper, pv, fv, when) = map(np.array, [rate, nper, pv, fv, when])
     temp = (1 + rate) ** nper
     mask = (rate == 0)
