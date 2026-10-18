@@ -4,6 +4,9 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+from datetime import datetime
+
 import numpy_financial
 
 # -- Path setup --------------------------------------------------------------
@@ -20,7 +23,7 @@ import numpy_financial
 # -- Project information -----------------------------------------------------
 
 project = 'numpy-financial'
-copyright = '2023, numpy-financial developers'
+copyright = f'2005-{datetime.now().year}, NumPy Developers'
 author = 'numpy-financial developers'
 
 
@@ -61,3 +64,36 @@ html_static_path = ['_static']
 
 html_logo = "_static/numpy_financial_logov.svg"
 html_favicon = "_static/numpy_financial_favicon.png"
+
+# -- Version switcher configuration ------------------------------------------
+
+# Determine the version string for the switcher.
+# Must match a "version" field in versions.json for the dropdown to show it selected.
+#
+# In production (CI), DOCS_VERSION is set explicitly:
+#   - "dev" for main branch builds (deployed to /dev/)
+#   - "X.Y.Z" for release tag builds (deployed to /version/X.Y.Z/)
+#
+# For local development, default to showing stable version to test the typical UX.
+if os.environ.get("DOCS_VERSION"):
+    # CI sets this explicitly based on branch/tag
+    switcher_version = os.environ["DOCS_VERSION"]
+else:
+    # Local development: show stable version (1.1.0) as default for UX testing
+    # This matches what users see when visiting the main docs site
+    switcher_version = "1.1.0"
+
+# versions.json is generated dynamically on gh-pages by the CI workflow.
+# Always use the absolute URL (local development requires internet access).
+json_url = "https://numpy.org/numpy-financial/_static/versions.json"
+
+html_theme_options = {
+    "github_url": "https://github.com/numpy/numpy-financial",
+    # Navbar layout: theme switcher, version switcher, then GitHub icon
+    "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
+    "switcher": {
+        "json_url": json_url,
+        "version_match": switcher_version,
+    },
+    "show_version_warning_banner": True,
+}

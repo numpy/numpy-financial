@@ -77,25 +77,19 @@ PyPI trusted publishing. Do not build or upload artifacts by hand.
       - paste the contents of ${CHANGES} in the `Describe this release section`
       - if pre-release check the box labelled `Set as a pre-release`
 
-- Publish the documentation for the release. A GH workflow builds
-  `dev/` from `main`; the released versions have to be published by
-  hand. Skip this step for a pre-release.
+- Publish the documentation for the release. The `Publish docs to gh-pages`
+  workflow automatically builds and deploys versioned documentation when
+  a `v*` tag is pushed:
 
-      - wait for the workflow to rebuild `dev/` from the release
-        commit, and check that https://numpy.org/numpy-financial/dev/
-        shows ${VERSION}. Do this before the version bump below, which
-        returns `dev/` to a development version.
+      - Dev docs are deployed to `/dev/` from `main` branch pushes
+      - Release docs are deployed to `/version/${VERSION}/` from `v*` tags
+      - The workflow regenerates `_static/versions.json` by scanning existing
+        directories, marking the highest non-prerelease version as stable
 
-      - in a clone of the `gh-pages` branch, copy those docs to their
-        permanent location and point `latest` at them:
-
-            cp -r dev version/${VERSION}
-            git add version/${VERSION}
-            git rm -rf latest
-            ln -s version/${VERSION} latest
-            git add latest
-
-      - commit and push `gh-pages`
+  Verify the deployment:
+      - Check https://numpy.org/numpy-financial/version/${VERSION}/ shows
+        the new version's documentation
+      - Check the version switcher dropdown includes the new version
 
 - Update https://github.com/numpy/numpy-financial/milestones:
 
