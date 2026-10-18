@@ -579,6 +579,11 @@ class TestPpmt:
         result = npf.ppmt(*args) if when is None else npf.ppmt(*args, when)
         assert_decimal_close(result, desired, tol=1e-8)
 
+    def test_gh_166(self):
+        # An integer rate gave an integer buffer, so storing NaN in it
+        # raised a ValueError.
+        assert_allclose(npf.ppmt(0, 1, 12, 1200), -100.0, rtol=1e-10)
+
 
 class TestIpmt:
     def test_float(self):
@@ -679,6 +684,11 @@ class TestIpmt:
         # 0d array inputs should return a scalar.
         assert numpy.isscalar(npf.ipmt(*args))
 
+    def test_gh_166(self):
+        # An integer rate gave an integer buffer, so storing NaN in it
+        # raised a ValueError.
+        assert_allclose(npf.ipmt(0, 1, 12, 1200), 0.0, rtol=1e-10)
+
 
 class TestFv:
     def test_float(self):
@@ -748,6 +758,17 @@ class TestFv:
             [-500, -610.51],  # Computed using Google Sheet's FV
             rtol=1e-10,
         )
+
+    @pytest.mark.parametrize(
+        "args, desired",
+        [
+            ((0, 12, -100.5, -1000.25), 2206.25),
+            (([0, 0], 12, -100.5, -1000.25), [2206.25, 2206.25]),
+        ],
+    )
+    def test_gh_166(self, args, desired):
+        # An integer rate gave an integer buffer, truncating the result.
+        assert_allclose(npf.fv(*args), desired, rtol=1e-10)
 
 
 class TestIrr:
