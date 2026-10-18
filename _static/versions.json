@@ -1,0 +1,23 @@
+[
+    {
+        "name": "dev",
+        "version": "dev",
+        "url": "https://numpy.org/numpy-financial/dev/"
+    },
+    {
+        "name": "1.1.0 (stable)",
+        "version": "1.1.0",
+        "url": "https://numpy.org/numpy-financial/version/1.1.0/",
+        "preferred": true
+    },
+    {
+        "name": "0.2.0",
+        "version": "0.2.0",
+        "url": "https://numpy.org/numpy-financial/version/0.2.0/"
+    },
+    {
+        "name": "0.1.0",
+        "version": "0.1.0",
+        "url": "https://numpy.org/numpy-financial/version/0.1.0/"
+    }
+]
