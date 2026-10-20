@@ -13,7 +13,17 @@ otherwise stated.
 
 from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
-from typing import Any, Callable, Final, Literal, Protocol, TypeAlias, TypeVar, overload
+from typing import (
+    Any,
+    Callable,
+    Final,
+    Literal,
+    Protocol,
+    TypeAlias,
+    TypeVar,
+    cast,
+    overload,
+)
 
 import numpy as np
 import numpy.typing as npt
@@ -379,12 +389,30 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
 
     """
     when = _convert_when(when)
-    (rate, nper, pv, fv, when) = map(np.array, [rate, nper, pv, fv, when])
+    scalar = (type(rate) in (float, np.float64)
+            and type(when) is int
+            and all(type(value) in (int, float, np.float64)
+                    and (type(value) is not int or -2**63 <= value < 2**63)
+                    for value in (nper, pv, fv)))
+    if scalar:
+        # Keep NumPy floating-point error handling, without allocating arrays
+        # for ordinary scalar loans. Other dtypes retain the general path.
+        rate, nper, pv, fv = map(np.float64, (rate, nper, pv, fv))
+        when = cast(int, when)
+    else:
+        (rate, nper, pv, fv, when) = map(np.array, [rate, nper, pv, fv, when])
     temp = (1 + rate) ** nper
     mask = (rate == 0)
-    masked_rate = np.where(mask, 1, rate)
-    fact = np.where(mask != 0, nper,
-                    (1 + masked_rate * when) * (temp - 1) / masked_rate)
+    if scalar:
+        masked_rate = np.float64(1) if mask else rate
+    else:
+        masked_rate = np.where(mask, 1, rate)
+    fact = (1 + masked_rate * when) * (temp - 1) / masked_rate
+    if scalar:
+        if mask:
+            fact = nper
+    else:
+        fact = np.where(mask, nper, fact)
     return -(fv + pv * temp) / fact
 
 @overload
