@@ -16,3 +16,6 @@ API Documentation
    ppmt
    pv
    rate
+   effective_annual_rate
+   nominal_annual_rate
+   compound_value

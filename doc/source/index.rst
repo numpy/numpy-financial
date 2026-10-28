@@ -25,6 +25,7 @@ alias is `npf`.  For example,
    :maxdepth: 4
 
    api
+   compounding
    dev/index
 
 
