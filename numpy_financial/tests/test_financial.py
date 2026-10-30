@@ -796,6 +796,18 @@ class TestIrr:
         # Test that if there is no solution then npf.irr returns nan.
         assert numpy.isnan(npf.irr(v))
 
+    @pytest.mark.parametrize("cashflows", [
+        [100, 50, 0], [-100, -50, 0], [0, 100, 0], [0, -100, 0],
+    ])
+    def test_zero_polynomial_root_is_not_an_irr(self, cashflows):
+        assert numpy.isnan(npf.irr(cashflows))
+        with pytest.raises(npf.NoRealSolutionError):
+            npf.irr(cashflows, raise_exceptions=True)
+
+    def test_trailing_zeros_preserve_negative_irr(self):
+        assert_allclose(npf.irr([-100, 50, 0, 0]), -0.5)
+        assert_allclose(npf.irr([[-100, 50, 0], [-100, 150, 0]]), [-0.5, 0.5])
+
     def test_gh_15(self):
         v = [
             -3000.0,
