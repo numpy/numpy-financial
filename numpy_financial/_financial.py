@@ -1166,8 +1166,8 @@ def irr(values, *, raise_exceptions=False, selection_logic=_irr_default_selectio
             g = np.roots(row)
             eirr = np.real(g[np.isreal(g)]) - 1
 
-            # Realistic IRR
-            eirr = eirr[eirr >= -1]
+            # The discount factor must be nonzero in the NPV equation.
+            eirr = eirr[eirr > -1]
 
             # If no real solution
             if len(eirr) == 0:
