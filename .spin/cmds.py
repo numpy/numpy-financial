@@ -9,12 +9,16 @@ from spin.cmds import meson
 @click.command()
 @click.option('--tests', '-t', multiple=True,
               help='Select benchmarks by name or regular expression.')
+@click.option('--quick', '-q', is_flag=True, default=False,
+              help="Run each benchmark only once (timings won't be accurate).")
 @meson.build_dir_option
 @click.pass_context
-def bench(ctx, tests, build_dir):
+def bench(ctx, tests, quick, build_dir):
     """Run benchmarks against the local build without saving results."""
     args = [sys.executable, '-m', 'asv', 'run', '--python=same',
             '--dry-run', '--show-stderr']
+    if quick:
+        args.append('--quick')
     for test in tests:
         args.extend(['--bench', test])
     ctx.invoke(meson.build, build_dir=build_dir)
