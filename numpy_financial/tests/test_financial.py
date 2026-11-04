@@ -680,6 +680,27 @@ class TestIpmt:
         assert numpy.isscalar(npf.ipmt(*args))
 
 
+    def test_nested_period_arrays_from_dataframe_column(self):
+        rate = numpy.array([0.05, 0.07])
+        per = numpy.empty(2, dtype=object)
+        per[0] = numpy.arange(1, 5)
+        per[1] = numpy.arange(1, 5)
+        nper = numpy.array([10, 10])
+        pv = numpy.array([10000, 12000])
+
+        per_matrix = numpy.stack(per)
+        expected_ipmt = npf.ipmt(
+            rate[:, numpy.newaxis], per_matrix, nper[:, numpy.newaxis],
+            pv[:, numpy.newaxis]
+        )
+        expected_ppmt = npf.ppmt(
+            rate[:, numpy.newaxis], per_matrix, nper[:, numpy.newaxis],
+            pv[:, numpy.newaxis]
+        )
+        assert_allclose(npf.ipmt(rate, per, nper, pv), expected_ipmt)
+        assert_allclose(npf.ppmt(rate, per, nper, pv), expected_ppmt)
+
+
 class TestFv:
     def test_float(self):
         assert_allclose(
