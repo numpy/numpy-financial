@@ -1,3 +1,10 @@
+# 1.2.0
+
+## Enhancements
+
+- ENH: Add `cumprinc` and `cumipmt` ([#165](https://github.com/numpy/numpy-financial/pull/165)).
+
+
 # 1.1.0
 
 We're happy to announce the release of numpy-financial 1.1.0!

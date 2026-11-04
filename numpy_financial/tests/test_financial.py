@@ -883,3 +883,220 @@ class TestIrr:
 
         with pytest.raises(npf.NoRealSolutionError):
             npf.irr(cashflows, raise_exceptions=True)
+
+def _cumprinc_iterative(rate, start, end, nper, pv, fv=0, when="end"):
+    """Cumulative principal by summing ppmt, the definition of cumprinc.
+
+    Used to check the closed-form version. The period bounds are coerced
+    to int so that Decimal inputs can be iterated; ppmt still returns
+    Decimal when the remaining arguments are Decimal.
+    """
+    return sum(
+        npf.ppmt(rate, per, nper, pv, fv, when)
+        for per in range(int(start), int(end) + 1)
+    )
+
+def _cumipmt_iterative(rate, start, end, nper, pv, fv=0, when="end"):
+    """Cumulative interest by summing ipmt, the definition of cumipmt.
+    """
+    return sum(
+        npf.ipmt(rate, per, nper, pv, fv, when)
+        for per in range(int(start), int(end) + 1)
+    )
+
+class TestCumprinc:
+    @pytest.mark.parametrize("when", [None, 0, "end"])
+    def test_sas_reference_end(self, when):
+        # SAS: CUMPRINC(0.09/12, 360, 125000, 12, 24, 0) -> $1008.23
+        # https://documentation.sas.com/doc/en/edmcdc/v_031/ds2ref/p1ae3ccwcl1y4dn0zld1p5rj88yx.htm
+        # SAS reports the magnitude; numpy-financial signs cash paid out
+        # negative. The SAS doc prints to 2 d.p., hence rtol=1e-5.
+        kwargs = dict(rate=0.09 / 12, start=12, end=24, nper=360, pv=125000)
+        result = (
+            npf.cumprinc(**kwargs)
+            if when is None
+            else npf.cumprinc(**kwargs, when=when)
+        )
+        assert_allclose(result, -1008.23, rtol=1e-5)
+
+    @pytest.mark.parametrize("when", [1, "begin"])
+    def test_sas_reference_begin(self, when):
+        # SAS: CUMPRINC(0.09/12, 360, 125000, 12, 24, 1) -> $1000.73
+        # Same source. Note 1008.23 / 1000.73 == 1 + 0.09/12, i.e. this
+        # pair pins the one-period discount applied when when == 1.
+        result = npf.cumprinc(
+            rate=0.09 / 12, start=12, end=24, nper=360, pv=125000, when=when
+        )
+        assert_allclose(result, -1000.73, rtol=1e-5)
+
+    @pytest.mark.parametrize(
+        "when, desired",
+        [
+            (1, -1778.160172),
+            ("begin", -1778.160172),
+            (0, -853.996373),
+            ("end", -853.996373),
+        ],
+    )
+    def test_excel_reference_from_first_period(self, when, desired):
+        # Computed using Excel's CUMPRINC:
+        #   =CUMPRINC(0.09/12, 360, 125000, 1, 12, 1) -> -1778.160172
+        #   =CUMPRINC(0.09/12, 360, 125000, 1, 12, 0) ->  -853.996373
+        result = npf.cumprinc(
+            rate=0.09 / 12, start=1, end=12, nper=360, pv=125000, when=when
+        )
+        assert_allclose(result, desired, rtol=1e-9)
+
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize("rate", [0.09 / 12, 0.0824 / 12, 0.01, 0.1])
+    @pytest.mark.parametrize(
+        "start, end",
+        [(1, 1), (1, 6), (1, 12), (2, 4), (5, 5), (7, 12), (12, 12)],
+    )
+    def test_matches_iterative(self, rate, start, end, when):
+        # The closed form must agree with summing ppmt period by period.
+        args = (rate, start, end, 12, 2500, 0, when)
+        assert_allclose(
+            npf.cumprinc(*args),
+            _cumprinc_iterative(*args),
+            rtol=1e-9,
+        )
+
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize("per", [1, 2, 6, 12])
+    def test_single_period_equals_ppmt(self, per, when):
+        # A one-period range is just ppmt.
+        rate, nper, pv = 0.0824 / 12, 12, 2500
+        assert_allclose(
+            npf.cumprinc(rate, per, per, nper, pv, 0, when),
+            npf.ppmt(rate, per, nper, pv, 0, when),
+            rtol=1e-9,
+        )
+
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    def test_array_start_and_end(self, when):
+        # start contains both 1 and values greater than 1 in the same call.
+        rate, nper, pv = 0.09 / 12, 360, 125000
+        start = numpy.array([1, 2, 12])
+        end = numpy.array([12, 12, 24])
+        result = npf.cumprinc(rate, start, end, nper, pv, 0, when)
+        desired = [
+            _cumprinc_iterative(rate, s, e, nper, pv, 0, when)
+            for s, e in zip(start, end, strict=True)
+        ]
+        assert_allclose(result, desired, rtol=1e-9)
+
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize(
+        "start, end", [(1, 12), (1, 6), (7, 12), (5, 5), (2, 9)]
+    )
+    def test_zero_rate(self, start, end, when):
+        # With no interest every payment is pure principal, so the
+        # cumulative principal is pmt * count == -pv * count / nper.
+        nper, pv = 12, 2500
+        desired = -pv * (end - start + 1) / nper
+        result = npf.cumprinc(0.0, start, end, nper, pv, 0, when)
+        assert_allclose(result, desired, rtol=1e-12)
+
+
+    def test_decimal(self):
+        args = (Decimal("0.08") / Decimal("12"),
+                Decimal("1"),
+                Decimal("12"),
+                Decimal("60"),
+                Decimal("15000."),
+                Decimal("0"),
+                "end")
+        result = npf.cumprinc(*args)
+        assert_decimal_close(result, _cumprinc_iterative(*args), tol=Decimal("1e-5"))
+
+    def test_scalar_input_returns_scalar(self):
+        result = npf.cumprinc(
+            rate=0.0824 / 12, start=1, end=12, nper=12, pv=2500
+        )
+        assert_(numpy.isscalar(result) or numpy.ndim(result) == 0)
+
+    def test_broadcasting(self):
+        rates = numpy.array([0.09 / 12, 0.0824 / 12, 0.01])
+        result = npf.cumprinc(
+            rate=rates, start=1, end=12, nper=12, pv=2500, when="end"
+        )
+        assert_equal(numpy.shape(result), (3,))
+
+    @pytest.mark.parametrize(
+        "start, end",
+        [(0, 6), (-1, 6), (6, 5), (1, 13)],
+    )
+    def test_out_of_range_is_nan(self, start, end):
+        # per < 1, end before start, and end beyond nper are all
+        # meaningless; ipmt returns nan for per < 1, so match that.
+        result = npf.cumprinc(
+            rate=0.0824 / 12, start=start, end=end, nper=12, pv=2500
+        )
+        assert_(numpy.isnan(result))
+
+class TestCumipmt:
+    @pytest.mark.parametrize(
+        "start, end, when, desired",
+        [
+            (12, 24, 0, -12066.88311),
+            (12, 24, "end", -12066.88311),
+            (1, 12, 1, -10201.33288),
+            (1, 12, "begin", -10201.33288),
+        ],
+    )
+    def test_excel_reference(self, start, end, when, desired):
+        # Computed using Excel's CUMIPMT, which reports 5 d.p. here:
+        #   =CUMIPMT(0.09/12, 360, 125000, 12, 24, 0) -> -12066.88311
+        #   =CUMIPMT(0.09/12, 360, 125000,  1, 12, 1) -> -10201.33288
+        result = npf.cumipmt(
+            rate=0.09 / 12, start=start, end=end, nper=360, pv=125000, when=when
+        )
+        assert_allclose(result, desired, rtol=1e-8)
+
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize("rate", [0.09 / 12, 0.0824 / 12, 0.01, 0.1])
+    @pytest.mark.parametrize(
+        "start, end",
+        [(1, 1), (1, 6), (1, 12), (2, 4), (5, 5), (7, 12), (12, 12)],
+    )
+    def test_matches_iterative(self, rate, start, end, when):
+        args = (rate, start, end, 12, 2500, 0, when)
+        assert_allclose(
+            npf.cumipmt(*args),
+            _cumipmt_iterative(*args),
+            rtol=1e-9,
+            atol=1e-9,
+        )
+
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize("start, end", [(1, 12), (1, 6), (5, 5), (7, 12)])
+    def test_zero_rate_has_no_interest(self, start, end, when):
+        result = npf.cumipmt(0.0, start, end, 12, 2500, 0, when)
+        assert_allclose(result, 0, atol=1e-10)
+
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize("per", [1, 2, 6, 12])
+    def test_single_period_equals_ipmt(self, per, when):
+        # Pins the `end + 1` offset: an off-by-one returns 0, not ipmt.
+        rate, nper, pv = 0.0824 / 12, 12, 2500
+        assert_allclose(
+            npf.cumipmt(rate, per, per, nper, pv, 0, when),
+            npf.ipmt(rate, per, nper, pv, 0, when),
+            rtol=1e-9,
+            atol=1e-9,
+        )
+
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    def test_array_start_and_end(self, when):
+        # Under when='begin' the first element takes the period 1
+        # exemption and the other two do not, all in one call.
+        rate, nper, pv = 0.09 / 12, 360, 125000
+        start = numpy.array([1, 2, 12])
+        end = numpy.array([12, 12, 24])
+        result = npf.cumipmt(rate, start, end, nper, pv, 0, when)
+        desired = [
+            _cumipmt_iterative(rate, s, e, nper, pv, 0, when)
+            for s, e in zip(start, end, strict=True)
+        ]
+        assert_allclose(result, desired, rtol=1e-9)
