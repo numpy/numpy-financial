@@ -451,6 +451,11 @@ class TestNper:
 
 
 class TestPpmt:
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize("per", [1, [1, 6, 12]])
+    def test_integer_zero_rate(self, when, per):
+        assert_allclose(npf.ppmt(0, per, 12, 1200, when=when), -100.0)
+
     def test_float(self):
         assert_allclose(npf.ppmt(0.1 / 12, 1, 60, 55000), -710.25, rtol=1e-4)
 
@@ -581,6 +586,11 @@ class TestPpmt:
 
 
 class TestIpmt:
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize("per", [1, [1, 6, 12]])
+    def test_integer_zero_rate(self, when, per):
+        assert_allclose(npf.ipmt(0, per, 12, 1200, when=when), 0.0, atol=0)
+
     def test_float(self):
         assert_allclose(
             npf.ipmt(0.1 / 12, 1, 24, 2000),
@@ -681,6 +691,32 @@ class TestIpmt:
 
 
 class TestFv:
+    @pytest.mark.parametrize("when", ["end", "begin"])
+    @pytest.mark.parametrize("rate", [0, numpy.int64(0), numpy.array(0)])
+    def test_integer_zero_rate(self, rate, when):
+        # gh-166: an integer rate must not discard fractional cash flows.
+        assert_equal(npf.fv(rate, 12, -100.5, -1000.25, when), 2206.25)
+
+    @pytest.mark.parametrize(
+        "when, expected", [("end", [3.25, 4.0]), ("begin", [4.0, 5.5])]
+    )
+    def test_integer_rates_broadcast(self, when, expected):
+        result = npf.fv([[0], [1]], 2, [-0.25, -0.5], -0.625, when)
+        assert_allclose(result, [[1.125, 1.625], expected])
+        assert result.dtype.kind == "f"
+
+    def test_integer_rate_decimal_cashflows(self):
+        result = npf.fv(0, 12, Decimal("-100.5"), Decimal("-1000.25"))
+        assert isinstance(result, Decimal)
+        assert result == Decimal("2206.25")
+
+    def test_float32_inputs(self):
+        args = [numpy.array([value], dtype=numpy.float32)
+                for value in (0, 12, -100.5, -1000.25)]
+        result = npf.fv(*args)
+        assert result.dtype == numpy.dtype("float32")
+        assert_equal(result, [2206.25])
+
     def test_float(self):
         assert_allclose(
             npf.fv(0.075, 20, -2000, 0, 0),
