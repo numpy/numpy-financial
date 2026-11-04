@@ -2,6 +2,10 @@
 
 patterned after spreadsheet computations.
 
+Cash received is positive and cash paid out is negative. For a borrower,
+loan proceeds are positive and repayments are negative; for a lender,
+the signs are reversed.
+
 There is some complexity in each function
 so that the functions behave like ufuncs with
 broadcasting and being able to be called with scalars
@@ -317,9 +321,11 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
     nper : array_like
         Number of compounding periods
     pv : array_like
-        Present value
+        Present value. Cash received is positive and cash paid out is
+        negative. For a borrower, the loan amount is positive.
     fv : array_like,  optional
-        Future value (default = 0)
+        Future value (default = 0). For a loan with positive `pv`,
+        use a negative value for a balance that remains to be repaid.
     when : {{'begin', 1}, {'end', 0}}, {string, int}
         When payments are due ('begin' (1) or 'end' (0))
 
@@ -376,6 +382,13 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
     In order to pay-off (i.e., have a future-value of 0) the $200,000 obtained
     today, a monthly payment of $1,854.02 would be required.  Note that this
     example illustrates usage of `fv` having a default value of 0.
+
+    For a $100 loan with no interest, ten payments of $8 leave $20 owed.
+    Use ``fv=-20`` for this remaining debt; payments are negative because
+    they represent money paid out:
+
+    >>> float(npf.pmt(0, 10, 100, fv=-20))
+    -8.0
 
     """
     when = _convert_when(when)
