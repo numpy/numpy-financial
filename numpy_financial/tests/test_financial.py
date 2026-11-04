@@ -170,6 +170,123 @@ class TestPV:
 
 
 class TestRate:
+    @pytest.mark.parametrize("number_type", [float, Decimal])
+    @pytest.mark.parametrize("pmt,pv,expected", [
+        (-440000, 263175, 1.6711838275594646),
+        (263175, -440000, 0.5838779110248231),
+    ])
+    def test_gh126(self, number_type, pmt, pv, expected):
+        args = [number_type(v) for v in (8, pmt, pv, 25500)]
+        result = npf.rate(*args, tol=number_type("1e-10"))
+        assert result > -1
+        assert_allclose(float(result), expected, atol=1e-10, rtol=0)
+        if number_type is Decimal:
+            assert isinstance(result, Decimal)
+        # Independently discount the actual cash flows at the returned rate.
+        cashflows = [pv] + [pmt] * 7 + [pmt + 25500]
+        residual = sum(c / (1 + float(result)) ** t
+                       for t, c in enumerate(cashflows))
+        assert abs(residual) < 1e-3
+
+    def test_gh126_broadcast(self):
+        pmt = numpy.array([[-440000], [263175]])
+        pv = numpy.array([[263175], [-440000]])
+        result = npf.rate(8, pmt, pv, [25500, 25500], tol=1e-10)
+        assert_allclose(result, [[1.6711838275594646] * 2,
+                                 [0.5838779110248231] * 2], atol=1e-10)
+
+    def test_gh126_mixed_results(self):
+        result = npf.rate([8, 2, 2], [263175, 0, 0],
+                          [-440000, -100, 100], [25500, 81, 81])
+        assert_allclose(result, [0.583877911, -0.1, numpy.nan], atol=1e-6)
+
+    @pytest.mark.parametrize("when", [0, 1])
+    def test_rate_repayment_round_trip(self, when):
+        target = 0.6
+        pmt = npf.pmt(target, 8, -440000, 25500, when=when)
+        result = npf.rate(8, pmt, -440000, 25500, when=when, tol=1e-10)
+        assert_allclose(result, target, atol=1e-10)
+
+    @pytest.mark.parametrize("guess", [-1, -2, numpy.nan, numpy.inf])
+    def test_rate_invalid_guess(self, guess):
+        with pytest.raises(ValueError, match="guess"):
+            npf.rate(8, 263175, -440000, 25500, guess=guess)
+
+    def test_gh126_iteration_budget(self):
+        assert numpy.isnan(npf.rate(8, 263175, -440000, 25500, maxiter=10))
+        with pytest.raises(npf.IterationsExceededError):
+            npf.rate(8, 263175, -440000, 25500, maxiter=10,
+                     raise_exceptions=True)
+
+    @pytest.mark.parametrize("scale", ["1e-400", "1", "1e400"])
+    def test_gh126_decimal_currency_scale(self, scale):
+        factor = Decimal(scale)
+        result = npf.rate(Decimal(8), Decimal(263175) * factor,
+                          Decimal(-440000) * factor, Decimal(25500) * factor,
+                          tol=Decimal("1e-10"))
+        assert isinstance(result, Decimal)
+        assert_allclose(float(result), 0.5838779110248231,
+                        atol=1e-10, rtol=0)
+
+    @pytest.mark.parametrize("scale", [1e-200, 1.0, 1e200])
+    def test_gh126_float_currency_scale(self, scale):
+        result = npf.rate(8, 263175 * scale, -440000 * scale,
+                          25500 * scale, tol=1e-10)
+        assert_allclose(result, 0.5838779110248231, atol=1e-10, rtol=0)
+
+    def test_rate_fallback_large_root(self):
+        from numpy_financial._financial import _rate_bisect
+
+        # Analytic one-period growth. Reaching the lower domain boundary
+        # must not prevent discovery of a much larger positive root.
+        growth = 2.0 ** 60
+        result = _rate_bisect(1, 0, -1, growth, 0, 0.1, 1e-10, 200)
+        assert_allclose(result, growth - 1, rtol=1e-12)
+
+    def test_rate_fallback_near_lower_boundary(self):
+        from numpy_financial._financial import _rate_bisect
+
+        result = _rate_bisect(1, 0, -1, 1e-8, 0, 0.1, 1e-14, 200)
+        assert result > -1
+        assert_allclose(result, -1 + 1e-8, atol=1e-14, rtol=0)
+
+    def test_rate_fallback_without_sign_change(self):
+        from numpy_financial._financial import _rate_bisect
+
+        # Positive cash flows cannot cancel anywhere in r > -1.
+        assert numpy.isnan(_rate_bisect(1, 0, 1, 1, 0, 0.1, 1e-10, 100))
+
+    @pytest.mark.parametrize("principal,nper,annual,balloon", [
+        (250000, 300, "0.04", 0),
+        (250000, 300, "0.06", 0),
+        (15000, 48, "0.08", 0),
+        (20000, 48, "0.07", 8000),
+    ])
+    @pytest.mark.parametrize("when", [0, 1])
+    def test_rate_practitioner_loans(self, principal, nper, annual, balloon, when):
+        from decimal import localcontext
+
+        # Independent high-precision annuity calculation, without npf.pmt.
+        # Annual rates are nominal, compounded monthly; payments are unrounded.
+        with localcontext() as context:
+            context.prec = 60
+            monthly = Decimal(annual) / 12
+            growth = (1 + monthly) ** nper
+            payment = ((principal * growth - balloon) * monthly
+                       / ((growth - 1) * (1 + monthly * when)))
+        result = npf.rate(nper, -float(payment), principal, -balloon,
+                          when=when, tol=1e-10)
+        assert_allclose(result, float(monthly), atol=1e-10, rtol=0)
+        # Check the actual month-by-month outstanding balance independently.
+        balance = float(principal)
+        for _ in range(nper):
+            if when:
+                balance -= float(payment)
+            balance *= 1 + result
+            if not when:
+                balance -= float(payment)
+        assert_allclose(balance, balloon, atol=0.01, rtol=0)
+
     def test_rate(self):
         assert_allclose(npf.rate(10, 0, -3500, 10000), 0.1107, rtol=1e-4)
 
