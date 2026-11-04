@@ -1337,19 +1337,18 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions: bool = False)
 
     Notes
     -----
-    The MIRR formula is as follows:
+    For cash flows at times 0 through N, the MIRR is:
 
     .. math::
 
-        MIRR =
-        \\left( \\frac{{FV_{positive}}}{{PV_{negative}}} \\right)^{\\frac{{1}}{{n-1}}}
-        * (1+r) - 1
+        MIRR = \left(\frac{FV_{positive}}{|PV_{negative}|}\right)^{1/N} - 1
 
-    where:
-        - \(FV_{positive}\) is the future value of positive cash flows,
-        - \(PV_{negative}\) is the present value of negative cash flows,
-        - \(n\) is the number of periods.
-        - \(r\) is the reinvestment rate.
+    Here, ``FV_positive`` is the value of positive cash flows at time N,
+    accumulated at ``reinvest_rate``; ``PV_negative`` is the signed present
+    value of negative cash flows at time zero, discounted at ``finance_rate``.
+    ``N = len(values) - 1`` is the elapsed number of periods for one cash-flow
+    series. The future value already includes reinvestment, so no additional
+    factor of ``1 + reinvest_rate`` is required.
 
     Examples
     --------
