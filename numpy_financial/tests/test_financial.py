@@ -750,6 +750,37 @@ class TestFv:
         )
 
 
+class TestIntegerRates:
+    # (1 + rate) ** nper must not be evaluated with integer arithmetic,
+    # which wraps around on overflow. 2**64 wraps to 0 in int64.
+    @pytest.mark.parametrize(
+        ("func", "args", "desired"),
+        [
+            (npf.fv, (64, 0, -(2.0**-64)), 1.0),
+            (npf.pv, (64, -1, 0), 1 - 2.0**-64),
+            (npf.pmt, (64, 1), -1 / (1 - 2.0**-64)),
+        ],
+    )
+    def test_no_overflow(self, func, args, desired):
+        assert_allclose(func(1, *args), desired, rtol=1e-15)
+        assert_allclose(func(1, *args), func(1.0, *args), rtol=1e-15)
+
+    @pytest.mark.parametrize("dtype", [numpy.int32, numpy.int64])
+    def test_integer_arrays(self, dtype):
+        rate = numpy.array([1, 2], dtype=dtype)
+        nper = numpy.array([64, 41], dtype=dtype)
+        assert_allclose(npf.pv(rate, nper, -1, 0), [1.0, 0.5], rtol=1e-15)
+        assert_allclose(npf.pmt(rate, nper, 1), [-1.0, -2.0], rtol=1e-15)
+        assert_allclose(npf.fv(rate[:1], nper[:1], 0, -(2.0**-64)), [1.0])
+
+    @pytest.mark.parametrize(
+        ("func", "args"), [(npf.pv, (-1, 0, -1)), (npf.pmt, (-2, 1))]
+    )
+    def test_negative_integer_nper(self, func, args):
+        # Integer arrays reject negative integer powers.
+        assert_allclose(func(1, *args), func(1.0, *args), rtol=1e-15)
+
+
 class TestIrr:
     def test_npv_irr_congruence(self):
         # IRR is defined as the rate required for the present value of
