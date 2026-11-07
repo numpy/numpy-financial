@@ -112,6 +112,15 @@ def _ufunc_like(array: np.generic | npt.NDArray[Any]) -> Any:
         # Otherwise, return entire array
         return array.squeeze()
 
+
+def _float_power_base(base: Any) -> Any:
+    # Integer ``**`` wraps around on overflow and rejects negative
+    # exponents, so evaluate integer and boolean bases in float64.
+    # Other bases, including Decimal and object arrays, are unchanged.
+    if isinstance(base, (np.ndarray, np.generic)) and base.dtype.kind in "biu":
+        return base.astype(np.float64)
+    return base
+
 @overload
 def _convert_when(when: _ArrayT) -> _ArrayT: ...
 @overload
@@ -253,7 +262,7 @@ def fv(rate, nper, pmt, pv, when: _When = 'end'):
     fv_array[zero] = -(pv[zero] + pmt[zero] * nper[zero])
 
     rate_nonzero = rate[nonzero]
-    temp = (1 + rate_nonzero) ** nper[nonzero]
+    temp = _float_power_base(1 + rate_nonzero) ** nper[nonzero]
     fv_array[nonzero] = (
             - pv[nonzero] * temp
             - pmt[nonzero] * (1 + rate_nonzero * when[nonzero]) / rate_nonzero
@@ -393,7 +402,7 @@ def pmt(rate, nper, pv, fv: Any = 0, when: _When = 'end'):
     """
     when = _convert_when(when)
     (rate, nper, pv, fv, when) = map(np.array, [rate, nper, pv, fv, when])
-    temp = (1 + rate) ** nper
+    temp = _float_power_base(1 + rate) ** nper
     mask = (rate == 0)
     masked_rate = np.where(mask, 1, rate)
     fact = np.where(mask != 0, nper,
@@ -880,7 +889,7 @@ def pv(rate, nper, pmt, fv: Any = 0, when: _When = 'end'):
     """
     when = _convert_when(when)
     rate, nper, pmt, fv, when = map(np.asarray, [rate, nper, pmt, fv, when])
-    temp = (1 + rate) ** nper
+    temp = _float_power_base(1 + rate) ** nper
     fact = np.where(rate == 0, nper, (1 + rate * when) * (temp - 1) / rate)
     return -(fv + pmt * fact) / temp
 
