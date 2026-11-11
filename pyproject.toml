@@ -116,7 +116,7 @@ package = 'numpy_financial'
 
 
 [tool.cibuildwheel]
-build = "cp313-* cp314-*"
+build = "cp313-* cp314-* cp315-*"
 skip = "*-musllinux* *_i686 *-win32"
 test-command = "python -c \"import numpy_financial\""
 
