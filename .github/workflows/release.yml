@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: pypa/cibuildwheel@v3.2
+      - uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
 
       - uses: actions/upload-artifact@v4
         with:
