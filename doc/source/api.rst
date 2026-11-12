@@ -6,6 +6,8 @@ API Documentation
 .. autosummary::
    :toctree: _api_stubs/
 
+   cumulative_interest
+   cumulative_principal
    fv
    ipmt
    irr
