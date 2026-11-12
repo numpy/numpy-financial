@@ -2,7 +2,7 @@
 
 ## Enhancements
 
-- ENH: Add `cumprinc` and `cumipmt` ([#165](https://github.com/numpy/numpy-financial/pull/165)).
+- ENH: Add `cumulative_principal` and `cumulative_interest` ([#165](https://github.com/numpy/numpy-financial/pull/165)).
 
 
 # 1.1.0

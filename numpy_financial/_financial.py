@@ -22,7 +22,7 @@ from numpy._typing import _NestedSequence  # pyright: ignore[reportPrivateImport
 from numpy_financial import _cfinancial
 
 __all__ = ['fv', 'pmt', 'nper', 'ipmt', 'ppmt', 'pv', 'rate',
-           'irr', 'npv', 'mirr', 'cumprinc', 'cumipmt',
+           'irr', 'npv', 'mirr', 'cumulative_principal', 'cumulative_interest',
            'NoRealSolutionError', 'IterationsExceededError']
 
 _ArrayT = TypeVar("_ArrayT", bound=npt.NDArray[Any])
@@ -1416,7 +1416,7 @@ def mirr(values, finance_rate, reinvest_rate, *, raise_exceptions: bool = False)
 
 
 @overload
-def cumprinc(
+def cumulative_principal(
     rate: _AsFloat,
     start: _CoFloat,
     end: _CoFloat,
@@ -1426,7 +1426,7 @@ def cumprinc(
     when: _When = 'end',
 ) -> float: ...
 @overload
-def cumprinc(
+def cumulative_principal(
     rate: Decimal,
     start: _AsDecimal,
     end: _AsDecimal,
@@ -1436,7 +1436,7 @@ def cumprinc(
     when: _When = 'end',
 ) -> Decimal: ...
 @overload
-def cumprinc(
+def cumulative_principal(
     rate: _AsFloat1D,
     start: _CoFloatOr1D,
     end: _CoFloatOr1D,
@@ -1446,7 +1446,7 @@ def cumprinc(
     when: _When = 'end',
 ) -> npt.NDArray[np.float64]: ...
 @overload
-def cumprinc(
+def cumulative_principal(
     rate: _ArrayLike,
     start: _ArrayLike,
     end: _ArrayLike,
@@ -1455,8 +1455,12 @@ def cumprinc(
     fv: _ArrayLike = 0,
     when: _When = 'end',
 ) -> Any: ...
-def cumprinc(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> Any:
+def cumulative_principal(
+    rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end'
+) -> Any:
     """Compute the cumulative principal paid between two periods.
+
+    Corresponds to the ``CUMPRINC`` function in Excel.
 
     Parameters
     ----------
@@ -1488,12 +1492,14 @@ def cumprinc(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> An
 
     See Also
     --------
-    ppmt, ipmt, pmt, fv
+    cumulative_interest, ppmt, ipmt, pmt, fv
 
     Notes
     -----
     The total payment is made up of payment against principal plus
-    interest, so ``pmt * (end - start + 1) == cumprinc + cumipmt``.
+    interest, so::
+
+        pmt * (end - start + 1) == cumulative_principal + cumulative_interest
 
     The cumulative principal is obtained as the difference between two
     loan balances rather than by summing `ppmt` across the range. Each
@@ -1523,16 +1529,16 @@ def cumprinc(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> An
     $125,000 loan at 9% interest per year compounded monthly, and over
     the full term?
 
-    >>> np.round(npf.cumprinc(0.09 / 12, 1, 12, 30 * 12, 125000), 2)
+    >>> np.round(npf.cumulative_principal(0.09 / 12, 1, 12, 30 * 12, 125000), 2)
     np.float64(-854.0)
-    >>> np.round(npf.cumprinc(0.09 / 12, 1, 30 * 12, 30 * 12, 125000), 2)
+    >>> np.round(npf.cumulative_principal(0.09 / 12, 1, 30 * 12, 30 * 12, 125000), 2)
     np.float64(-125000.0)
 
     Paying at the beginning of each period repays far more in the first
     year, since the first payment accrues no interest:
 
     >>> np.round(
-    ...     npf.cumprinc(0.09 / 12, 1, 12, 30 * 12, 125000, 0, 'begin'), 2
+    ...     npf.cumulative_principal(0.09 / 12, 1, 12, 30 * 12, 125000, 0, 'begin'), 2
     ... )
     np.float64(-1778.16)
 
@@ -1562,7 +1568,7 @@ def cumprinc(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> An
     return _ufunc_like(result)
 
 @overload
-def cumipmt(
+def cumulative_interest(
     rate: _AsFloat,
     start: _CoFloat,
     end: _CoFloat,
@@ -1572,7 +1578,7 @@ def cumipmt(
     when: _When = 'end',
 ) -> float: ...
 @overload
-def cumipmt(
+def cumulative_interest(
     rate: Decimal,
     start: _AsDecimal,
     end: _AsDecimal,
@@ -1582,7 +1588,7 @@ def cumipmt(
     when: _When = 'end',
 ) -> Decimal: ...
 @overload
-def cumipmt(
+def cumulative_interest(
     rate: _AsFloat1D,
     start: _CoFloatOr1D,
     end: _CoFloatOr1D,
@@ -1592,7 +1598,7 @@ def cumipmt(
     when: _When = 'end',
 ) -> npt.NDArray[np.float64]: ...
 @overload
-def cumipmt(
+def cumulative_interest(
     rate: _ArrayLike,
     start: _ArrayLike,
     end: _ArrayLike,
@@ -1601,8 +1607,12 @@ def cumipmt(
     fv: _ArrayLike = 0,
     when: _When = 'end',
 ) -> Any: ...
-def cumipmt(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> Any:
+def cumulative_interest(
+    rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end'
+) -> Any:
     """Compute the cumulative interest paid between two periods.
+
+    Corresponds to the ``CUMIPMT`` function in Excel.
 
     Parameters
     ----------
@@ -1634,20 +1644,20 @@ def cumipmt(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> Any
 
     See Also
     --------
-    cumprinc, ipmt, ppmt, pmt
+    cumulative_principal, ipmt, ppmt, pmt
 
     Notes
     -----
     Each payment is made up of interest plus principal, so summing that
     identity over the range gives::
 
-        pmt * (end - start + 1) == cumipmt + cumprinc
+        pmt * (end - start + 1) == cumulative_interest + cumulative_principal
 
     The interest is therefore taken as the total paid over the range less
     the part that reduced the balance. Since `ppmt` is defined as
     ``pmt - ipmt``, this holds exactly for both values of `when`, so no
-    separate derivation is needed; see `cumprinc` for how the principal
-    is obtained.
+    separate derivation is needed; see `cumulative_principal` for how the
+    principal is obtained.
 
     Examples
     --------
@@ -1658,16 +1668,16 @@ def cumipmt(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> Any
     $125,000 loan at 9% interest per year compounded monthly, and over
     the full term?
 
-    >>> np.round(npf.cumipmt(0.09 / 12, 1, 12, 30 * 12, 125000), 2)
+    >>> np.round(npf.cumulative_interest(0.09 / 12, 1, 12, 30 * 12, 125000), 2)
     np.float64(-11215.34)
-    >>> np.round(npf.cumipmt(0.09 / 12, 1, 30 * 12, 30 * 12, 125000), 2)
+    >>> np.round(npf.cumulative_interest(0.09 / 12, 1, 30 * 12, 30 * 12, 125000), 2)
     np.float64(-237080.18)
 
     Paying at the beginning of each period costs less interest, since
     the first payment accrues none at all:
 
     >>> np.round(
-    ...     npf.cumipmt(0.09 / 12, 1, 12, 30 * 12, 125000, 0, 'begin'), 2
+    ...     npf.cumulative_interest(0.09 / 12, 1, 12, 30 * 12, 125000, 0, 'begin'), 2
     ... )
     np.float64(-10201.33)
 
@@ -1680,7 +1690,7 @@ def cumipmt(rate, start, end, nper, pv, fv: Any = 0, when: _When = 'end') -> Any
 
     result = np.array(
         total_pmt * (end - start + 1)
-        - cumprinc(rate, start, end, nper, pv, fv, when)
+        - cumulative_principal(rate, start, end, nper, pv, fv, when)
     )
 
     return _ufunc_like(result)
