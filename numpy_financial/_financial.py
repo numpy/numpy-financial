@@ -1007,7 +1007,7 @@ def rate(
     return rn
 
 
-def _irr_default_selection(eirr: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+def _irr_default_selection(eirr: npt.NDArray[np.float64]) -> np.float64:
     """ default selection logic for IRR function when there are > 1 real solutions """
      # check sign of all IRR solutions
     same_sign = np.all(eirr > 0) if eirr[0] > 0 else np.all(eirr < 0)
@@ -1029,7 +1029,7 @@ def _irr_default_selection(eirr: npt.NDArray[np.float64]) -> npt.NDArray[np.floa
 
 _SelectionFunc: TypeAlias = Callable[
     [npt.NDArray[np.float64]],
-    npt.NDArray[np.float64],
+    float | np.floating[Any],
 ]
 
 
